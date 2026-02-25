@@ -1,0 +1,20 @@
+{
+  "name": "vikingapp",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "test:server": "npm --prefix server test",
+    "seed:test": "node scripts/seedTestScenario.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "puppeteer-core": "^24.37.5"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.6.2"
+  }
+}
