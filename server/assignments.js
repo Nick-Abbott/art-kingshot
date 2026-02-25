@@ -425,7 +425,7 @@ function generateAssignments(members) {
     nameById.set(member.playerId, member.playerName || "");
   }
 
-  const result = annotated.map((member) => {
+  const baseResult = annotated.map((member) => {
     const incomingInfo = incoming.get(member.playerId);
     const outgoingInfo = outgoing.get(member.playerId);
     const outgoingTotal = sum(outgoingInfo.map((entry) => entry.troops));
@@ -468,6 +468,29 @@ function generateAssignments(members) {
       incomingTotal: incomingInfo.total,
       garrisonLeadId,
       garrisonLeadName,
+    };
+  });
+
+  const leadByTarget = new Map();
+  for (const member of baseResult) {
+    if (member.garrisonLeadId) {
+      leadByTarget.set(member.playerId, member.garrisonLeadId);
+    }
+  }
+
+  const result = baseResult.map((member) => {
+    const outgoingInfo = member.outgoing.map((entry) => ({
+      ...entry,
+      whaleLead: leadByTarget.get(entry.toId) === member.playerId,
+    }));
+    const incomingInfo = member.incoming.map((entry) => ({
+      ...entry,
+      whaleLead: leadByTarget.get(member.playerId) === entry.fromId,
+    }));
+    return {
+      ...member,
+      outgoing: outgoingInfo,
+      incoming: incomingInfo,
     };
   });
 

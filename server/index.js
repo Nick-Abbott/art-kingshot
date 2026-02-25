@@ -107,6 +107,19 @@ app.post("/api/signup", (req, res) => {
   res.json({ members: loadMembers() });
 });
 
+app.delete("/api/members/:playerId", (req, res) => {
+  if (!requireRunCode(req, res)) return;
+  const playerId =
+    typeof req.params.playerId === "string" ? req.params.playerId.trim() : "";
+  if (!playerId) {
+    res.status(400).json({ error: "playerId is required." });
+    return;
+  }
+
+  db.prepare("DELETE FROM members WHERE playerId = ?").run(playerId);
+  res.json({ members: loadMembers() });
+});
+
 app.post("/api/run", (req, res) => {
   if (!requireRunCode(req, res)) return;
   try {

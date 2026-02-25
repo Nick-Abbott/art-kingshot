@@ -286,6 +286,40 @@ function App() {
     }
   }
 
+  async function removeSignup(playerId) {
+    setError("");
+    setBusy(true);
+    try {
+      let code = runCode;
+      if (!code) {
+        code = window.prompt("Enter the run code to remove a signup:");
+        if (!code) {
+          setBusy(false);
+          return;
+        }
+        setRunCode(code);
+        window.localStorage.setItem("runCode", code);
+      }
+      const res = await fetch(`/api/members/${playerId}`, {
+        method: "DELETE",
+        headers: { "x-run-code": code },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (res.status === 403) {
+          window.localStorage.removeItem("runCode");
+          setRunCode("");
+        }
+        throw new Error(data.error || "Failed to remove signup.");
+      }
+      setMembers(data.members || []);
+    } catch (removeError) {
+      setError(removeError.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <div className="app">
       <header className="hero">
@@ -430,10 +464,20 @@ function App() {
                         {formatNumber(member.power)} power
                       </p>
                     </div>
-                    {member.whale && <span className="badge">Whale</span>}
+                    <div className="roster-actions">
+                      {member.whale && <span className="badge">Whale</span>}
+                      <button
+                        className="ghost-button small"
+                        type="button"
+                        onClick={() => removeSignup(member.playerId)}
+                        disabled={busy}
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
                 ))
-              )}
+            )}
             </div>
             <button className="run-button" type="button" onClick={runAssignments} disabled={busy}>
               Run assignments
@@ -466,7 +510,7 @@ function App() {
                         Garrison lead: {member.garrisonLeadName}
                       </p>
                     ) : (
-                      <p className="garrison muted">No whale garrison lead.</p>
+                      <p className="garrison muted">Garrison lead: none</p>
                     )}
                   </header>
                   <div className="assignment-section">
