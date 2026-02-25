@@ -1,0 +1,46 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install server deps
+        run: npm --prefix server ci
+
+      - name: Run server tests
+        run: npm --prefix server test
+
+      - name: Install client deps
+        run: npm --prefix client ci
+
+      - name: Build client
+        run: npm --prefix client run build
+
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            set -e
+            cd /var/www/app
+            git pull
+            cd client
+            npm ci
+            npm run build
+            cd ../server
+            npm ci
+            sudo systemctl restart art-kingshot
