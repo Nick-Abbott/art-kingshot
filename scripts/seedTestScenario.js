@@ -1,4 +1,5 @@
 const BASE_URL = process.env.VIKING_APP_URL || "http://localhost:3001";
+const RUN_CODE = process.env.RUN_CODE || "";
 
 function mulberry32(seed) {
   return function () {
@@ -45,7 +46,10 @@ function buildGroup(
 async function postJson(path, body) {
   const response = await fetch(`${BASE_URL}${path}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(RUN_CODE ? { "x-run-code": RUN_CODE } : {}),
+    },
     body: JSON.stringify(body),
   });
   if (!response.ok) {
