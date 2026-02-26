@@ -15,6 +15,7 @@
     "puppeteer-core": "^24.37.5"
   },
   "dependencies": {
+    "22": "^0.0.0",
     "better-sqlite3": "^12.6.2"
   }
 }
