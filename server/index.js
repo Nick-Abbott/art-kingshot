@@ -29,7 +29,33 @@ db.exec(`
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL
   );
+  CREATE TABLE IF NOT EXISTS bear (
+    playerId TEXT PRIMARY KEY,
+    playerName TEXT NOT NULL,
+    rallySize INTEGER NOT NULL,
+    bearGroup TEXT NOT NULL CHECK (bearGroup IN ('bear1', 'bear2'))
+  );
 `);
+
+// Migrate data from old bear1/bear2 tables to new bear table
+try {
+  const bear1Exists = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='bear1'").get();
+  const bear2Exists = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='bear2'").get();
+  
+  if (bear1Exists) {
+    db.prepare(`INSERT OR IGNORE INTO bear (playerId, playerName, rallySize, bearGroup) 
+                SELECT playerId, playerName, rallySize, 'bear1' FROM bear1`).run();
+    db.exec('DROP TABLE bear1');
+  }
+  
+  if (bear2Exists) {
+    db.prepare(`INSERT OR IGNORE INTO bear (playerId, playerName, rallySize, bearGroup) 
+                SELECT playerId, playerName, rallySize, 'bear2' FROM bear2`).run();
+    db.exec('DROP TABLE bear2');
+  }
+} catch (error) {
+  console.log('Migration completed or not needed');
+}
 
 function loadMembers() {
   return db
@@ -74,7 +100,10 @@ function normalizeMemberPayload(body) {
 }
 
 function requireRunCode(req, res) {
-  if (!RUN_CODE) return true;
+  if (!RUN_CODE) {
+    res.status(403).json({ error: "Run code not configured." });
+    return false;
+  }
   const provided =
     (req.header("x-run-code") || "").trim() ||
     (typeof req.body?.runCode === "string" ? req.body.runCode.trim() : "");
@@ -179,6 +208,86 @@ app.post("/api/reset", (req, res) => {
   if (!requireRunCode(req, res)) return;
   db.exec("DELETE FROM members; DELETE FROM meta WHERE key = 'lastRun';");
   res.json({ ok: true });
+});
+
+app.get("/api/bear/:group", (req, res) => {
+  const group = req.params.group;
+  if (group !== "bear1" && group !== "bear2") {
+    res.status(400).json({ error: "Invalid bear group." });
+    return;
+  }
+  const members = db.prepare(`SELECT playerId, playerName, rallySize FROM bear WHERE bearGroup = ?`).all(group);
+  res.json({ members });
+});
+
+app.post("/api/bear/:group", (req, res) => {
+  const group = req.params.group;
+  if (group !== "bear1" && group !== "bear2") {
+    res.status(400).json({ error: "Invalid bear group." });
+    return;
+  }
+  const playerId = typeof req.body.playerId === "string" ? req.body.playerId.trim() : "";
+  const playerName = typeof req.body.playerName === "string" ? req.body.playerName.trim() : "";
+  const rallySize = Number(req.body.rallySize);
+
+  if (!playerId) {
+    res.status(400).json({ error: "playerId is required." });
+    return;
+  }
+  if (!Number.isFinite(rallySize) || rallySize <= 0) {
+    res.status(400).json({ error: "rallySize must be a positive number." });
+    return;
+  }
+
+  const otherGroup = group === "bear1" ? "bear2" : "bear1";
+  const existsInOther = db.prepare(`SELECT playerId FROM bear WHERE playerId = ? AND bearGroup = ?`).get(playerId, otherGroup);
+  if (existsInOther) {
+    res.status(400).json({ error: `Player is already in ${otherGroup === "bear1" ? "Bear 1" : "Bear 2"}.` });
+    return;
+  }
+
+  db.prepare(
+    `INSERT INTO bear (playerId, playerName, rallySize, bearGroup)
+     VALUES (?, ?, ?, ?)
+     ON CONFLICT(playerId) DO UPDATE SET
+       playerName=excluded.playerName,
+       rallySize=excluded.rallySize,
+       bearGroup=excluded.bearGroup`
+  ).run(playerId, playerName, rallySize, group);
+
+  const members = db.prepare(`SELECT playerId, playerName, rallySize FROM bear WHERE bearGroup = ?`).all(group);
+  res.json({ members });
+});
+
+app.delete("/api/bear/:group", (req, res) => {
+  if (!requireRunCode(req, res)) return;
+  const group = req.params.group;
+  if (group !== "bear1" && group !== "bear2") {
+    res.status(400).json({ error: "Invalid bear group." });
+    return;
+  }
+
+  db.prepare(`DELETE FROM bear WHERE bearGroup = ?`).run(group);
+  const members = db.prepare(`SELECT playerId, playerName, rallySize FROM bear WHERE bearGroup = ?`).all(group);
+  res.json({ members });
+});
+
+app.delete("/api/bear/:group/:playerId", (req, res) => {
+  if (!requireRunCode(req, res)) return;
+  const group = req.params.group;
+  if (group !== "bear1" && group !== "bear2") {
+    res.status(400).json({ error: "Invalid bear group." });
+    return;
+  }
+  const playerId = typeof req.params.playerId === "string" ? req.params.playerId.trim() : "";
+  if (!playerId) {
+    res.status(400).json({ error: "playerId is required." });
+    return;
+  }
+
+  db.prepare(`DELETE FROM bear WHERE playerId = ? AND bearGroup = ?`).run(playerId, group);
+  const members = db.prepare(`SELECT playerId, playerName, rallySize FROM bear WHERE bearGroup = ?`).all(group);
+  res.json({ members });
 });
 
 app.listen(port, () => {
