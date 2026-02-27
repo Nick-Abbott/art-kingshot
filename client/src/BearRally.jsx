@@ -388,11 +388,10 @@ function BearRally() {
             </button>
           </form>
           {editingMember && (
-            <button 
-              className="ghost-button" 
-              type="button" 
+            <button
+              className="ghost-button button-spacer"
+              type="button"
               onClick={cancelEdit}
-              style={{ marginTop: "12px" }}
             >
               Cancel Edit
             </button>
@@ -401,7 +400,7 @@ function BearRally() {
         </section>
 
         <section className="panel">
-          <div className="panel-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div className="panel-header panel-header-split">
             <div>
               <h2>Bear 1 (01:00 UTC)</h2>
               <p>Sorted by rally size (largest first).</p>
@@ -454,7 +453,7 @@ function BearRally() {
         </section>
 
         <section className="panel">
-          <div className="panel-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div className="panel-header panel-header-split">
             <div>
               <h2>Bear 2 (12:00 UTC)</h2>
               <p>Sorted by rally size (largest first).</p>
@@ -542,22 +541,14 @@ function BearRally() {
             </button>
           </div>
           {rallyOrder && (
-            <div style={{ marginTop: "20px" }}>
-              <div style={{
-                background: "#f9f4ec",
-                padding: "16px",
-                borderRadius: "10px",
-                fontFamily: "monospace",
-                whiteSpace: "pre",
-                border: "1px solid rgba(28, 27, 34, 0.1)"
-              }}>
+            <div className="rally-order">
+              <div className="rally-order-output">
                 {rallyOrder}
               </div>
               <button
-                className="ghost-button"
+                className="ghost-button rally-order-copy"
                 type="button"
                 onClick={copyToClipboard}
-                style={{ marginTop: "12px" }}
               >
                 Copy to Clipboard
               </button>

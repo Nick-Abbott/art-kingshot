@@ -512,11 +512,10 @@ function VikingVengeance() {
               </button>
             </form>
             {editingMember && (
-              <button 
-                className="ghost-button" 
-                type="button" 
+              <button
+                className="ghost-button button-spacer"
+                type="button"
                 onClick={cancelEdit}
-                style={{ marginTop: "12px" }}
               >
                 Cancel Edit
               </button>
