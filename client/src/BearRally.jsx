@@ -56,6 +56,12 @@ function BearRally({ allianceId, canManage }) {
           playerId: profileJson.profile.playerId || "",
           playerName: profileJson.profile.playerName || "",
         }));
+      } else if (requestId === loadRequestId.current && !editingRef.current) {
+        setForm((prev) => ({
+          ...prev,
+          playerId: "",
+          playerName: "",
+        }));
       }
     }
     load().catch(console.error);
@@ -134,11 +140,24 @@ function BearRally({ allianceId, canManage }) {
         }
         throw new Error(data.error || t("bear.errors.signupFailed"));
       }
-      
+
       if (form.bearGroup === "bear1") {
         setBear1Members(data.members || []);
       } else {
         setBear2Members(data.members || []);
+      }
+
+      if (editingMember && editingMember.bearGroup !== form.bearGroup) {
+        const sourceGroup = editingMember.bearGroup;
+        const sourceRes = await fetch(`/api/bear/${sourceGroup}`, {
+          headers: { "x-alliance-id": allianceId },
+        });
+        const sourceData = await sourceRes.json();
+        if (sourceGroup === "bear1") {
+          setBear1Members(sourceData.members || []);
+        } else {
+          setBear2Members(sourceData.members || []);
+        }
       }
       setForm({ playerId: "", rallySize: "", bearGroup: form.bearGroup, playerName: "" });
       setLookupStatus("");
