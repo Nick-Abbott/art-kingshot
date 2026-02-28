@@ -28,6 +28,10 @@ function BearRally({ allianceId, canManage }) {
     if (!allianceId) return;
     setEditingMember(null);
     setLookupStatus("");
+  }, [allianceId]);
+
+  useEffect(() => {
+    if (!allianceId) return;
     async function load() {
       const requestId = ++loadRequestId.current;
       const res1 = await fetch("/api/bear/bear1", {
@@ -67,7 +71,7 @@ function BearRally({ allianceId, canManage }) {
       }
     }
     load().catch(console.error);
-  }, [allianceId, editingMember]);
+  }, [allianceId]);
 
   function extractPlayerName(payload) {
     const data = payload?.data ?? payload;

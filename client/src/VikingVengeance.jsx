@@ -110,6 +110,10 @@ function VikingVengeance({ allianceId, canManage }) {
     if (!allianceId) return;
     setEditingMember(null);
     setLookupStatus("");
+  }, [allianceId]);
+
+  useEffect(() => {
+    if (!allianceId) return;
     async function load() {
       const requestId = ++loadRequestId.current;
       const membersRes = await fetch("/api/members", {
@@ -152,7 +156,7 @@ function VikingVengeance({ allianceId, canManage }) {
       console.error(loadError);
       setError(t("viking.errors.loadFailed"));
     });
-  }, [allianceId, editingMember, t]);
+  }, [allianceId, t]);
 
   function updateForm(event) {
     const { name, value, type, checked } = event.target;
