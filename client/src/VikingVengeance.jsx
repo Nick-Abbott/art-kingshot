@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 const emptyForm = {
@@ -25,6 +25,12 @@ function VikingVengeance({ allianceId, canManage }) {
   const [editingMember, setEditingMember] = useState(null);
   const [saveDefaults, setSaveDefaults] = useState(true);
   const [lastLookupId, setLastLookupId] = useState("");
+  const loadRequestId = useRef(0);
+  const editingRef = useRef(editingMember);
+
+  useEffect(() => {
+    editingRef.current = editingMember;
+  }, [editingMember]);
 
   const memberCount = members.length;
 
@@ -103,23 +109,30 @@ function VikingVengeance({ allianceId, canManage }) {
   useEffect(() => {
     if (!allianceId) return;
     async function load() {
+      const requestId = ++loadRequestId.current;
       const membersRes = await fetch("/api/members", {
         headers: { "x-alliance-id": allianceId },
       });
       const membersJson = await membersRes.json();
+      if (requestId !== loadRequestId.current) return;
       setMembers(membersJson.members || []);
 
       const resultsRes = await fetch("/api/results", {
         headers: { "x-alliance-id": allianceId },
       });
       const resultsJson = await resultsRes.json();
+      if (requestId !== loadRequestId.current) return;
       setResults(resultsJson.results || null);
 
       const profileRes = await fetch("/api/me/profile", {
         headers: { "x-alliance-id": allianceId },
       });
       const profileJson = await profileRes.json();
-      if (profileJson.profile && !editingMember) {
+      if (
+        requestId === loadRequestId.current &&
+        profileJson.profile &&
+        !editingRef.current
+      ) {
         const profile = profileJson.profile;
         setForm({
           playerId: profile.playerId || "",
@@ -128,7 +141,7 @@ function VikingVengeance({ allianceId, canManage }) {
           marchCount: profile.marchCount ? String(profile.marchCount) : "4",
           power: profile.power ? formatNumber(profile.power) : "",
         });
-      } else if (!editingMember) {
+      } else if (requestId === loadRequestId.current && !editingRef.current) {
         setForm(emptyForm);
       }
     }

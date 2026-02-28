@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 function formatNumber(value) {
@@ -17,27 +17,40 @@ function BearRally({ allianceId, canManage }) {
   const [rallyOrder, setRallyOrder] = useState("");
   const [selectedBearGroup, setSelectedBearGroup] = useState("bear1");
   const [editingMember, setEditingMember] = useState(null);
+  const loadRequestId = useRef(0);
+  const editingRef = useRef(editingMember);
+
+  useEffect(() => {
+    editingRef.current = editingMember;
+  }, [editingMember]);
 
   useEffect(() => {
     if (!allianceId) return;
     async function load() {
+      const requestId = ++loadRequestId.current;
       const res1 = await fetch("/api/bear/bear1", {
         headers: { "x-alliance-id": allianceId },
       });
       const data1 = await res1.json();
+      if (requestId !== loadRequestId.current) return;
       setBear1Members(data1.members || []);
 
       const res2 = await fetch("/api/bear/bear2", {
         headers: { "x-alliance-id": allianceId },
       });
       const data2 = await res2.json();
+      if (requestId !== loadRequestId.current) return;
       setBear2Members(data2.members || []);
 
       const profileRes = await fetch("/api/me/profile", {
         headers: { "x-alliance-id": allianceId },
       });
       const profileJson = await profileRes.json();
-      if (profileJson.profile && !editingMember) {
+      if (
+        requestId === loadRequestId.current &&
+        profileJson.profile &&
+        !editingRef.current
+      ) {
         setForm((prev) => ({
           ...prev,
           playerId: profileJson.profile.playerId || "",
