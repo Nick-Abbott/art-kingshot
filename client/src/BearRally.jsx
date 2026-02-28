@@ -123,6 +123,14 @@ function BearRally({ allianceId, canManage }) {
         throw new Error(t("auth.notAuthorizedAction"));
       }
       const fid = form.playerId.trim();
+      const inferredSourceGroup =
+        form.bearGroup === "bear1"
+          ? bear2Members.some((member) => member.playerId === fid)
+            ? "bear2"
+            : null
+          : bear1Members.some((member) => member.playerId === fid)
+            ? "bear1"
+            : null;
       let resolvedName = form.playerName;
       
       // Only lookup player name if not editing (new signup)
@@ -153,8 +161,12 @@ function BearRally({ allianceId, canManage }) {
         setBear2Members(data.members || []);
       }
 
-      if (editingMember && editingMember.bearGroup !== form.bearGroup) {
-        const sourceGroup = editingMember.bearGroup;
+      const sourceGroup =
+        editingMember && editingMember.bearGroup !== form.bearGroup
+          ? editingMember.bearGroup
+          : inferredSourceGroup;
+
+      if (sourceGroup) {
         const sourceRes = await fetch(`/api/bear/${sourceGroup}`, {
           headers: { "x-alliance-id": allianceId },
         });
