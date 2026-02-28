@@ -7,6 +7,7 @@ These instructions are for agents working in this repository.
 - Read existing docs and code before making changes.
 - Keep changes focused and avoid unrelated refactors.
 - Update or add tests when server logic changes.
+- Localize new or changed UI text across all locale files.
 
 ## Required Verification
 

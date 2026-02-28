@@ -4,18 +4,18 @@
       "viking": "バイキング・ヴェンジェンス",
       "bear": "ベアラリー"
     },
-    "alliance": "Alliance"
+    "alliance": "同盟"
   },
   "auth": {
     "eyebrow": "ART Alliance",
-    "title": "Sign in to continue",
-    "subtitle": "Log in with Discord to access alliance tools.",
-    "login": "Login with Discord",
-    "logout": "Logout",
-    "loading": "Loading",
-    "loadingTitle": "Checking your session",
-    "loadFailed": "Failed to load session.",
-    "notAuthorizedAction": "You do not have permission to do that."
+    "title": "続行するにはログインしてください",
+    "subtitle": "Discordでログインして同盟ツールにアクセスします。",
+    "login": "Discordでログイン",
+    "logout": "ログアウト",
+    "loading": "読み込み中",
+    "loadingTitle": "セッションを確認しています",
+    "loadFailed": "セッションの読み込みに失敗しました。",
+    "notAuthorizedAction": "その操作を行う権限がありません。"
   },
   "modal": {
     "placeholder": "コードを入力",
@@ -38,7 +38,7 @@
     "marchCount": "行軍数",
     "power": "戦力",
     "troopCount": "部隊数",
-    "saveDefaults": "Save as defaults",
+    "saveDefaults": "既定として保存",
     "saveSignup": "登録を保存",
     "update": "更新",
     "cancelEdit": "編集をキャンセル",

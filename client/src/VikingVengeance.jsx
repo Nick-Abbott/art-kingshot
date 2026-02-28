@@ -24,6 +24,7 @@ function VikingVengeance({ allianceId, canManage }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [editingMember, setEditingMember] = useState(null);
   const [saveDefaults, setSaveDefaults] = useState(true);
+  const [lastLookupId, setLastLookupId] = useState("");
 
   const memberCount = members.length;
 
@@ -143,7 +144,13 @@ function VikingVengeance({ allianceId, canManage }) {
     setForm((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
+      ...(name === "playerId" && !editingMember ? { playerName: "" } : {}),
     }));
+
+    if (name === "playerId" && !editingMember) {
+      setLookupStatus("");
+      setLastLookupId("");
+    }
   }
 
   function formatNumberInput(value) {
@@ -228,9 +235,10 @@ function VikingVengeance({ allianceId, canManage }) {
       const fid = form.playerId.trim();
       let resolvedName = form.playerName;
       
-      // Only lookup player name if not editing and no name is set.
-      if (!editingMember && !resolvedName) {
+      // Only lookup player name if not editing and FID changed or name is missing.
+      if (!editingMember && (!resolvedName || fid !== lastLookupId)) {
         resolvedName = await lookupPlayerName(fid);
+        setLastLookupId(fid);
       }
       
       const res = await fetch("/api/signup", {
@@ -252,7 +260,7 @@ function VikingVengeance({ allianceId, canManage }) {
         throw new Error(data.error || t("viking.errors.signupFailed"));
       }
       setMembers(data.members || []);
-      if (saveDefaults) {
+      if (saveDefaults && !editingMember) {
         await saveProfileDefaults({
           playerId: fid,
           troopCount: Number(form.troopCount),

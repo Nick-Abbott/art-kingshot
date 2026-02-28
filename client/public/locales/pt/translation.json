@@ -4,18 +4,18 @@
       "viking": "Viking Vengeance",
       "bear": "Rally do Urso"
     },
-    "alliance": "Alliance"
+    "alliance": "Aliança"
   },
   "auth": {
     "eyebrow": "ART Alliance",
-    "title": "Sign in to continue",
-    "subtitle": "Log in with Discord to access alliance tools.",
-    "login": "Login with Discord",
-    "logout": "Logout",
-    "loading": "Loading",
-    "loadingTitle": "Checking your session",
-    "loadFailed": "Failed to load session.",
-    "notAuthorizedAction": "You do not have permission to do that."
+    "title": "Faça login para continuar",
+    "subtitle": "Faça login com o Discord para acessar as ferramentas da aliança.",
+    "login": "Entrar com Discord",
+    "logout": "Sair",
+    "loading": "Carregando",
+    "loadingTitle": "Verificando sua sessão",
+    "loadFailed": "Falha ao carregar a sessão.",
+    "notAuthorizedAction": "Você não tem permissão para fazer isso."
   },
   "modal": {
     "placeholder": "Digite o código",
@@ -38,7 +38,7 @@
     "marchCount": "Número de marchas",
     "power": "Poder",
     "troopCount": "Quantidade de tropas",
-    "saveDefaults": "Save as defaults",
+    "saveDefaults": "Salvar como padrão",
     "saveSignup": "Salvar inscrição",
     "update": "Atualizar",
     "cancelEdit": "Cancelar edição",
