@@ -1,0 +1,123 @@
+{
+  "app": {
+    "tabs": {
+      "viking": "Viking Vengeance",
+      "bear": "Rally do Urso"
+    }
+  },
+  "modal": {
+    "placeholder": "Digite o código",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "errorOccurred": "Ocorreu um erro"
+  },
+  "viking": {
+    "eyebrow": "Kingshot • Viking Vengeance",
+    "title": "Planejador de reforço viking",
+    "subtitle": "Todos enviam tropas, todos ficam cobertos, as baleias lideram a guarnição.",
+    "signedUp": "Inscritos",
+    "minimumIncoming": "Entradas mínimas",
+    "resetEvent": "Redefinir evento",
+    "signupTitle": "Inscrição",
+    "editSignupTitle": "Editar inscrição",
+    "signupSubtitle": "Insira seu ID de jogador e número de tropas para este evento.",
+    "editSignupSubtitle": "Atualize suas informações de jogador.",
+    "playerId": "ID do jogador",
+    "marchCount": "Número de marchas",
+    "power": "Poder",
+    "troopCount": "Quantidade de tropas",
+    "saveSignup": "Salvar inscrição",
+    "update": "Atualizar",
+    "cancelEdit": "Cancelar edição",
+    "findAssignmentsTitle": "Encontre suas atribuições",
+    "findAssignmentsSubtitle": "Pesquise pelo nome do jogador para ir ao seu cartão.",
+    "playerName": "Nome do jogador",
+    "searchPlaceholder": "Comece a digitar um nome...",
+    "rosterTitle": "Lista",
+    "rosterSubtitle": "Toque em Executar para calcular quem reforça quem.",
+    "noSignups": "Nenhuma inscrição ainda.",
+    "troopsMeta": "{{value}} tropas",
+    "powerMeta": "{{value}} poder",
+    "marchesMeta": "{{value}} marchas",
+    "whale": "Baleia",
+    "edit": "Editar",
+    "remove": "Remover",
+    "runAssignments": "Executar atribuições",
+    "assignmentsTitle": "Atribuições",
+    "assignmentsSubtitle": "Compartilhe a lista de saída para que todos enviem todas as tropas.",
+    "noAssignments": "Nenhuma atribuição ainda.",
+    "troopsOutgoing": "{{value}} tropas saindo",
+    "incoming": "Entrando: {{value}}",
+    "troopsRemaining": "Tropas restantes: {{value}}",
+    "garrisonLead": "Líder da guarnição: {{name}}",
+    "garrisonNone": "Líder da guarnição: nenhum",
+    "sendTroopsTo": "Enviar tropas para",
+    "receivingFrom": "Recebendo de",
+    "lead": "Líder",
+    "prompts": {
+      "runAssignments": "Digite o código de execução para gerar atribuições:",
+      "resetEvent": "Digite o código de execução para redefinir o evento:",
+      "removeSignup": "Digite o código de execução para remover uma inscrição:"
+    },
+    "lookup": {
+      "looking": "Procurando nome do jogador...",
+      "found": "Encontrado: {{name}}"
+    },
+    "errors": {
+      "loadFailed": "Falha ao carregar os dados.",
+      "lookupFailed": "Falha na busca.",
+      "noPlayerName": "Nenhum nome de jogador encontrado para esse ID.",
+      "signupFailed": "Falha na inscrição.",
+      "needMembers": "É necessário pelo menos 2 membros para gerar atribuições.",
+      "invalidCode": "Código inválido. Tente novamente.",
+      "runFailed": "Falha ao executar atribuições.",
+      "resetFailed": "Falha ao redefinir.",
+      "removeFailed": "Falha ao remover inscrição."
+    }
+  },
+  "bear": {
+    "eyebrow": "Kingshot • Rally do Urso",
+    "title": "Planejador de rally do urso",
+    "subtitle": "Acompanhe os tamanhos de rally para Urso 1 (01:00 UTC) e Urso 2 (12:00 UTC).",
+    "bear1": "Urso 1 (01:00 UTC)",
+    "bear2": "Urso 2 (12:00 UTC)",
+    "signupTitle": "Inscrição",
+    "editSignupTitle": "Editar inscrição",
+    "signupSubtitle": "Insira seu ID de jogador, tamanho do rally e selecione seu grupo de urso.",
+    "editSignupSubtitle": "Atualize o tamanho do seu rally.",
+    "playerId": "ID do jogador",
+    "rallySize": "Tamanho do rally",
+    "bearGroup": "Grupo do urso",
+    "register": "Registrar",
+    "update": "Atualizar",
+    "cancelEdit": "Cancelar edição",
+    "sortedByRally": "Ordenado por tamanho do rally (maior primeiro).",
+    "resetBear1": "Redefinir Urso 1",
+    "resetBear2": "Redefinir Urso 2",
+    "noSignups": "Nenhuma inscrição ainda.",
+    "edit": "Editar",
+    "remove": "Remover",
+    "generatorTitle": "Gerador de ordem de rally",
+    "generatorSubtitle": "Gere uma ordem de rally formatada para copiar no chat.",
+    "numberOfHosts": "Número de anfitriões",
+    "generateOrder": "Gerar ordem de rally",
+    "copyToClipboard": "Copiar para a área de transferência",
+    "rallySizeMeta": "Tamanho do rally: {{value}}",
+    "prompts": {
+      "resetBear": "Digite o código de execução para redefinir {{bear}}:",
+      "removeMember": "Digite o código de execução para remover um membro:"
+    },
+    "lookup": {
+      "looking": "Procurando nome do jogador...",
+      "found": "Encontrado: {{name}}"
+    },
+    "errors": {
+      "lookupFailed": "Falha na busca.",
+      "noPlayerName": "Nenhum nome de jogador encontrado para esse ID.",
+      "signupFailed": "Falha na inscrição.",
+      "invalidCode": "Código inválido. Tente novamente.",
+      "resetFailed": "Falha ao redefinir.",
+      "removeFailed": "Falha ao remover membro."
+    }
+  }
+}

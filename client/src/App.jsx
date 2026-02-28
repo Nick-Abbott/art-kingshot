@@ -1,8 +1,10 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import VikingVengeance from "./VikingVengeance";
 import BearRally from "./BearRally";
 
 function App() {
+  const { t } = useTranslation();
   const [page, setPage] = useState(() => window.localStorage.getItem("currentPage") || "viking");
 
   function switchPage(newPage) {
@@ -17,13 +19,13 @@ function App() {
           onClick={() => switchPage("viking")}
           className={`app-tab ${page === "viking" ? "is-active" : ""}`}
         >
-          Viking Vengeance
+          {t("app.tabs.viking")}
         </button>
         <button
           onClick={() => switchPage("bear")}
           className={`app-tab ${page === "bear" ? "is-active" : ""}`}
         >
-          Bear Rally
+          {t("app.tabs.bear")}
         </button>
       </nav>
       {page === "viking" ? <VikingVengeance /> : <BearRally />}

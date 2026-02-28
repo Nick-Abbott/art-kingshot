@@ -1,0 +1,123 @@
+{
+  "app": {
+    "tabs": {
+      "viking": "Viking Vengeance",
+      "bear": "Rally de l'ours"
+    }
+  },
+  "modal": {
+    "placeholder": "Entrer le code",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "errorOccurred": "Une erreur s'est produite"
+  },
+  "viking": {
+    "eyebrow": "Kingshot • Viking Vengeance",
+    "title": "Planificateur de renforts vikings",
+    "subtitle": "Tout le monde envoie des troupes, tout le monde est couvert, les baleines mènent la garnison.",
+    "signedUp": "Inscrits",
+    "minimumIncoming": "Entrées minimales",
+    "resetEvent": "Réinitialiser l'événement",
+    "signupTitle": "Inscription",
+    "editSignupTitle": "Modifier l'inscription",
+    "signupSubtitle": "Entrez votre ID joueur et le nombre de troupes pour cet événement.",
+    "editSignupSubtitle": "Mettez à jour vos informations de joueur.",
+    "playerId": "ID joueur",
+    "marchCount": "Nombre de marches",
+    "power": "Puissance",
+    "troopCount": "Nombre de troupes",
+    "saveSignup": "Enregistrer l'inscription",
+    "update": "Mettre à jour",
+    "cancelEdit": "Annuler la modification",
+    "findAssignmentsTitle": "Trouvez vos affectations",
+    "findAssignmentsSubtitle": "Recherchez par nom de joueur pour accéder à votre carte.",
+    "playerName": "Nom du joueur",
+    "searchPlaceholder": "Commencez à taper un nom...",
+    "rosterTitle": "Liste",
+    "rosterSubtitle": "Appuyez sur Exécuter pour calculer qui renforce qui.",
+    "noSignups": "Aucune inscription pour le moment.",
+    "troopsMeta": "{{value}} troupes",
+    "powerMeta": "{{value}} puissance",
+    "marchesMeta": "{{value}} marches",
+    "whale": "Baleine",
+    "edit": "Modifier",
+    "remove": "Supprimer",
+    "runAssignments": "Exécuter les affectations",
+    "assignmentsTitle": "Affectations",
+    "assignmentsSubtitle": "Partagez la liste sortante pour que tout le monde envoie toutes les troupes.",
+    "noAssignments": "Aucune affectation pour le moment.",
+    "troopsOutgoing": "{{value}} troupes sortantes",
+    "incoming": "Entrant : {{value}}",
+    "troopsRemaining": "Troupes restantes : {{value}}",
+    "garrisonLead": "Chef de garnison : {{name}}",
+    "garrisonNone": "Chef de garnison : aucun",
+    "sendTroopsTo": "Envoyer des troupes à",
+    "receivingFrom": "Reçoit de",
+    "lead": "Chef",
+    "prompts": {
+      "runAssignments": "Entrez le code d'exécution pour générer les affectations :",
+      "resetEvent": "Entrez le code d'exécution pour réinitialiser l'événement :",
+      "removeSignup": "Entrez le code d'exécution pour supprimer une inscription :"
+    },
+    "lookup": {
+      "looking": "Recherche du nom du joueur...",
+      "found": "Trouvé : {{name}}"
+    },
+    "errors": {
+      "loadFailed": "Échec du chargement des données.",
+      "lookupFailed": "Échec de la recherche.",
+      "noPlayerName": "Aucun nom de joueur trouvé pour cet ID.",
+      "signupFailed": "Échec de l'inscription.",
+      "needMembers": "Au moins 2 membres sont nécessaires pour générer les affectations.",
+      "invalidCode": "Code invalide. Veuillez réessayer.",
+      "runFailed": "Échec de l'exécution des affectations.",
+      "resetFailed": "Échec de la réinitialisation.",
+      "removeFailed": "Échec de la suppression de l'inscription."
+    }
+  },
+  "bear": {
+    "eyebrow": "Kingshot • Rally de l'ours",
+    "title": "Planificateur de rallye de l'ours",
+    "subtitle": "Suivez les tailles de rallye pour Ours 1 (01:00 UTC) et Ours 2 (12:00 UTC).",
+    "bear1": "Ours 1 (01:00 UTC)",
+    "bear2": "Ours 2 (12:00 UTC)",
+    "signupTitle": "Inscription",
+    "editSignupTitle": "Modifier l'inscription",
+    "signupSubtitle": "Entrez votre ID joueur, la taille du rallye et sélectionnez votre groupe d'ours.",
+    "editSignupSubtitle": "Mettez à jour la taille de votre rallye.",
+    "playerId": "ID joueur",
+    "rallySize": "Taille du rallye",
+    "bearGroup": "Groupe d'ours",
+    "register": "S'inscrire",
+    "update": "Mettre à jour",
+    "cancelEdit": "Annuler la modification",
+    "sortedByRally": "Trié par taille de rallye (du plus grand au plus petit).",
+    "resetBear1": "Réinitialiser Ours 1",
+    "resetBear2": "Réinitialiser Ours 2",
+    "noSignups": "Aucune inscription pour le moment.",
+    "edit": "Modifier",
+    "remove": "Supprimer",
+    "generatorTitle": "Générateur d'ordre de rallye",
+    "generatorSubtitle": "Générez un ordre de rallye formaté pour le copier dans le chat.",
+    "numberOfHosts": "Nombre d'hôtes",
+    "generateOrder": "Générer l'ordre de rallye",
+    "copyToClipboard": "Copier dans le presse-papiers",
+    "rallySizeMeta": "Taille du rallye : {{value}}",
+    "prompts": {
+      "resetBear": "Entrez le code d'exécution pour réinitialiser {{bear}} :",
+      "removeMember": "Entrez le code d'exécution pour supprimer un membre :"
+    },
+    "lookup": {
+      "looking": "Recherche du nom du joueur...",
+      "found": "Trouvé : {{name}}"
+    },
+    "errors": {
+      "lookupFailed": "Échec de la recherche.",
+      "noPlayerName": "Aucun nom de joueur trouvé pour cet ID.",
+      "signupFailed": "Échec de l'inscription.",
+      "invalidCode": "Code invalide. Veuillez réessayer.",
+      "resetFailed": "Échec de la réinitialisation.",
+      "removeFailed": "Échec de la suppression du membre."
+    }
+  }
+}

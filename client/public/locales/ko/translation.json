@@ -1,0 +1,123 @@
+{
+  "app": {
+    "tabs": {
+      "viking": "바이킹 벤전스",
+      "bear": "곰 레이드"
+    }
+  },
+  "modal": {
+    "placeholder": "코드를 입력하세요",
+    "cancel": "취소",
+    "confirm": "확인",
+    "errorOccurred": "오류가 발생했습니다"
+  },
+  "viking": {
+    "eyebrow": "Kingshot • Viking Vengeance",
+    "title": "바이킹 지원 계획표",
+    "subtitle": "모두가 병력을 보내고 모두가 보호받습니다. 고래가 수비대를 이끕니다.",
+    "signedUp": "등록됨",
+    "minimumIncoming": "최소 유입",
+    "resetEvent": "이벤트 초기화",
+    "signupTitle": "등록",
+    "editSignupTitle": "등록 수정",
+    "signupSubtitle": "이 이벤트에 사용할 플레이어 ID와 병력 수를 입력하세요.",
+    "editSignupSubtitle": "플레이어 정보를 업데이트하세요.",
+    "playerId": "플레이어 ID",
+    "marchCount": "행군 수",
+    "power": "전투력",
+    "troopCount": "병력 수",
+    "saveSignup": "등록 저장",
+    "update": "업데이트",
+    "cancelEdit": "수정 취소",
+    "findAssignmentsTitle": "배정 찾기",
+    "findAssignmentsSubtitle": "플레이어 이름으로 검색하여 카드로 이동하세요.",
+    "playerName": "플레이어 이름",
+    "searchPlaceholder": "이름을 입력하세요...",
+    "rosterTitle": "명단",
+    "rosterSubtitle": "실행을 눌러 누가 누구를 지원하는지 계산하세요.",
+    "noSignups": "등록이 아직 없습니다.",
+    "troopsMeta": "{{value}} 병력",
+    "powerMeta": "{{value}} 전투력",
+    "marchesMeta": "{{value}} 행군",
+    "whale": "고래",
+    "edit": "수정",
+    "remove": "삭제",
+    "runAssignments": "배정 실행",
+    "assignmentsTitle": "배정",
+    "assignmentsSubtitle": "모두가 모든 병력을 보내도록 발송 목록을 공유하세요.",
+    "noAssignments": "배정이 아직 없습니다.",
+    "troopsOutgoing": "{{value}} 병력 출발",
+    "incoming": "유입: {{value}}",
+    "troopsRemaining": "남은 병력: {{value}}",
+    "garrisonLead": "수비대장: {{name}}",
+    "garrisonNone": "수비대장: 없음",
+    "sendTroopsTo": "병력 보내기",
+    "receivingFrom": "받는 곳",
+    "lead": "리더",
+    "prompts": {
+      "runAssignments": "배정을 생성할 실행 코드를 입력하세요:",
+      "resetEvent": "이벤트를 초기화할 실행 코드를 입력하세요:",
+      "removeSignup": "등록을 삭제할 실행 코드를 입력하세요:"
+    },
+    "lookup": {
+      "looking": "플레이어 이름을 조회 중...",
+      "found": "찾음: {{name}}"
+    },
+    "errors": {
+      "loadFailed": "데이터를 불러오지 못했습니다.",
+      "lookupFailed": "조회에 실패했습니다.",
+      "noPlayerName": "해당 ID의 플레이어 이름을 찾을 수 없습니다.",
+      "signupFailed": "등록에 실패했습니다.",
+      "needMembers": "배정을 생성하려면 최소 2명이 필요합니다.",
+      "invalidCode": "코드가 올바르지 않습니다. 다시 시도하세요.",
+      "runFailed": "배정 실행에 실패했습니다.",
+      "resetFailed": "초기화에 실패했습니다.",
+      "removeFailed": "등록 삭제에 실패했습니다."
+    }
+  },
+  "bear": {
+    "eyebrow": "Kingshot • 곰 레이드",
+    "title": "곰 레이드 계획표",
+    "subtitle": "곰 1 (01:00 UTC)과 곰 2 (12:00 UTC)의 레이드 규모를 추적합니다.",
+    "bear1": "곰 1 (01:00 UTC)",
+    "bear2": "곰 2 (12:00 UTC)",
+    "signupTitle": "등록",
+    "editSignupTitle": "등록 수정",
+    "signupSubtitle": "플레이어 ID, 레이드 규모를 입력하고 곰 그룹을 선택하세요.",
+    "editSignupSubtitle": "레이드 규모를 업데이트하세요.",
+    "playerId": "플레이어 ID",
+    "rallySize": "레이드 규모",
+    "bearGroup": "곰 그룹",
+    "register": "등록",
+    "update": "업데이트",
+    "cancelEdit": "수정 취소",
+    "sortedByRally": "레이드 규모 순 정렬(큰 값부터).",
+    "resetBear1": "곰 1 초기화",
+    "resetBear2": "곰 2 초기화",
+    "noSignups": "등록이 아직 없습니다.",
+    "edit": "수정",
+    "remove": "삭제",
+    "generatorTitle": "레이드 순서 생성기",
+    "generatorSubtitle": "채팅에 복사할 레이드 순서를 생성합니다.",
+    "numberOfHosts": "호스트 수",
+    "generateOrder": "레이드 순서 생성",
+    "copyToClipboard": "클립보드에 복사",
+    "rallySizeMeta": "레이드 규모: {{value}}",
+    "prompts": {
+      "resetBear": "{{bear}} 초기화를 위한 실행 코드를 입력하세요:",
+      "removeMember": "멤버 삭제를 위한 실행 코드를 입력하세요:"
+    },
+    "lookup": {
+      "looking": "플레이어 이름을 조회 중...",
+      "found": "찾음: {{name}}"
+    },
+    "errors": {
+      "lookupFailed": "조회에 실패했습니다.",
+      "noPlayerName": "해당 ID의 플레이어 이름을 찾을 수 없습니다.",
+      "signupFailed": "등록에 실패했습니다.",
+      "invalidCode": "코드가 올바르지 않습니다. 다시 시도하세요.",
+      "resetFailed": "초기화에 실패했습니다.",
+      "removeFailed": "멤버 삭제에 실패했습니다."
+    }
+  }
+}

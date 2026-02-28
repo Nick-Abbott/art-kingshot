@@ -1,0 +1,123 @@
+{
+  "app": {
+    "tabs": {
+      "viking": "维京复仇",
+      "bear": "熊集结"
+    }
+  },
+  "modal": {
+    "placeholder": "输入代码",
+    "cancel": "取消",
+    "confirm": "确认",
+    "errorOccurred": "发生错误"
+  },
+  "viking": {
+    "eyebrow": "Kingshot • Viking Vengeance",
+    "title": "维京增援规划器",
+    "subtitle": "所有人派兵，所有人都能覆盖，鲸鱼带领驻军。",
+    "signedUp": "已报名",
+    "minimumIncoming": "最低来兵",
+    "resetEvent": "重置活动",
+    "signupTitle": "报名",
+    "editSignupTitle": "编辑报名",
+    "signupSubtitle": "输入你的玩家ID和本次活动的兵力数量。",
+    "editSignupSubtitle": "更新你的玩家信息。",
+    "playerId": "玩家ID",
+    "marchCount": "行军数",
+    "power": "战力",
+    "troopCount": "兵力数量",
+    "saveSignup": "保存报名",
+    "update": "更新",
+    "cancelEdit": "取消编辑",
+    "findAssignmentsTitle": "查找你的分配",
+    "findAssignmentsSubtitle": "按玩家名搜索以跳转到你的卡片。",
+    "playerName": "玩家名",
+    "searchPlaceholder": "开始输入名字...",
+    "rosterTitle": "名单",
+    "rosterSubtitle": "点击运行以计算谁增援谁。",
+    "noSignups": "暂无报名。",
+    "troopsMeta": "{{value}} 兵",
+    "powerMeta": "{{value}} 战力",
+    "marchesMeta": "{{value}} 行军",
+    "whale": "鲸鱼",
+    "edit": "编辑",
+    "remove": "移除",
+    "runAssignments": "运行分配",
+    "assignmentsTitle": "分配",
+    "assignmentsSubtitle": "分享外出列表，让所有人派出全部兵力。",
+    "noAssignments": "暂无分配。",
+    "troopsOutgoing": "{{value}} 出征兵力",
+    "incoming": "来兵：{{value}}",
+    "troopsRemaining": "剩余兵力：{{value}}",
+    "garrisonLead": "驻军统帅：{{name}}",
+    "garrisonNone": "驻军统帅：无",
+    "sendTroopsTo": "派兵到",
+    "receivingFrom": "接收自",
+    "lead": "主将",
+    "prompts": {
+      "runAssignments": "输入运行代码以生成分配：",
+      "resetEvent": "输入运行代码以重置活动：",
+      "removeSignup": "输入运行代码以移除报名："
+    },
+    "lookup": {
+      "looking": "正在查询玩家名...",
+      "found": "已找到：{{name}}"
+    },
+    "errors": {
+      "loadFailed": "加载数据失败。",
+      "lookupFailed": "查询失败。",
+      "noPlayerName": "未找到该ID的玩家名。",
+      "signupFailed": "报名失败。",
+      "needMembers": "至少需要 2 名成员才能生成分配。",
+      "invalidCode": "代码无效，请重试。",
+      "runFailed": "运行分配失败。",
+      "resetFailed": "重置失败。",
+      "removeFailed": "移除报名失败。"
+    }
+  },
+  "bear": {
+    "eyebrow": "Kingshot • 熊集结",
+    "title": "熊集结规划器",
+    "subtitle": "追踪熊1（01:00 UTC）和熊2（12:00 UTC）的集结规模。",
+    "bear1": "熊1（01:00 UTC）",
+    "bear2": "熊2（12:00 UTC）",
+    "signupTitle": "报名",
+    "editSignupTitle": "编辑报名",
+    "signupSubtitle": "输入玩家ID、集结规模并选择熊组。",
+    "editSignupSubtitle": "更新你的集结规模。",
+    "playerId": "玩家ID",
+    "rallySize": "集结规模",
+    "bearGroup": "熊组",
+    "register": "报名",
+    "update": "更新",
+    "cancelEdit": "取消编辑",
+    "sortedByRally": "按集结规模排序（从大到小）。",
+    "resetBear1": "重置熊1",
+    "resetBear2": "重置熊2",
+    "noSignups": "暂无报名。",
+    "edit": "编辑",
+    "remove": "移除",
+    "generatorTitle": "集结顺序生成器",
+    "generatorSubtitle": "生成可复制到聊天的集结顺序。",
+    "numberOfHosts": "主控数量",
+    "generateOrder": "生成集结顺序",
+    "copyToClipboard": "复制到剪贴板",
+    "rallySizeMeta": "集结规模：{{value}}",
+    "prompts": {
+      "resetBear": "输入运行代码以重置{{bear}}：",
+      "removeMember": "输入运行代码以移除成员："
+    },
+    "lookup": {
+      "looking": "正在查询玩家名...",
+      "found": "已找到：{{name}}"
+    },
+    "errors": {
+      "lookupFailed": "查询失败。",
+      "noPlayerName": "未找到该ID的玩家名。",
+      "signupFailed": "报名失败。",
+      "invalidCode": "代码无效，请重试。",
+      "resetFailed": "重置失败。",
+      "removeFailed": "移除成员失败。"
+    }
+  }
+}

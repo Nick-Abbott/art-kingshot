@@ -1,0 +1,123 @@
+{
+  "app": {
+    "tabs": {
+      "viking": "バイキング・ヴェンジェンス",
+      "bear": "ベアラリー"
+    }
+  },
+  "modal": {
+    "placeholder": "コードを入力",
+    "cancel": "キャンセル",
+    "confirm": "確認",
+    "errorOccurred": "エラーが発生しました"
+  },
+  "viking": {
+    "eyebrow": "Kingshot • Viking Vengeance",
+    "title": "バイキング補給計画",
+    "subtitle": "全員が部隊を送り、全員が守られます。クジラが守備隊を率います。",
+    "signedUp": "登録済み",
+    "minimumIncoming": "最低受け入れ",
+    "resetEvent": "イベントをリセット",
+    "signupTitle": "登録",
+    "editSignupTitle": "登録を編集",
+    "signupSubtitle": "このイベントのプレイヤーIDと部隊数を入力してください。",
+    "editSignupSubtitle": "プレイヤー情報を更新します。",
+    "playerId": "プレイヤーID",
+    "marchCount": "行軍数",
+    "power": "戦力",
+    "troopCount": "部隊数",
+    "saveSignup": "登録を保存",
+    "update": "更新",
+    "cancelEdit": "編集をキャンセル",
+    "findAssignmentsTitle": "割り当てを探す",
+    "findAssignmentsSubtitle": "プレイヤー名で検索してカードへ移動します。",
+    "playerName": "プレイヤー名",
+    "searchPlaceholder": "名前を入力...",
+    "rosterTitle": "名簿",
+    "rosterSubtitle": "実行をタップして誰が誰を支援するか計算します。",
+    "noSignups": "まだ登録がありません。",
+    "troopsMeta": "{{value}} 部隊",
+    "powerMeta": "{{value}} 戦力",
+    "marchesMeta": "{{value}} 行軍",
+    "whale": "クジラ",
+    "edit": "編集",
+    "remove": "削除",
+    "runAssignments": "割り当てを実行",
+    "assignmentsTitle": "割り当て",
+    "assignmentsSubtitle": "全員が部隊を全て送れるように送出リストを共有します。",
+    "noAssignments": "まだ割り当てがありません。",
+    "troopsOutgoing": "出撃部隊：{{value}}",
+    "incoming": "受け入れ：{{value}}",
+    "troopsRemaining": "残り部隊：{{value}}",
+    "garrisonLead": "守備隊長：{{name}}",
+    "garrisonNone": "守備隊長：なし",
+    "sendTroopsTo": "送る先",
+    "receivingFrom": "受け取る元",
+    "lead": "リーダー",
+    "prompts": {
+      "runAssignments": "割り当て生成の実行コードを入力してください：",
+      "resetEvent": "イベントをリセットする実行コードを入力してください：",
+      "removeSignup": "登録を削除する実行コードを入力してください："
+    },
+    "lookup": {
+      "looking": "プレイヤー名を検索中...",
+      "found": "見つかりました：{{name}}"
+    },
+    "errors": {
+      "loadFailed": "データの読み込みに失敗しました。",
+      "lookupFailed": "検索に失敗しました。",
+      "noPlayerName": "このIDのプレイヤー名が見つかりません。",
+      "signupFailed": "登録に失敗しました。",
+      "needMembers": "割り当て生成には最低2名が必要です。",
+      "invalidCode": "コードが無効です。もう一度お試しください。",
+      "runFailed": "割り当ての実行に失敗しました。",
+      "resetFailed": "リセットに失敗しました。",
+      "removeFailed": "登録の削除に失敗しました。"
+    }
+  },
+  "bear": {
+    "eyebrow": "Kingshot • ベアラリー",
+    "title": "ベアラリー計画",
+    "subtitle": "ベア1（01:00 UTC）とベア2（12:00 UTC）のラリー規模を追跡します。",
+    "bear1": "ベア1（01:00 UTC）",
+    "bear2": "ベア2（12:00 UTC）",
+    "signupTitle": "登録",
+    "editSignupTitle": "登録を編集",
+    "signupSubtitle": "プレイヤーID、ラリー規模を入力し、ベアグループを選択してください。",
+    "editSignupSubtitle": "ラリー規模を更新します。",
+    "playerId": "プレイヤーID",
+    "rallySize": "ラリー規模",
+    "bearGroup": "ベアグループ",
+    "register": "登録",
+    "update": "更新",
+    "cancelEdit": "編集をキャンセル",
+    "sortedByRally": "ラリー規模順（大きい順）",
+    "resetBear1": "ベア1をリセット",
+    "resetBear2": "ベア2をリセット",
+    "noSignups": "まだ登録がありません。",
+    "edit": "編集",
+    "remove": "削除",
+    "generatorTitle": "ラリー順生成",
+    "generatorSubtitle": "チャットにコピーできるラリー順を生成します。",
+    "numberOfHosts": "ホスト数",
+    "generateOrder": "ラリー順を生成",
+    "copyToClipboard": "クリップボードにコピー",
+    "rallySizeMeta": "ラリー規模：{{value}}",
+    "prompts": {
+      "resetBear": "{{bear}}をリセットする実行コードを入力してください：",
+      "removeMember": "メンバーを削除する実行コードを入力してください："
+    },
+    "lookup": {
+      "looking": "プレイヤー名を検索中...",
+      "found": "見つかりました：{{name}}"
+    },
+    "errors": {
+      "lookupFailed": "検索に失敗しました。",
+      "noPlayerName": "このIDのプレイヤー名が見つかりません。",
+      "signupFailed": "登録に失敗しました。",
+      "invalidCode": "コードが無効です。もう一度お試しください。",
+      "resetFailed": "リセットに失敗しました。",
+      "removeFailed": "メンバーの削除に失敗しました。"
+    }
+  }
+}

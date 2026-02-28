@@ -29,6 +29,9 @@ jobs:
       - name: Install client deps
         run: npm --prefix client ci
 
+      - name: Verify i18n keys
+        run: npm --prefix client run test:i18n
+
       - name: Build client
         run: npm --prefix client run build
 

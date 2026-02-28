@@ -1,0 +1,123 @@
+{
+  "app": {
+    "tabs": {
+      "viking": "Viking Vengeance",
+      "bear": "Bear Rally"
+    }
+  },
+  "modal": {
+    "placeholder": "Enter code",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "errorOccurred": "An error occurred"
+  },
+  "viking": {
+    "eyebrow": "Kingshot • Viking Vengeance",
+    "title": "Viking Reinforcement Planner",
+    "subtitle": "Everyone sends troops out, everyone gets covered, whales lead the garrison.",
+    "signedUp": "Signed up",
+    "minimumIncoming": "Minimum incoming",
+    "resetEvent": "Reset event",
+    "signupTitle": "Signup",
+    "editSignupTitle": "Edit Signup",
+    "signupSubtitle": "Enter your player ID and troop count for this event.",
+    "editSignupSubtitle": "Update your player information.",
+    "playerId": "Player ID",
+    "marchCount": "March count",
+    "power": "Power",
+    "troopCount": "Troop count",
+    "saveSignup": "Save signup",
+    "update": "Update",
+    "cancelEdit": "Cancel Edit",
+    "findAssignmentsTitle": "Find your assignments",
+    "findAssignmentsSubtitle": "Search by player name to jump to your card.",
+    "playerName": "Player name",
+    "searchPlaceholder": "Start typing a name...",
+    "rosterTitle": "Roster",
+    "rosterSubtitle": "Tap Run to calculate who reinforces who.",
+    "noSignups": "No signups yet.",
+    "troopsMeta": "{{value}} troops",
+    "powerMeta": "{{value}} power",
+    "marchesMeta": "{{value}} marches",
+    "whale": "Whale",
+    "edit": "Edit",
+    "remove": "Remove",
+    "runAssignments": "Run assignments",
+    "assignmentsTitle": "Assignments",
+    "assignmentsSubtitle": "Share the outgoing list so everyone sends all troops away.",
+    "noAssignments": "No assignments yet.",
+    "troopsOutgoing": "{{value}} troops outgoing",
+    "incoming": "Incoming: {{value}}",
+    "troopsRemaining": "Troops remaining: {{value}}",
+    "garrisonLead": "Garrison lead: {{name}}",
+    "garrisonNone": "Garrison lead: none",
+    "sendTroopsTo": "Send troops to",
+    "receivingFrom": "Receiving from",
+    "lead": "Lead",
+    "prompts": {
+      "runAssignments": "Enter the run code to generate assignments:",
+      "resetEvent": "Enter the run code to reset the event:",
+      "removeSignup": "Enter the run code to remove a signup:"
+    },
+    "lookup": {
+      "looking": "Looking up player name...",
+      "found": "Found: {{name}}"
+    },
+    "errors": {
+      "loadFailed": "Failed to load data.",
+      "lookupFailed": "Lookup failed.",
+      "noPlayerName": "No player name found for that ID.",
+      "signupFailed": "Signup failed.",
+      "needMembers": "Need at least 2 members to generate assignments.",
+      "invalidCode": "Invalid code. Please try again.",
+      "runFailed": "Failed to run assignments.",
+      "resetFailed": "Reset failed.",
+      "removeFailed": "Failed to remove signup."
+    }
+  },
+  "bear": {
+    "eyebrow": "Kingshot • Bear Rally",
+    "title": "Bear Rally Planner",
+    "subtitle": "Track rally sizes for Bear 1 (01:00 UTC) and Bear 2 (12:00 UTC).",
+    "bear1": "Bear 1 (01:00 UTC)",
+    "bear2": "Bear 2 (12:00 UTC)",
+    "signupTitle": "Signup",
+    "editSignupTitle": "Edit Signup",
+    "signupSubtitle": "Enter your player ID, rally size, and select your bear group.",
+    "editSignupSubtitle": "Update your rally size.",
+    "playerId": "Player ID",
+    "rallySize": "Rally size",
+    "bearGroup": "Bear group",
+    "register": "Register",
+    "update": "Update",
+    "cancelEdit": "Cancel Edit",
+    "sortedByRally": "Sorted by rally size (largest first).",
+    "resetBear1": "Reset Bear 1",
+    "resetBear2": "Reset Bear 2",
+    "noSignups": "No signups yet.",
+    "edit": "Edit",
+    "remove": "Remove",
+    "generatorTitle": "Rally Order Generator",
+    "generatorSubtitle": "Generate a formatted rally order for copying to chat.",
+    "numberOfHosts": "Number of Hosts",
+    "generateOrder": "Generate Rally Order",
+    "copyToClipboard": "Copy to Clipboard",
+    "rallySizeMeta": "Rally size: {{value}}",
+    "prompts": {
+      "resetBear": "Enter the run code to reset {{bear}}:",
+      "removeMember": "Enter the run code to remove a member:"
+    },
+    "lookup": {
+      "looking": "Looking up player name...",
+      "found": "Found: {{name}}"
+    },
+    "errors": {
+      "lookupFailed": "Lookup failed.",
+      "noPlayerName": "No player name found for that ID.",
+      "signupFailed": "Signup failed.",
+      "invalidCode": "Invalid code. Please try again.",
+      "resetFailed": "Reset failed.",
+      "removeFailed": "Failed to remove member."
+    }
+  }
+}

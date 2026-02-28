@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 function formatNumber(value) {
   return new Intl.NumberFormat().format(value);
 }
 
 function BearRally() {
+  const { t } = useTranslation();
   const [bear1Members, setBear1Members] = useState([]);
   const [bear2Members, setBear2Members] = useState([]);
   const [form, setForm] = useState({ playerId: "", rallySize: "", bearGroup: "bear1" });
@@ -54,7 +56,7 @@ function BearRally() {
   }
 
   async function lookupPlayerName(fid) {
-    setLookupStatus("Looking up player name...");
+    setLookupStatus(t("bear.lookup.looking"));
     try {
       const res = await fetch("/api/player-lookup", {
         method: "POST",
@@ -63,11 +65,11 @@ function BearRally() {
       });
       const data = await res.json();
       if (!res.ok || data?.error) {
-        throw new Error(data?.error || "Lookup failed.");
+        throw new Error(data?.error || t("bear.errors.lookupFailed"));
       }
       const name = extractPlayerName(data);
-      if (!name) throw new Error("No player name found for that ID.");
-      setLookupStatus(`Found: ${name}`);
+      if (!name) throw new Error(t("bear.errors.noPlayerName"));
+      setLookupStatus(t("bear.lookup.found", { name }));
       return name;
     } catch (lookupErr) {
       setLookupStatus("");
@@ -107,7 +109,7 @@ function BearRally() {
       });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Signup failed.");
+        throw new Error(data.error || t("bear.errors.signupFailed"));
       }
       
       // Refresh both bear groups if we moved between them
@@ -169,7 +171,7 @@ function BearRally() {
         await modalConfig.onConfirm(modalInput.trim());
         setShowModal(false);
       } catch (err) {
-        setModalError(err.message || "An error occurred");
+        setModalError(err.message || t("modal.errorOccurred"));
       }
     }
   }
@@ -185,7 +187,7 @@ function BearRally() {
     setBusy(true);
     
     promptForCode(
-      `Enter the run code to reset ${bearGroup === "bear1" ? "Bear 1" : "Bear 2"}:`,
+      t("bear.prompts.resetBear", { bear: bearGroup === "bear1" ? t("bear.bear1") : t("bear.bear2") }),
       async (code) => {
         try {
           setRunCode(code);
@@ -199,9 +201,9 @@ function BearRally() {
             if (res.status === 403) {
               window.localStorage.removeItem("runCode");
               setRunCode("");
-              throw new Error("Invalid code. Please try again.");
+              throw new Error(t("bear.errors.invalidCode"));
             }
-            throw new Error("Reset failed.");
+            throw new Error(t("bear.errors.resetFailed"));
           }
           if (bearGroup === "bear1") {
             setBear1Members([]);
@@ -222,7 +224,7 @@ function BearRally() {
     setBusy(true);
     
     promptForCode(
-      "Enter the run code to remove a member:",
+      t("bear.prompts.removeMember"),
       async (code) => {
         try {
           setRunCode(code);
@@ -237,9 +239,9 @@ function BearRally() {
             if (res.status === 403) {
               window.localStorage.removeItem("runCode");
               setRunCode("");
-              throw new Error("Invalid code. Please try again.");
+              throw new Error(t("bear.errors.invalidCode"));
             }
-            throw new Error(data.error || "Failed to remove member.");
+            throw new Error(data.error || t("bear.errors.removeFailed"));
           }
           if (bearGroup === "bear1") {
             setBear1Members(data.members || []);
@@ -304,15 +306,15 @@ function BearRally() {
                 if (e.key === "Escape") handleModalCancel();
               }}
               autoFocus
-              placeholder="Enter code"
+              placeholder={t("modal.placeholder")}
             />
             {modalError && <p className="modal-error">{modalError}</p>}
             <div className="modal-actions">
               <button className="ghost-button" onClick={handleModalCancel}>
-                Cancel
+                {t("modal.cancel")}
               </button>
               <button className="primary-button" onClick={handleModalConfirm}>
-                Confirm
+                {t("modal.confirm")}
               </button>
             </div>
           </div>
@@ -321,19 +323,19 @@ function BearRally() {
       <div className="app">
       <header className="hero">
         <div className="hero-content">
-          <p className="eyebrow">Kingshot • Bear Rally</p>
-          <h1>Bear Rally Planner</h1>
+          <p className="eyebrow">{t("bear.eyebrow")}</p>
+          <h1>{t("bear.title")}</h1>
           <p className="hero-subtitle">
-            Track rally sizes for Bear 1 (01:00 UTC) and Bear 2 (12:00 UTC).
+            {t("bear.subtitle")}
           </p>
         </div>
         <div className="hero-card">
           <div>
-            <p className="hero-label">Bear 1 (01:00 UTC)</p>
+            <p className="hero-label">{t("bear.bear1")}</p>
             <p className="hero-value">{bear1Members.length}</p>
           </div>
           <div>
-            <p className="hero-label">Bear 2 (12:00 UTC)</p>
+            <p className="hero-label">{t("bear.bear2")}</p>
             <p className="hero-value">{bear2Members.length}</p>
           </div>
         </div>
@@ -342,17 +344,17 @@ function BearRally() {
       <main>
         <section className="panel">
           <div className="panel-header">
-            <h2>{editingMember ? "Edit Signup" : "Signup"}</h2>
-            <p>{editingMember ? "Update your rally size." : "Enter your player ID, rally size, and select your bear group."}</p>
+            <h2>{editingMember ? t("bear.editSignupTitle") : t("bear.signupTitle")}</h2>
+            <p>{editingMember ? t("bear.editSignupSubtitle") : t("bear.signupSubtitle")}</p>
           </div>
           <form className="signup-form" onSubmit={submitSignup}>
             <label>
-              Player ID
+              {t("bear.playerId")}
               <input
                 name="playerId"
                 value={form.playerId}
                 onChange={(e) => setForm({ ...form, playerId: e.target.value })}
-                placeholder="Player ID"
+                placeholder={t("bear.playerId")}
                 required
                 disabled={editingMember !== null}
                 className={editingMember !== null ? "read-only" : ""}
@@ -360,7 +362,7 @@ function BearRally() {
             </label>
             {lookupStatus && <span className="lookup-status">{lookupStatus}</span>}
             <label>
-              Rally Size
+              {t("bear.rallySize")}
               <input
                 name="rallySize"
                 value={form.rallySize}
@@ -372,19 +374,19 @@ function BearRally() {
               />
             </label>
             <label>
-              Bear Group
+              {t("bear.bearGroup")}
               <select
                 name="bearGroup"
                 value={form.bearGroup}
                 onChange={(e) => setForm({ ...form, bearGroup: e.target.value })}
                 required
               >
-                <option value="bear1">Bear 1 (01:00 UTC)</option>
-                <option value="bear2">Bear 2 (12:00 UTC)</option>
+                <option value="bear1">{t("bear.bear1")}</option>
+                <option value="bear2">{t("bear.bear2")}</option>
               </select>
             </label>
             <button className="primary-button" type="submit" disabled={busy}>
-              {editingMember ? "Update" : "Register"}
+              {editingMember ? t("bear.update") : t("bear.register")}
             </button>
           </form>
           {editingMember && (
@@ -393,7 +395,7 @@ function BearRally() {
               type="button"
               onClick={cancelEdit}
             >
-              Cancel Edit
+              {t("bear.cancelEdit")}
             </button>
           )}
           {error && <p className="error">{error}</p>}
@@ -402,8 +404,8 @@ function BearRally() {
         <section className="panel">
           <div className="panel-header panel-header-split">
             <div>
-              <h2>Bear 1 (01:00 UTC)</h2>
-              <p>Sorted by rally size (largest first).</p>
+              <h2>{t("bear.bear1")}</h2>
+              <p>{t("bear.sortedByRally")}</p>
             </div>
             <button
               className="primary-button"
@@ -411,12 +413,12 @@ function BearRally() {
               onClick={() => resetBearGroup("bear1")}
               disabled={busy}
             >
-              Reset Bear 1
+              {t("bear.resetBear1")}
             </button>
           </div>
           <div className="roster">
             {sortedBear1.length === 0 ? (
-              <p className="empty">No signups yet.</p>
+              <p className="empty">{t("bear.noSignups")}</p>
             ) : (
               sortedBear1.map((member) => (
                 <div key={member.playerId} className="roster-card">
@@ -425,7 +427,7 @@ function BearRally() {
                       {member.playerName || member.playerId}
                     </p>
                     <p className="roster-meta">
-                      Rally size: {formatNumber(member.rallySize)}
+                      {t("bear.rallySizeMeta", { value: formatNumber(member.rallySize) })}
                     </p>
                   </div>
                   <div className="roster-actions">
@@ -435,7 +437,7 @@ function BearRally() {
                       onClick={() => startEdit(member, "bear1")}
                       disabled={busy}
                     >
-                      Edit
+                      {t("bear.edit")}
                     </button>
                     <button
                       className="ghost-button small"
@@ -443,7 +445,7 @@ function BearRally() {
                       onClick={() => removeMember("bear1", member.playerId)}
                       disabled={busy}
                     >
-                      Remove
+                      {t("bear.remove")}
                     </button>
                   </div>
                 </div>
@@ -455,8 +457,8 @@ function BearRally() {
         <section className="panel">
           <div className="panel-header panel-header-split">
             <div>
-              <h2>Bear 2 (12:00 UTC)</h2>
-              <p>Sorted by rally size (largest first).</p>
+              <h2>{t("bear.bear2")}</h2>
+              <p>{t("bear.sortedByRally")}</p>
             </div>
             <button
               className="primary-button"
@@ -464,12 +466,12 @@ function BearRally() {
               onClick={() => resetBearGroup("bear2")}
               disabled={busy}
             >
-              Reset Bear 2
+              {t("bear.resetBear2")}
             </button>
           </div>
           <div className="roster">
             {sortedBear2.length === 0 ? (
-              <p className="empty">No signups yet.</p>
+              <p className="empty">{t("bear.noSignups")}</p>
             ) : (
               sortedBear2.map((member) => (
                 <div key={member.playerId} className="roster-card">
@@ -478,7 +480,7 @@ function BearRally() {
                       {member.playerName || member.playerId}
                     </p>
                     <p className="roster-meta">
-                      Rally size: {formatNumber(member.rallySize)}
+                      {t("bear.rallySizeMeta", { value: formatNumber(member.rallySize) })}
                     </p>
                   </div>
                   <div className="roster-actions">
@@ -488,7 +490,7 @@ function BearRally() {
                       onClick={() => startEdit(member, "bear2")}
                       disabled={busy}
                     >
-                      Edit
+                      {t("bear.edit")}
                     </button>
                     <button
                       className="ghost-button small"
@@ -496,7 +498,7 @@ function BearRally() {
                       onClick={() => removeMember("bear2", member.playerId)}
                       disabled={busy}
                     >
-                      Remove
+                      {t("bear.remove")}
                     </button>
                   </div>
                 </div>
@@ -507,12 +509,12 @@ function BearRally() {
 
         <section className="panel">
           <div className="panel-header">
-            <h2>Rally Order Generator</h2>
-            <p>Generate a formatted rally order for copying to chat.</p>
+            <h2>{t("bear.generatorTitle")}</h2>
+            <p>{t("bear.generatorSubtitle")}</p>
           </div>
           <div className="signup-form">
             <label>
-              Number of Hosts
+              {t("bear.numberOfHosts")}
               <input
                 type="number"
                 value={hostCount}
@@ -522,13 +524,13 @@ function BearRally() {
               />
             </label>
             <label>
-              Bear Group
+              {t("bear.bearGroup")}
               <select
                 value={selectedBearGroup}
                 onChange={(e) => setSelectedBearGroup(e.target.value)}
               >
-                <option value="bear1">Bear 1 (01:00 UTC)</option>
-                <option value="bear2">Bear 2 (12:00 UTC)</option>
+                <option value="bear1">{t("bear.bear1")}</option>
+                <option value="bear2">{t("bear.bear2")}</option>
               </select>
             </label>
             <button
@@ -537,7 +539,7 @@ function BearRally() {
               onClick={() => generateRallyOrder(selectedBearGroup)}
               disabled={(selectedBearGroup === "bear1" ? sortedBear1.length : sortedBear2.length) === 0}
             >
-              Generate Rally Order
+              {t("bear.generateOrder")}
             </button>
           </div>
           {rallyOrder && (
@@ -550,7 +552,7 @@ function BearRally() {
                 type="button"
                 onClick={copyToClipboard}
               >
-                Copy to Clipboard
+                {t("bear.copyToClipboard")}
               </button>
             </div>
           )}

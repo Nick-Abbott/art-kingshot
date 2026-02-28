@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 const emptyForm = {
   playerId: "",
@@ -13,6 +14,7 @@ function formatNumber(value) {
 }
 
 function VikingVengeance() {
+  const { t } = useTranslation();
   const [form, setForm] = useState(emptyForm);
   const [members, setMembers] = useState([]);
   const [results, setResults] = useState(null);
@@ -116,7 +118,7 @@ function VikingVengeance() {
 
     load().catch((loadError) => {
       console.error(loadError);
-      setError("Failed to load data.");
+      setError(t("viking.errors.loadFailed"));
     });
   }, []);
 
@@ -166,7 +168,7 @@ function VikingVengeance() {
   }
 
   async function lookupPlayerName(fid) {
-    setLookupStatus("Looking up player name...");
+    setLookupStatus(t("viking.lookup.looking"));
     try {
       const res = await fetch("/api/player-lookup", {
         method: "POST",
@@ -175,11 +177,11 @@ function VikingVengeance() {
       });
       const data = await res.json();
       if (!res.ok || data?.error) {
-        throw new Error(data?.error || "Lookup failed.");
+        throw new Error(data?.error || t("viking.errors.lookupFailed"));
       }
       const name = extractPlayerName(data);
-      if (!name) throw new Error("No player name found for that ID.");
-      setLookupStatus(`Found: ${name}`);
+      if (!name) throw new Error(t("viking.errors.noPlayerName"));
+      setLookupStatus(t("viking.lookup.found", { name }));
       return name;
     } catch (lookupErr) {
       setLookupStatus("");
@@ -213,7 +215,7 @@ function VikingVengeance() {
       });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Signup failed.");
+        throw new Error(data.error || t("viking.errors.signupFailed"));
       }
       setMembers(data.members || []);
       setForm(emptyForm);
@@ -260,7 +262,7 @@ function VikingVengeance() {
         await modalConfig.onConfirm(modalInput.trim());
         setShowModal(false);
       } catch (err) {
-        setModalError(err.message || "An error occurred");
+        setModalError(err.message || t("modal.errorOccurred"));
       }
     }
   }
@@ -276,14 +278,14 @@ function VikingVengeance() {
     
     // Check if there are enough members before prompting for code
     if (members.length < 2) {
-      setError("Need at least 2 members to generate assignments.");
+      setError(t("viking.errors.needMembers"));
       return;
     }
     
     setBusy(true);
     
     promptForCode(
-      "Enter the run code to generate assignments:",
+      t("viking.prompts.runAssignments"),
       async (code) => {
         try {
           setRunCode(code);
@@ -299,9 +301,9 @@ function VikingVengeance() {
             if (res.status === 403) {
               window.localStorage.removeItem("runCode");
               setRunCode("");
-              throw new Error("Invalid code. Please try again.");
+              throw new Error(t("viking.errors.invalidCode"));
             }
-            throw new Error(data.error || "Failed to run assignments.");
+            throw new Error(data.error || t("viking.errors.runFailed"));
           }
           
           // Check if there are warnings indicating not enough members
@@ -311,7 +313,7 @@ function VikingVengeance() {
               w.includes("Not enough valid members")
             );
             if (notEnoughMembers) {
-              throw new Error("Need at least 2 members to generate assignments.");
+              throw new Error(t("viking.errors.needMembers"));
             }
           }
           
@@ -330,7 +332,7 @@ function VikingVengeance() {
     setBusy(true);
     
     promptForCode(
-      "Enter the run code to reset the event:",
+      t("viking.prompts.resetEvent"),
       async (code) => {
         try {
           setRunCode(code);
@@ -345,9 +347,9 @@ function VikingVengeance() {
             if (res.status === 403) {
               window.localStorage.removeItem("runCode");
               setRunCode("");
-              throw new Error("Invalid code. Please try again.");
+              throw new Error(t("viking.errors.invalidCode"));
             }
-            throw new Error(data.error || "Reset failed.");
+            throw new Error(data.error || t("viking.errors.resetFailed"));
           }
           setMembers([]);
           setResults(null);
@@ -368,7 +370,7 @@ function VikingVengeance() {
     setBusy(true);
     
     promptForCode(
-      "Enter the run code to remove a signup:",
+      t("viking.prompts.removeSignup"),
       async (code) => {
         try {
           setRunCode(code);
@@ -383,9 +385,9 @@ function VikingVengeance() {
             if (res.status === 403) {
               window.localStorage.removeItem("runCode");
               setRunCode("");
-              throw new Error("Invalid code. Please try again.");
+              throw new Error(t("viking.errors.invalidCode"));
             }
-            throw new Error(data.error || "Failed to remove signup.");
+            throw new Error(data.error || t("viking.errors.removeFailed"));
           }
           setMembers(data.members || []);
           setBusy(false);
@@ -413,15 +415,15 @@ function VikingVengeance() {
                 if (e.key === "Escape") handleModalCancel();
               }}
               autoFocus
-              placeholder="Enter code"
+              placeholder={t("modal.placeholder")}
             />
             {modalError && <p className="modal-error">{modalError}</p>}
             <div className="modal-actions">
               <button className="ghost-button" onClick={handleModalCancel}>
-                Cancel
+                {t("modal.cancel")}
               </button>
               <button className="primary-button" onClick={handleModalConfirm}>
-                Confirm
+                {t("modal.confirm")}
               </button>
             </div>
           </div>
@@ -430,23 +432,23 @@ function VikingVengeance() {
       <div className="app">
       <header className="hero">
         <div className="hero-content">
-          <p className="eyebrow">Kingshot • Viking Vengeance</p>
-          <h1>Viking Reinforcement Planner</h1>
+          <p className="eyebrow">{t("viking.eyebrow")}</p>
+          <h1>{t("viking.title")}</h1>
           <p className="hero-subtitle">
-            Everyone sends troops out, everyone gets covered, whales lead the garrison.
+            {t("viking.subtitle")}
           </p>
         </div>
         <div className="hero-card">
           <div>
-            <p className="hero-label">Signed up</p>
+            <p className="hero-label">{t("viking.signedUp")}</p>
             <p className="hero-value">{memberCount}</p>
           </div>
           <div>
-            <p className="hero-label">Minimum incoming</p>
+            <p className="hero-label">{t("viking.minimumIncoming")}</p>
             <p className="hero-value">200k</p>
           </div>
           <button className="ghost-button" type="button" onClick={resetAll} disabled={busy}>
-            Reset event
+            {t("viking.resetEvent")}
           </button>
         </div>
       </header>
@@ -455,17 +457,17 @@ function VikingVengeance() {
         {!results ? (
           <section className="panel">
             <div className="panel-header">
-              <h2>{editingMember ? "Edit Signup" : "Signup"}</h2>
-              <p>{editingMember ? "Update your player information." : "Enter your player ID and troop count for this event."}</p>
+              <h2>{editingMember ? t("viking.editSignupTitle") : t("viking.signupTitle")}</h2>
+              <p>{editingMember ? t("viking.editSignupSubtitle") : t("viking.signupSubtitle")}</p>
             </div>
             <form className="signup-form" onSubmit={submitSignup}>
               <label>
-                Player ID
+                {t("viking.playerId")}
                 <input
                   name="playerId"
                   value={form.playerId}
                   onChange={updateForm}
-                  placeholder="Player ID"
+                  placeholder={t("viking.playerId")}
                   required
                   disabled={editingMember !== null}
                   className={editingMember !== null ? "read-only" : ""}
@@ -473,7 +475,7 @@ function VikingVengeance() {
               </label>
               {lookupStatus && <span className="lookup-status">{lookupStatus}</span>}
               <label>
-                March count
+                {t("viking.marchCount")}
                 <input
                   name="marchCount"
                   value={form.marchCount}
@@ -485,7 +487,7 @@ function VikingVengeance() {
                 />
               </label>
               <label>
-                Power
+                {t("viking.power")}
                 <input
                   name="power"
                   value={form.power}
@@ -496,7 +498,7 @@ function VikingVengeance() {
                 />
               </label>
               <label>
-                Troop count
+                {t("viking.troopCount")}
                 <input
                   name="troopCount"
                   value={form.troopCount}
@@ -508,7 +510,7 @@ function VikingVengeance() {
                 />
               </label>
               <button className="primary-button" type="submit" disabled={busy}>
-                {editingMember ? "Update" : "Save signup"}
+                {editingMember ? t("viking.update") : t("viking.saveSignup")}
               </button>
             </form>
             {editingMember && (
@@ -517,19 +519,19 @@ function VikingVengeance() {
                 type="button"
                 onClick={cancelEdit}
               >
-                Cancel Edit
+                {t("viking.cancelEdit")}
               </button>
             )}
           </section>
         ) : (
           <section className="panel">
             <div className="panel-header">
-              <h2>Find your assignments</h2>
-              <p>Search by player name to jump to your card.</p>
+              <h2>{t("viking.findAssignmentsTitle")}</h2>
+              <p>{t("viking.findAssignmentsSubtitle")}</p>
             </div>
             <div className="signup-form">
               <label>
-                Player name
+                {t("viking.playerName")}
                 <div className="search-field">
                   <input
                     name="search"
@@ -542,7 +544,7 @@ function VikingVengeance() {
                         setSearchQuery(topSuggestion);
                       }
                     }}
-                    placeholder="Start typing a name..."
+                    placeholder={t("viking.searchPlaceholder")}
                     autoComplete="off"
                   />
                   {suggestionTail && (
@@ -560,12 +562,12 @@ function VikingVengeance() {
         {!results && (
           <section className="panel">
             <div className="panel-header">
-              <h2>Roster</h2>
-              <p>Tap Run to calculate who reinforces who.</p>
+              <h2>{t("viking.rosterTitle")}</h2>
+              <p>{t("viking.rosterSubtitle")}</p>
             </div>
             <div className="roster">
               {sortedMembers.length === 0 ? (
-                <p className="empty">No signups yet.</p>
+                <p className="empty">{t("viking.noSignups")}</p>
               ) : (
                 sortedMembers.map((member) => (
                   <div key={member.playerId} className="roster-card">
@@ -574,24 +576,24 @@ function VikingVengeance() {
                         {member.playerName ? member.playerName : member.playerId}
                       </p>
                       <p className="roster-meta">
-                        {formatNumber(member.troopCount)} troops
+                        {t("viking.troopsMeta", { value: formatNumber(member.troopCount) })}
                       </p>
                       <p className="roster-meta">
-                        {formatNumber(member.power)} power
+                        {t("viking.powerMeta", { value: formatNumber(member.power) })}
                       </p>
                       <p className="roster-meta">
-                        {member.marchCount} marches
+                        {t("viking.marchesMeta", { value: member.marchCount })}
                       </p>
                     </div>
                     <div className="roster-actions">
-                      {member.whale && <span className="badge">Whale</span>}
+                      {member.whale && <span className="badge">{t("viking.whale")}</span>}
                       <button
                         className="ghost-button small"
                         type="button"
                         onClick={() => startEdit(member)}
                         disabled={busy}
                       >
-                        Edit
+                        {t("viking.edit")}
                       </button>
                       <button
                         className="ghost-button small"
@@ -599,7 +601,7 @@ function VikingVengeance() {
                         onClick={() => removeSignup(member.playerId)}
                         disabled={busy}
                       >
-                        Remove
+                        {t("viking.remove")}
                       </button>
                     </div>
                   </div>
@@ -608,57 +610,57 @@ function VikingVengeance() {
             </div>
             {error && <p className="error">{error}</p>}
             <button className="run-button" type="button" onClick={runAssignments} disabled={busy}>
-              Run assignments
+              {t("viking.runAssignments")}
             </button>
           </section>
         )}
 
         <section className="panel results">
           <div className="panel-header">
-            <h2>Assignments</h2>
-            <p>Share the outgoing list so everyone sends all troops away.</p>
+            <h2>{t("viking.assignmentsTitle")}</h2>
+            <p>{t("viking.assignmentsSubtitle")}</p>
           </div>
           {!results ? (
-            <p className="empty">No assignments yet.</p>
+            <p className="empty">{t("viking.noAssignments")}</p>
           ) : (
             <div className="results-grid">
               {filteredResults.map((member) => (
                 <article key={member.playerId} className="result-card">
                   <header>
                     <h3>{member.playerName ? member.playerName : member.playerId}</h3>
-                    <p>{formatNumber(member.troopCount)} troops outgoing</p>
+                    <p>{t("viking.troopsOutgoing", { value: formatNumber(member.troopCount) })}</p>
                     <p className="incoming">
-                      Incoming: {formatNumber(member.incomingTotal)}
+                      {t("viking.incoming", { value: formatNumber(member.incomingTotal) })}
                     </p>
                     <p className="incoming">
-                      Troops remaining: {formatNumber(member.troopsRemaining || 0)}
+                      {t("viking.troopsRemaining", { value: formatNumber(member.troopsRemaining || 0) })}
                     </p>
                     {member.garrisonLeadId ? (
                       <p className="garrison">
-                        Garrison lead: {member.garrisonLeadName}
+                        {t("viking.garrisonLead", { name: member.garrisonLeadName })}
                       </p>
                     ) : (
-                      <p className="garrison muted">Garrison lead: none</p>
+                      <p className="garrison muted">{t("viking.garrisonNone")}</p>
                     )}
                   </header>
                   <div className="assignment-section">
-                    <h4>Send troops to</h4>
+                    <h4>{t("viking.sendTroopsTo")}</h4>
                     <ul>
                       {member.outgoing.map((item, index) => (
                         <li key={`${member.playerId}-out-${index}`}>
                           {(item.toName || item.toId)} — {formatNumber(item.troops)}{" "}
-                          {item.whaleLead ? <span className="tiny">Lead</span> : null}
+                          {item.whaleLead ? <span className="tiny">{t("viking.lead")}</span> : null}
                         </li>
                       ))}
                     </ul>
                   </div>
                   <div className="assignment-section">
-                    <h4>Receiving from</h4>
+                    <h4>{t("viking.receivingFrom")}</h4>
                     <ul>
                       {member.incoming.map((item, index) => (
                         <li key={`${member.playerId}-in-${index}`}>
                           {(item.fromName || item.fromId)} — {formatNumber(item.troops)}{" "}
-                          {item.whaleLead ? <span className="tiny">Lead</span> : null}
+                          {item.whaleLead ? <span className="tiny">{t("viking.lead")}</span> : null}
                         </li>
                       ))}
                     </ul>

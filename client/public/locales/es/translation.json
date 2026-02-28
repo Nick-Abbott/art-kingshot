@@ -1,0 +1,123 @@
+{
+  "app": {
+    "tabs": {
+      "viking": "Viking Vengeance",
+      "bear": "Rally del oso"
+    }
+  },
+  "modal": {
+    "placeholder": "Ingresar código",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "errorOccurred": "Ocurrió un error"
+  },
+  "viking": {
+    "eyebrow": "Kingshot • Viking Vengeance",
+    "title": "Planificador de refuerzos vikingos",
+    "subtitle": "Todos envían tropas, todos quedan cubiertos, las ballenas lideran la guarnición.",
+    "signedUp": "Inscritos",
+    "minimumIncoming": "Entradas mínimas",
+    "resetEvent": "Restablecer evento",
+    "signupTitle": "Registro",
+    "editSignupTitle": "Editar registro",
+    "signupSubtitle": "Ingresa tu ID de jugador y número de tropas para este evento.",
+    "editSignupSubtitle": "Actualiza tu información de jugador.",
+    "playerId": "ID de jugador",
+    "marchCount": "Cantidad de marchas",
+    "power": "Poder",
+    "troopCount": "Cantidad de tropas",
+    "saveSignup": "Guardar registro",
+    "update": "Actualizar",
+    "cancelEdit": "Cancelar edición",
+    "findAssignmentsTitle": "Encuentra tus asignaciones",
+    "findAssignmentsSubtitle": "Busca por nombre de jugador para ir a tu tarjeta.",
+    "playerName": "Nombre del jugador",
+    "searchPlaceholder": "Empieza a escribir un nombre...",
+    "rosterTitle": "Lista",
+    "rosterSubtitle": "Pulsa Ejecutar para calcular quién refuerza a quién.",
+    "noSignups": "Aún no hay registros.",
+    "troopsMeta": "{{value}} tropas",
+    "powerMeta": "{{value}} poder",
+    "marchesMeta": "{{value}} marchas",
+    "whale": "Ballena",
+    "edit": "Editar",
+    "remove": "Eliminar",
+    "runAssignments": "Ejecutar asignaciones",
+    "assignmentsTitle": "Asignaciones",
+    "assignmentsSubtitle": "Comparte la lista saliente para que todos envíen todas las tropas.",
+    "noAssignments": "Aún no hay asignaciones.",
+    "troopsOutgoing": "{{value}} tropas salientes",
+    "incoming": "Entrantes: {{value}}",
+    "troopsRemaining": "Tropas restantes: {{value}}",
+    "garrisonLead": "Líder de guarnición: {{name}}",
+    "garrisonNone": "Líder de guarnición: ninguno",
+    "sendTroopsTo": "Enviar tropas a",
+    "receivingFrom": "Recibe de",
+    "lead": "Líder",
+    "prompts": {
+      "runAssignments": "Ingresa el código de ejecución para generar asignaciones:",
+      "resetEvent": "Ingresa el código de ejecución para restablecer el evento:",
+      "removeSignup": "Ingresa el código de ejecución para eliminar un registro:"
+    },
+    "lookup": {
+      "looking": "Buscando nombre del jugador...",
+      "found": "Encontrado: {{name}}"
+    },
+    "errors": {
+      "loadFailed": "No se pudieron cargar los datos.",
+      "lookupFailed": "La búsqueda falló.",
+      "noPlayerName": "No se encontró nombre de jugador para ese ID.",
+      "signupFailed": "El registro falló.",
+      "needMembers": "Se necesitan al menos 2 miembros para generar asignaciones.",
+      "invalidCode": "Código inválido. Inténtalo de nuevo.",
+      "runFailed": "No se pudieron ejecutar las asignaciones.",
+      "resetFailed": "No se pudo restablecer.",
+      "removeFailed": "No se pudo eliminar el registro."
+    }
+  },
+  "bear": {
+    "eyebrow": "Kingshot • Rally del oso",
+    "title": "Planificador de rally del oso",
+    "subtitle": "Sigue los tamaños de rally para Oso 1 (01:00 UTC) y Oso 2 (12:00 UTC).",
+    "bear1": "Oso 1 (01:00 UTC)",
+    "bear2": "Oso 2 (12:00 UTC)",
+    "signupTitle": "Registro",
+    "editSignupTitle": "Editar registro",
+    "signupSubtitle": "Ingresa tu ID de jugador, tamaño de rally y selecciona tu grupo de oso.",
+    "editSignupSubtitle": "Actualiza el tamaño de tu rally.",
+    "playerId": "ID de jugador",
+    "rallySize": "Tamaño de rally",
+    "bearGroup": "Grupo de oso",
+    "register": "Registrar",
+    "update": "Actualizar",
+    "cancelEdit": "Cancelar edición",
+    "sortedByRally": "Ordenado por tamaño de rally (mayor primero).",
+    "resetBear1": "Restablecer Oso 1",
+    "resetBear2": "Restablecer Oso 2",
+    "noSignups": "Aún no hay registros.",
+    "edit": "Editar",
+    "remove": "Eliminar",
+    "generatorTitle": "Generador de orden de rally",
+    "generatorSubtitle": "Genera una orden de rally formateada para copiar al chat.",
+    "numberOfHosts": "Número de anfitriones",
+    "generateOrder": "Generar orden de rally",
+    "copyToClipboard": "Copiar al portapapeles",
+    "rallySizeMeta": "Tamaño de rally: {{value}}",
+    "prompts": {
+      "resetBear": "Ingresa el código de ejecución para restablecer {{bear}}:",
+      "removeMember": "Ingresa el código de ejecución para eliminar un miembro:"
+    },
+    "lookup": {
+      "looking": "Buscando nombre del jugador...",
+      "found": "Encontrado: {{name}}"
+    },
+    "errors": {
+      "lookupFailed": "La búsqueda falló.",
+      "noPlayerName": "No se encontró nombre de jugador para ese ID.",
+      "signupFailed": "El registro falló.",
+      "invalidCode": "Código inválido. Inténtalo de nuevo.",
+      "resetFailed": "No se pudo restablecer.",
+      "removeFailed": "No se pudo eliminar al miembro."
+    }
+  }
+}
