@@ -5,36 +5,48 @@ function formatNumber(value) {
   return new Intl.NumberFormat().format(value);
 }
 
-function BearRally() {
+function BearRally({ allianceId, canManage }) {
   const { t } = useTranslation();
   const [bear1Members, setBear1Members] = useState([]);
   const [bear2Members, setBear2Members] = useState([]);
-  const [form, setForm] = useState({ playerId: "", rallySize: "", bearGroup: "bear1" });
+  const [form, setForm] = useState({ playerId: "", rallySize: "", bearGroup: "bear1", playerName: "" });
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [lookupStatus, setLookupStatus] = useState("");
-  const [runCode, setRunCode] = useState(() => window.localStorage.getItem("runCode") || "");
   const [hostCount, setHostCount] = useState(15);
   const [rallyOrder, setRallyOrder] = useState("");
   const [selectedBearGroup, setSelectedBearGroup] = useState("bear1");
-  const [showModal, setShowModal] = useState(false);
-  const [modalConfig, setModalConfig] = useState({ message: "", onConfirm: null });
-  const [modalInput, setModalInput] = useState("");
-  const [modalError, setModalError] = useState("");
   const [editingMember, setEditingMember] = useState(null);
 
   useEffect(() => {
+    if (!allianceId) return;
     async function load() {
-      const res1 = await fetch("/api/bear/bear1");
+      const res1 = await fetch("/api/bear/bear1", {
+        headers: { "x-alliance-id": allianceId },
+      });
       const data1 = await res1.json();
       setBear1Members(data1.members || []);
 
-      const res2 = await fetch("/api/bear/bear2");
+      const res2 = await fetch("/api/bear/bear2", {
+        headers: { "x-alliance-id": allianceId },
+      });
       const data2 = await res2.json();
       setBear2Members(data2.members || []);
+
+      const profileRes = await fetch("/api/me/profile", {
+        headers: { "x-alliance-id": allianceId },
+      });
+      const profileJson = await profileRes.json();
+      if (profileJson.profile && !editingMember) {
+        setForm((prev) => ({
+          ...prev,
+          playerId: profileJson.profile.playerId || "",
+          playerName: profileJson.profile.playerName || "",
+        }));
+      }
     }
     load().catch(console.error);
-  }, []);
+  }, [allianceId, editingMember]);
 
   function extractPlayerName(payload) {
     const data = payload?.data ?? payload;
@@ -82,6 +94,9 @@ function BearRally() {
     setError("");
     setBusy(true);
     try {
+      if (!allianceId) {
+        throw new Error(t("auth.notAuthorizedAction"));
+      }
       const fid = form.playerId.trim();
       let resolvedName = form.playerName;
       
@@ -90,17 +105,9 @@ function BearRally() {
         resolvedName = await lookupPlayerName(fid);
       }
       
-      // If editing and bear group changed, remove from old group first
-      if (editingMember && editingMember.bearGroup !== form.bearGroup) {
-        await fetch(`/api/bear/${editingMember.bearGroup}/${fid}`, {
-          method: "DELETE",
-          headers: { "x-run-code": runCode || "" },
-        });
-      }
-      
       const res = await fetch(`/api/bear/${form.bearGroup}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-alliance-id": allianceId },
         body: JSON.stringify({
           playerId: fid,
           playerName: resolvedName,
@@ -109,18 +116,10 @@ function BearRally() {
       });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || t("bear.errors.signupFailed"));
-      }
-      
-      // Refresh both bear groups if we moved between them
-      if (editingMember && editingMember.bearGroup !== form.bearGroup) {
-        const oldGroupRes = await fetch(`/api/bear/${editingMember.bearGroup}`);
-        const oldGroupData = await oldGroupRes.json();
-        if (editingMember.bearGroup === "bear1") {
-          setBear1Members(oldGroupData.members || []);
-        } else {
-          setBear2Members(oldGroupData.members || []);
+        if (res.status === 403) {
+          throw new Error(t("auth.notAuthorizedAction"));
         }
+        throw new Error(data.error || t("bear.errors.signupFailed"));
       }
       
       if (form.bearGroup === "bear1") {
@@ -157,104 +156,71 @@ function BearRally() {
     setError("");
   }
 
-  function promptForCode(message, callback) {
-    setModalConfig({ message, onConfirm: callback });
-    setModalInput("");
-    setModalError("");
-    setShowModal(true);
-  }
-
-  async function handleModalConfirm() {
-    if (modalInput.trim()) {
-      setModalError("");
-      try {
-        await modalConfig.onConfirm(modalInput.trim());
-        setShowModal(false);
-      } catch (err) {
-        setModalError(err.message || t("modal.errorOccurred"));
-      }
-    }
-  }
-
-  function handleModalCancel() {
-    setShowModal(false);
-    setModalError("");
-    setBusy(false);
-  }
-
   async function resetBearGroup(bearGroup) {
     setError("");
     setBusy(true);
-    
-    promptForCode(
-      t("bear.prompts.resetBear", { bear: bearGroup === "bear1" ? t("bear.bear1") : t("bear.bear2") }),
-      async (code) => {
-        try {
-          setRunCode(code);
-          window.localStorage.setItem("runCode", code);
-          
-          const res = await fetch(`/api/bear/${bearGroup}`, {
-            method: "DELETE",
-            headers: { "x-run-code": code },
-          });
-          if (!res.ok) {
-            if (res.status === 403) {
-              window.localStorage.removeItem("runCode");
-              setRunCode("");
-              throw new Error(t("bear.errors.invalidCode"));
-            }
-            throw new Error(t("bear.errors.resetFailed"));
-          }
-          if (bearGroup === "bear1") {
-            setBear1Members([]);
-          } else {
-            setBear2Members([]);
-          }
-          setBusy(false);
-        } catch (err) {
-          setBusy(false);
-          throw err;
+
+    if (!canManage) {
+      setError(t("auth.notAuthorizedAction"));
+      setBusy(false);
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/bear/${bearGroup}`, {
+        method: "DELETE",
+        headers: { "x-alliance-id": allianceId },
+      });
+      if (!res.ok) {
+        if (res.status === 403) {
+          throw new Error(t("auth.notAuthorizedAction"));
         }
+        throw new Error(t("bear.errors.resetFailed"));
       }
-    );
+      if (bearGroup === "bear1") {
+        setBear1Members([]);
+      } else {
+        setBear2Members([]);
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function removeMember(bearGroup, playerId) {
     setError("");
     setBusy(true);
-    
-    promptForCode(
-      t("bear.prompts.removeMember"),
-      async (code) => {
-        try {
-          setRunCode(code);
-          window.localStorage.setItem("runCode", code);
-          
-          const res = await fetch(`/api/bear/${bearGroup}/${playerId}`, {
-            method: "DELETE",
-            headers: { "x-run-code": code },
-          });
-          const data = await res.json();
-          if (!res.ok) {
-            if (res.status === 403) {
-              window.localStorage.removeItem("runCode");
-              setRunCode("");
-              throw new Error(t("bear.errors.invalidCode"));
-            }
-            throw new Error(data.error || t("bear.errors.removeFailed"));
-          }
-          if (bearGroup === "bear1") {
-            setBear1Members(data.members || []);
-          } else {
-            setBear2Members(data.members || []);
-          }
-          setBusy(false);
-        } catch (err) {
-          setBusy(false);
-          throw err;
+
+    if (!canManage) {
+      setError(t("auth.notAuthorizedAction"));
+      setBusy(false);
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/bear/${bearGroup}/${playerId}`, {
+        method: "DELETE",
+        headers: { "x-alliance-id": allianceId },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (res.status === 403) {
+          throw new Error(t("auth.notAuthorizedAction"));
         }
+        throw new Error(data.error || t("bear.errors.removeFailed"));
       }
-    );
+      if (bearGroup === "bear1") {
+        setBear1Members(data.members || []);
+      } else {
+        setBear2Members(data.members || []);
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
   }
 
   function generateRallyOrder(bearGroup) {
@@ -292,34 +258,6 @@ function BearRally() {
 
   return (
     <>
-      {showModal && (
-        <div className="modal-overlay" onClick={handleModalCancel}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3 className="modal-title">{modalConfig.message}</h3>
-            <input
-              type="text"
-              className="modal-input"
-              value={modalInput}
-              onChange={(e) => setModalInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleModalConfirm();
-                if (e.key === "Escape") handleModalCancel();
-              }}
-              autoFocus
-              placeholder={t("modal.placeholder")}
-            />
-            {modalError && <p className="modal-error">{modalError}</p>}
-            <div className="modal-actions">
-              <button className="ghost-button" onClick={handleModalCancel}>
-                {t("modal.cancel")}
-              </button>
-              <button className="primary-button" onClick={handleModalConfirm}>
-                {t("modal.confirm")}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
       <div className="app">
       <header className="hero">
         <div className="hero-content">
@@ -411,7 +349,7 @@ function BearRally() {
               className="primary-button"
               type="button"
               onClick={() => resetBearGroup("bear1")}
-              disabled={busy}
+              disabled={busy || !canManage}
             >
               {t("bear.resetBear1")}
             </button>
@@ -443,7 +381,7 @@ function BearRally() {
                       className="ghost-button small"
                       type="button"
                       onClick={() => removeMember("bear1", member.playerId)}
-                      disabled={busy}
+                      disabled={busy || !canManage}
                     >
                       {t("bear.remove")}
                     </button>
@@ -464,7 +402,7 @@ function BearRally() {
               className="primary-button"
               type="button"
               onClick={() => resetBearGroup("bear2")}
-              disabled={busy}
+              disabled={busy || !canManage}
             >
               {t("bear.resetBear2")}
             </button>
@@ -496,7 +434,7 @@ function BearRally() {
                       className="ghost-button small"
                       type="button"
                       onClick={() => removeMember("bear2", member.playerId)}
-                      disabled={busy}
+                      disabled={busy || !canManage}
                     >
                       {t("bear.remove")}
                     </button>

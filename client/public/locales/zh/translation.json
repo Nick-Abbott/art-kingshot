@@ -3,7 +3,19 @@
     "tabs": {
       "viking": "维京复仇",
       "bear": "熊集结"
-    }
+    },
+    "alliance": "Alliance"
+  },
+  "auth": {
+    "eyebrow": "ART Alliance",
+    "title": "Sign in to continue",
+    "subtitle": "Log in with Discord to access alliance tools.",
+    "login": "Login with Discord",
+    "logout": "Logout",
+    "loading": "Loading",
+    "loadingTitle": "Checking your session",
+    "loadFailed": "Failed to load session.",
+    "notAuthorizedAction": "You do not have permission to do that."
   },
   "modal": {
     "placeholder": "输入代码",
@@ -26,6 +38,7 @@
     "marchCount": "行军数",
     "power": "战力",
     "troopCount": "兵力数量",
+    "saveDefaults": "Save as defaults",
     "saveSignup": "保存报名",
     "update": "更新",
     "cancelEdit": "取消编辑",

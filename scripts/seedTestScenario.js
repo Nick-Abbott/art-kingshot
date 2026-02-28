@@ -1,5 +1,6 @@
 const BASE_URL = process.env.VIKING_APP_URL || "http://localhost:3001";
-const RUN_CODE = process.env.RUN_CODE || "";
+const ALLIANCE_ID = process.env.ALLIANCE_ID || "art";
+const DEV_BYPASS_TOKEN = process.env.DEV_BYPASS_TOKEN || "";
 
 function mulberry32(seed) {
   return function () {
@@ -48,7 +49,8 @@ async function postJson(path, body) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...(RUN_CODE ? { "x-run-code": RUN_CODE } : {}),
+      ...(ALLIANCE_ID ? { "x-alliance-id": ALLIANCE_ID } : {}),
+      ...(DEV_BYPASS_TOKEN ? { "x-dev-bypass": DEV_BYPASS_TOKEN } : {}),
     },
     body: JSON.stringify(body),
   });

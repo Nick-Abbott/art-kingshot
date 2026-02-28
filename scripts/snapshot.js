@@ -27,6 +27,7 @@ const path = require("node:path");
   }
 
   const baseUrl = process.env.SNAPSHOT_URL || "http://localhost:5173";
+  const devBypassToken = process.env.DEV_BYPASS_TOKEN || "";
   const outputDir = path.join(__dirname, "..", "snapshots");
   fs.mkdirSync(outputDir, { recursive: true });
 
@@ -44,6 +45,9 @@ const path = require("node:path");
     for (const scheme of colorSchemes) {
       for (const viewport of viewports) {
         const page = await browser.newPage();
+        if (devBypassToken) {
+          await page.setExtraHTTPHeaders({ "x-dev-bypass": devBypassToken });
+        }
         await page.emulateMediaFeatures([
           { name: "prefers-color-scheme", value: scheme },
         ]);

@@ -13,7 +13,7 @@ function formatNumber(value) {
   return new Intl.NumberFormat().format(value);
 }
 
-function VikingVengeance() {
+function VikingVengeance({ allianceId, canManage }) {
   const { t } = useTranslation();
   const [form, setForm] = useState(emptyForm);
   const [members, setMembers] = useState([]);
@@ -22,14 +22,8 @@ function VikingVengeance() {
   const [busy, setBusy] = useState(false);
   const [lookupStatus, setLookupStatus] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [runCode, setRunCode] = useState(
-    () => window.localStorage.getItem("runCode") || ""
-  );
-  const [showModal, setShowModal] = useState(false);
-  const [modalConfig, setModalConfig] = useState({ message: "", onConfirm: null });
-  const [modalInput, setModalInput] = useState("");
-  const [modalError, setModalError] = useState("");
   const [editingMember, setEditingMember] = useState(null);
+  const [saveDefaults, setSaveDefaults] = useState(true);
 
   const memberCount = members.length;
 
@@ -106,21 +100,43 @@ function VikingVengeance() {
       : "";
 
   useEffect(() => {
+    if (!allianceId) return;
     async function load() {
-      const membersRes = await fetch("/api/members");
+      const membersRes = await fetch("/api/members", {
+        headers: { "x-alliance-id": allianceId },
+      });
       const membersJson = await membersRes.json();
       setMembers(membersJson.members || []);
 
-      const resultsRes = await fetch("/api/results");
+      const resultsRes = await fetch("/api/results", {
+        headers: { "x-alliance-id": allianceId },
+      });
       const resultsJson = await resultsRes.json();
       setResults(resultsJson.results || null);
+
+      const profileRes = await fetch("/api/me/profile", {
+        headers: { "x-alliance-id": allianceId },
+      });
+      const profileJson = await profileRes.json();
+      if (profileJson.profile && !editingMember) {
+        const profile = profileJson.profile;
+        setForm({
+          playerId: profile.playerId || "",
+          troopCount: profile.troopCount ? String(profile.troopCount) : "",
+          playerName: profile.playerName || "",
+          marchCount: profile.marchCount ? String(profile.marchCount) : "4",
+          power: profile.power ? formatNumber(profile.power) : "",
+        });
+      } else if (!editingMember) {
+        setForm(emptyForm);
+      }
     }
 
     load().catch((loadError) => {
       console.error(loadError);
       setError(t("viking.errors.loadFailed"));
     });
-  }, []);
+  }, [allianceId, editingMember, t]);
 
   function updateForm(event) {
     const { name, value, type, checked } = event.target;
@@ -189,22 +205,37 @@ function VikingVengeance() {
     }
   }
 
+  async function saveProfileDefaults(payload) {
+    if (!allianceId) return;
+    await fetch("/api/me/profile", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-alliance-id": allianceId,
+      },
+      body: JSON.stringify(payload),
+    });
+  }
+
   async function submitSignup(event) {
     event.preventDefault();
     setError("");
     setBusy(true);
     try {
+      if (!allianceId) {
+        throw new Error(t("auth.notAuthorizedAction"));
+      }
       const fid = form.playerId.trim();
       let resolvedName = form.playerName;
       
-      // Only lookup player name if not editing (new signup)
-      if (!editingMember) {
+      // Only lookup player name if not editing and no name is set.
+      if (!editingMember && !resolvedName) {
         resolvedName = await lookupPlayerName(fid);
       }
       
       const res = await fetch("/api/signup", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-alliance-id": allianceId },
         body: JSON.stringify({
           playerId: fid,
           troopCount: Number(form.troopCount),
@@ -215,9 +246,21 @@ function VikingVengeance() {
       });
       const data = await res.json();
       if (!res.ok) {
+        if (res.status === 403) {
+          throw new Error(t("auth.notAuthorizedAction"));
+        }
         throw new Error(data.error || t("viking.errors.signupFailed"));
       }
       setMembers(data.members || []);
+      if (saveDefaults) {
+        await saveProfileDefaults({
+          playerId: fid,
+          troopCount: Number(form.troopCount),
+          playerName: resolvedName,
+          marchCount: Number(form.marchCount),
+          power: parseNumber(form.power),
+        });
+      }
       setForm(emptyForm);
       setLookupStatus("");
       setEditingMember(null);
@@ -248,187 +291,119 @@ function VikingVengeance() {
     setError("");
   }
 
-  function promptForCode(message, callback) {
-    setModalConfig({ message, onConfirm: callback });
-    setModalInput("");
-    setModalError("");
-    setShowModal(true);
-  }
-
-  async function handleModalConfirm() {
-    if (modalInput.trim()) {
-      setModalError("");
-      try {
-        await modalConfig.onConfirm(modalInput.trim());
-        setShowModal(false);
-      } catch (err) {
-        setModalError(err.message || t("modal.errorOccurred"));
-      }
-    }
-  }
-
-  function handleModalCancel() {
-    setShowModal(false);
-    setModalError("");
-    setBusy(false);
-  }
-
   async function runAssignments() {
     setError("");
-    
-    // Check if there are enough members before prompting for code
+
+    if (!canManage) {
+      setError(t("auth.notAuthorizedAction"));
+      return;
+    }
+
+    // Check if there are enough members before running
     if (members.length < 2) {
       setError(t("viking.errors.needMembers"));
       return;
     }
     
     setBusy(true);
-    
-    promptForCode(
-      t("viking.prompts.runAssignments"),
-      async (code) => {
-        try {
-          setRunCode(code);
-          window.localStorage.setItem("runCode", code);
-          
-          const res = await fetch("/api/run", {
-            method: "POST",
-            headers: { "x-run-code": code },
-          });
-          const data = await res.json();
-          
-          if (!res.ok) {
-            if (res.status === 403) {
-              window.localStorage.removeItem("runCode");
-              setRunCode("");
-              throw new Error(t("viking.errors.invalidCode"));
-            }
-            throw new Error(data.error || t("viking.errors.runFailed"));
-          }
-          
-          // Check if there are warnings indicating not enough members
-          if (data.warnings && data.warnings.length > 0) {
-            const notEnoughMembers = data.warnings.some(w => 
-              w.includes("Need at least 2 members") || 
-              w.includes("Not enough valid members")
-            );
-            if (notEnoughMembers) {
-              throw new Error(t("viking.errors.needMembers"));
-            }
-          }
-          
-          setResults(data);
-          setBusy(false);
-        } catch (err) {
-          setBusy(false);
-          throw err;
+    try {
+      const res = await fetch("/api/run", {
+        method: "POST",
+        headers: { "x-alliance-id": allianceId },
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (res.status === 403) {
+          throw new Error(t("auth.notAuthorizedAction"));
+        }
+        throw new Error(data.error || t("viking.errors.runFailed"));
+      }
+
+      if (data.warnings && data.warnings.length > 0) {
+        const notEnoughMembers = data.warnings.some((w) =>
+          w.includes("Need at least 2 members") ||
+          w.includes("Not enough valid members")
+        );
+        if (notEnoughMembers) {
+          throw new Error(t("viking.errors.needMembers"));
         }
       }
-    );
+
+      setResults(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function resetAll() {
     setError("");
     setBusy(true);
-    
-    promptForCode(
-      t("viking.prompts.resetEvent"),
-      async (code) => {
-        try {
-          setRunCode(code);
-          window.localStorage.setItem("runCode", code);
-          
-          const res = await fetch("/api/reset", {
-            method: "POST",
-            headers: { "x-run-code": code },
-          });
-          if (!res.ok) {
-            const data = await res.json();
-            if (res.status === 403) {
-              window.localStorage.removeItem("runCode");
-              setRunCode("");
-              throw new Error(t("viking.errors.invalidCode"));
-            }
-            throw new Error(data.error || t("viking.errors.resetFailed"));
-          }
-          setMembers([]);
-          setResults(null);
-          setForm(emptyForm);
-          setLookupStatus("");
-          setSearchQuery("");
-          setBusy(false);
-        } catch (err) {
-          setBusy(false);
-          throw err;
+
+    if (!canManage) {
+      setError(t("auth.notAuthorizedAction"));
+      setBusy(false);
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/reset", {
+        method: "POST",
+        headers: { "x-alliance-id": allianceId },
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        if (res.status === 403) {
+          throw new Error(t("auth.notAuthorizedAction"));
         }
+        throw new Error(data.error || t("viking.errors.resetFailed"));
       }
-    );
+      setMembers([]);
+      setResults(null);
+      setForm(emptyForm);
+      setLookupStatus("");
+      setSearchQuery("");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function removeSignup(playerId) {
     setError("");
     setBusy(true);
-    
-    promptForCode(
-      t("viking.prompts.removeSignup"),
-      async (code) => {
-        try {
-          setRunCode(code);
-          window.localStorage.setItem("runCode", code);
-          
-          const res = await fetch(`/api/members/${playerId}`, {
-            method: "DELETE",
-            headers: { "x-run-code": code },
-          });
-          const data = await res.json();
-          if (!res.ok) {
-            if (res.status === 403) {
-              window.localStorage.removeItem("runCode");
-              setRunCode("");
-              throw new Error(t("viking.errors.invalidCode"));
-            }
-            throw new Error(data.error || t("viking.errors.removeFailed"));
-          }
-          setMembers(data.members || []);
-          setBusy(false);
-        } catch (err) {
-          setBusy(false);
-          throw err;
+
+    if (!canManage) {
+      setError(t("auth.notAuthorizedAction"));
+      setBusy(false);
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/members/${playerId}`, {
+        method: "DELETE",
+        headers: { "x-alliance-id": allianceId },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (res.status === 403) {
+          throw new Error(t("auth.notAuthorizedAction"));
         }
+        throw new Error(data.error || t("viking.errors.removeFailed"));
       }
-    );
+      setMembers(data.members || []);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
     <>
-      {showModal && (
-        <div className="modal-overlay" onClick={handleModalCancel}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3 className="modal-title">{modalConfig.message}</h3>
-            <input
-              type="text"
-              className="modal-input"
-              value={modalInput}
-              onChange={(e) => setModalInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleModalConfirm();
-                if (e.key === "Escape") handleModalCancel();
-              }}
-              autoFocus
-              placeholder={t("modal.placeholder")}
-            />
-            {modalError && <p className="modal-error">{modalError}</p>}
-            <div className="modal-actions">
-              <button className="ghost-button" onClick={handleModalCancel}>
-                {t("modal.cancel")}
-              </button>
-              <button className="primary-button" onClick={handleModalConfirm}>
-                {t("modal.confirm")}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
       <div className="app">
       <header className="hero">
         <div className="hero-content">
@@ -447,7 +422,7 @@ function VikingVengeance() {
             <p className="hero-label">{t("viking.minimumIncoming")}</p>
             <p className="hero-value">200k</p>
           </div>
-          <button className="ghost-button" type="button" onClick={resetAll} disabled={busy}>
+          <button className="ghost-button" type="button" onClick={resetAll} disabled={busy || !canManage}>
             {t("viking.resetEvent")}
           </button>
         </div>
@@ -508,6 +483,14 @@ function VikingVengeance() {
                   placeholder="450000"
                   required
                 />
+              </label>
+              <label className="checkbox-field">
+                <input
+                  type="checkbox"
+                  checked={saveDefaults}
+                  onChange={(event) => setSaveDefaults(event.target.checked)}
+                />
+                <span>{t("viking.saveDefaults")}</span>
               </label>
               <button className="primary-button" type="submit" disabled={busy}>
                 {editingMember ? t("viking.update") : t("viking.saveSignup")}
@@ -599,7 +582,7 @@ function VikingVengeance() {
                         className="ghost-button small"
                         type="button"
                         onClick={() => removeSignup(member.playerId)}
-                        disabled={busy}
+                        disabled={busy || !canManage}
                       >
                         {t("viking.remove")}
                       </button>
@@ -609,7 +592,7 @@ function VikingVengeance() {
             )}
             </div>
             {error && <p className="error">{error}</p>}
-            <button className="run-button" type="button" onClick={runAssignments} disabled={busy}>
+            <button className="run-button" type="button" onClick={runAssignments} disabled={busy || !canManage}>
               {t("viking.runAssignments")}
             </button>
           </section>
