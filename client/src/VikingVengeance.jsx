@@ -108,6 +108,8 @@ function VikingVengeance({ allianceId, canManage }) {
 
   useEffect(() => {
     if (!allianceId) return;
+    setEditingMember(null);
+    setLookupStatus("");
     async function load() {
       const requestId = ++loadRequestId.current;
       const membersRes = await fetch("/api/members", {

@@ -26,6 +26,8 @@ function BearRally({ allianceId, canManage }) {
 
   useEffect(() => {
     if (!allianceId) return;
+    setEditingMember(null);
+    setLookupStatus("");
     async function load() {
       const requestId = ++loadRequestId.current;
       const res1 = await fetch("/api/bear/bear1", {
