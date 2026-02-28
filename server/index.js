@@ -70,6 +70,10 @@ db.exec(`
     expiresAt INTEGER NOT NULL,
     createdAt INTEGER NOT NULL
   );
+  CREATE TABLE IF NOT EXISTS app_bootstrap (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    createdAt INTEGER NOT NULL
+  );
   CREATE TABLE IF NOT EXISTS members (
     allianceId TEXT NOT NULL,
     playerId TEXT NOT NULL,
@@ -232,6 +236,9 @@ const insertMembership = db.prepare(
 const selectAllianceById = db.prepare(
   "SELECT id, name FROM alliances WHERE id = ?"
 );
+const insertBootstrapRow = db.prepare(
+  "INSERT OR IGNORE INTO app_bootstrap (id, createdAt) VALUES (1, ?)"
+);
 const selectProfile = db.prepare(
   "SELECT playerId, playerName, troopCount, marchCount, power FROM profiles WHERE userId = ? AND allianceId = ?"
 );
@@ -357,6 +364,11 @@ function requireAlliance(req, res) {
   const chosen = allianceId || memberships[0]?.allianceId;
   if (!chosen) {
     res.status(400).json({ error: "Alliance is required." });
+    return null;
+  }
+  const alliance = selectAllianceById.get(chosen);
+  if (!alliance) {
+    res.status(400).json({ error: "Alliance not found." });
     return null;
   }
   const membership = memberships.find((item) => item.allianceId === chosen);
@@ -594,10 +606,18 @@ app.get("/api/auth/discord/callback", async (req, res) => {
 
     let user = selectUserByDiscordId.get(discordId);
     if (!user) {
-      const countRow = db.prepare("SELECT COUNT(*) as count FROM users").get();
-      const isFirstUser = Number(countRow?.count || 0) === 0;
+      const now = Date.now();
       const id = crypto.randomUUID();
-      insertUser.run(id, discordId, displayName, avatar, isFirstUser ? 1 : 0, Date.now());
+      let isAppAdmin = 0;
+
+      db.transaction(() => {
+        const bootstrap = insertBootstrapRow.run(now);
+        if (bootstrap.changes === 1) {
+          isAppAdmin = 1;
+        }
+        insertUser.run(id, discordId, displayName, avatar, isAppAdmin, now);
+      })();
+
       user = selectUserById.get(id);
     } else {
       updateUser.run(displayName, avatar, user.id);
