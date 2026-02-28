@@ -31,6 +31,9 @@ function App() {
           setAuthStatus("unauthenticated");
           return;
         }
+        if (!res.ok) {
+          throw new Error(t("auth.loadFailed"));
+        }
         const data = await res.json();
         setUser(data.user || null);
         setMemberships(data.memberships || []);
