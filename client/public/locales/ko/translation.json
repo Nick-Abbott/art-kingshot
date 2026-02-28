@@ -3,7 +3,19 @@
     "tabs": {
       "viking": "바이킹 벤전스",
       "bear": "곰 레이드"
-    }
+    },
+    "alliance": "Alliance"
+  },
+  "auth": {
+    "eyebrow": "ART Alliance",
+    "title": "Sign in to continue",
+    "subtitle": "Log in with Discord to access alliance tools.",
+    "login": "Login with Discord",
+    "logout": "Logout",
+    "loading": "Loading",
+    "loadingTitle": "Checking your session",
+    "loadFailed": "Failed to load session.",
+    "notAuthorizedAction": "You do not have permission to do that."
   },
   "modal": {
     "placeholder": "코드를 입력하세요",
@@ -26,6 +38,7 @@
     "marchCount": "행군 수",
     "power": "전투력",
     "troopCount": "병력 수",
+    "saveDefaults": "Save as defaults",
     "saveSignup": "등록 저장",
     "update": "업데이트",
     "cancelEdit": "수정 취소",
