@@ -3,7 +3,19 @@
     "tabs": {
       "viking": "바이킹 벤전스",
       "bear": "곰 레이드"
-    }
+    },
+    "alliance": "동맹"
+  },
+  "auth": {
+    "eyebrow": "ART Alliance",
+    "title": "계속하려면 로그인하세요",
+    "subtitle": "Discord로 로그인하여 동맹 도구에 접근합니다.",
+    "login": "Discord로 로그인",
+    "logout": "로그아웃",
+    "loading": "로딩 중",
+    "loadingTitle": "세션 확인 중",
+    "loadFailed": "세션을 불러오지 못했습니다.",
+    "notAuthorizedAction": "해당 작업을 수행할 권한이 없습니다."
   },
   "modal": {
     "placeholder": "코드를 입력하세요",
@@ -26,6 +38,7 @@
     "marchCount": "행군 수",
     "power": "전투력",
     "troopCount": "병력 수",
+    "saveDefaults": "기본값으로 저장",
     "saveSignup": "등록 저장",
     "update": "업데이트",
     "cancelEdit": "수정 취소",

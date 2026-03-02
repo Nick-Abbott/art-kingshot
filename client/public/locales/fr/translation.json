@@ -3,7 +3,19 @@
     "tabs": {
       "viking": "Viking Vengeance",
       "bear": "Rally de l'ours"
-    }
+    },
+    "alliance": "Alliance"
+  },
+  "auth": {
+    "eyebrow": "ART Alliance",
+    "title": "Connectez-vous pour continuer",
+    "subtitle": "Connectez-vous avec Discord pour accéder aux outils de l'alliance.",
+    "login": "Se connecter avec Discord",
+    "logout": "Se déconnecter",
+    "loading": "Chargement",
+    "loadingTitle": "Vérification de votre session",
+    "loadFailed": "Échec du chargement de la session.",
+    "notAuthorizedAction": "Vous n'avez pas l'autorisation de faire cela."
   },
   "modal": {
     "placeholder": "Entrer le code",
@@ -26,6 +38,7 @@
     "marchCount": "Nombre de marches",
     "power": "Puissance",
     "troopCount": "Nombre de troupes",
+    "saveDefaults": "Enregistrer par défaut",
     "saveSignup": "Enregistrer l'inscription",
     "update": "Mettre à jour",
     "cancelEdit": "Annuler la modification",

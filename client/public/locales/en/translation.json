@@ -3,7 +3,19 @@
     "tabs": {
       "viking": "Viking Vengeance",
       "bear": "Bear Rally"
-    }
+    },
+    "alliance": "Alliance"
+  },
+  "auth": {
+    "eyebrow": "ART Alliance",
+    "title": "Sign in to continue",
+    "subtitle": "Log in with Discord to access alliance tools.",
+    "login": "Login with Discord",
+    "logout": "Logout",
+    "loading": "Loading",
+    "loadingTitle": "Checking your session",
+    "loadFailed": "Failed to load session.",
+    "notAuthorizedAction": "You do not have permission to do that."
   },
   "modal": {
     "placeholder": "Enter code",
@@ -26,6 +38,7 @@
     "marchCount": "March count",
     "power": "Power",
     "troopCount": "Troop count",
+    "saveDefaults": "Save as defaults",
     "saveSignup": "Save signup",
     "update": "Update",
     "cancelEdit": "Cancel Edit",

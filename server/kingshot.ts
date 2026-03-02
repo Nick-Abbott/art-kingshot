@@ -1,4 +1,4 @@
-const crypto = require("crypto");
+const crypto = require("node:crypto") as typeof import("node:crypto");
 
 const SIGN_SECRET = "mN4!pQs6JrYwV9";
 
@@ -34,3 +34,5 @@ module.exports = {
   buildSign,
   buildPlayerLookupPayload,
 };
+
+export {};

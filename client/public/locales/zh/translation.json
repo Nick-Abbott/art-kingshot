@@ -3,7 +3,19 @@
     "tabs": {
       "viking": "维京复仇",
       "bear": "熊集结"
-    }
+    },
+    "alliance": "联盟"
+  },
+  "auth": {
+    "eyebrow": "ART Alliance",
+    "title": "登录以继续",
+    "subtitle": "使用 Discord 登录以访问联盟工具。",
+    "login": "使用 Discord 登录",
+    "logout": "退出登录",
+    "loading": "加载中",
+    "loadingTitle": "正在检查会话",
+    "loadFailed": "无法加载会话。",
+    "notAuthorizedAction": "你没有权限执行此操作。"
   },
   "modal": {
     "placeholder": "输入代码",
@@ -26,6 +38,7 @@
     "marchCount": "行军数",
     "power": "战力",
     "troopCount": "兵力数量",
+    "saveDefaults": "保存为默认值",
     "saveSignup": "保存报名",
     "update": "更新",
     "cancelEdit": "取消编辑",

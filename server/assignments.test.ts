@@ -66,3 +66,5 @@ test("whale garrison lead is assigned when whale reinforces", () => {
 
   assert.ok(target.garrisonLeadId, "Expected a garrison lead for D");
 });
+
+export {};

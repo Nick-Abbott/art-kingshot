@@ -8,3 +8,5 @@ test("buildPlayerLookupPayload matches known signature", () => {
   assert.equal(payload.time, 1771962696541);
   assert.equal(payload.sign, "ab944e4c4a60e27e22252c58cba156f8");
 });
+
+export {};

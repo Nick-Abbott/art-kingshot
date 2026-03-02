@@ -2,3 +2,5 @@ snapshots/
 **/node_modules/
 **/*.sqlite
 **/dist
+AGENTS.local.md
+.env**
