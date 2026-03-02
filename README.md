@@ -11,27 +11,25 @@ This repository powers the primary website for the ART alliance in Kingshot. The
 
 ## Tech Stack
 
-- Client: React + Vite + i18next
-- Server: Express + better-sqlite3
+- Client: React + Vite + i18next + TypeScript
+- Server: Express + better-sqlite3 + TypeScript
 - Database: SQLite (local file)
+- Shared types: `shared/types.ts`
 
 ## Local Development
 
 1. Ensure Node.js 20.19+ or 22.12+ is installed.
-2. Install dependencies:
+2. Install dependencies from the repo root:
    ```bash
-   cd client
    npm install
-   cd ../server
-   npm install
-   cd ..
    ```
-3. Run the client:
+3. Run both client + server:
+   ```bash
+   npm run dev
+   ```
+   Or run them separately:
    ```bash
    npm run dev:client
-   ```
-4. Run the server (in a separate terminal):
-   ```bash
    npm run dev:server
    ```
 
@@ -60,6 +58,7 @@ Server:
 - `DEFAULT_ALLIANCE_ID`: Default alliance slug/id (default `art`)
 - `DEFAULT_ALLIANCE_NAME`: Default alliance name (default `ART Alliance`)
 - `DEV_BYPASS_TOKEN`: Local-only bypass token for scripts (optional, non-production)
+ - `NODE_ENV`: `production` enables secure cookies (optional)
 
 Scripts:
 - `VIKING_APP_URL`: Base URL for seed script (default `http://localhost:3001`)
@@ -71,12 +70,18 @@ Scripts:
 ## Scripts
 
 Root:
+- `npm run dev` — Start client + server together
 - `npm run dev:client` — Start the Vite client
 - `npm run dev:server` — Start the Express server
+- `npm run build` — Build server + client
+- `npm run typecheck` — Typecheck client
+- `npm run test` — Run server tests + i18n check + client tests
 - `npm run test:server` — Run server tests
+- `npm run test:client` — Run client tests
+- `npm run test:i18n` — Verify i18n keys
 - `npm run seed:test` — Seed test scenario data
 - `node scripts/check-auth-flow.js` — Basic auth/session check (server required)
-- `node scripts/check-alliance-switch.js` — Smoke check for alliance selection (server required)
+- `DEV_BYPASS_TOKEN=your_token node scripts/check-alliance-switch.js` — Smoke check for alliance selection (server required)
 
 Snapshots:
 ```bash
