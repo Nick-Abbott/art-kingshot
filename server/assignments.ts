@@ -1,3 +1,5 @@
+import type { AssignmentResult, Member } from "../shared/types";
+
 const NEED_PER_CITY = 200000;
 const MAX_SEND = 100000;
 const MAX_SEND_WHALE = 150000;
@@ -137,10 +139,16 @@ function annotateWhales(members) {
   };
 }
 
-function generateAssignments(members) {
+function generateAssignments(members: Member[]): AssignmentResult {
   const { warnings, validMembers } = validateMembers(members);
   if (validMembers.length < 2) {
-    return { needPerCity: NEED_PER_CITY, members: [], warnings };
+    return {
+      needPerCity: NEED_PER_CITY,
+      medianPower: 0,
+      whaleThreshold: 0,
+      members: [],
+      warnings,
+    };
   }
 
   const { members: annotated, median, whaleThreshold } =
@@ -518,3 +526,5 @@ module.exports = {
   MAX_SEND_WHALE,
   WHALE_MULTIPLIER,
 };
+
+export {};

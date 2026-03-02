@@ -75,6 +75,8 @@ Root:
 - `npm run dev:server` — Start the Express server
 - `npm run test:server` — Run server tests
 - `npm run seed:test` — Seed test scenario data
+- `node scripts/check-auth-flow.js` — Basic auth/session check (server required)
+- `node scripts/check-alliance-switch.js` — Smoke check for alliance selection (server required)
 
 Snapshots:
 ```bash
@@ -86,3 +88,4 @@ If auth is enabled locally, set `DEV_BYPASS_TOKEN` on the server and in the snap
 ## Notes
 
 - Seed script (`npm run seed:test`) requires a running server and a `DEV_BYPASS_TOKEN` if auth is enabled.
+- API conventions live in `docs/api-contract.md`.

@@ -14,7 +14,7 @@ These instructions are for agents working in this repository.
 - UI changes:
   - Run the snapshot script and review outputs in `snapshots/`.
   - Command: `CHROME_PATH=my_path node scripts/snapshot.js`
-  - Chrome path: see `AGENTS.local.md` for local `CHROME_PATH`.
+  - Chrome path: see `AGENTS.local.md` for local `CHROME_PATH`. If AGENTS.local.md does not exist, instruct the user to create one and provide the path to their chrome install.
 - Server changes:
   - Run server tests before marking the task complete.
   - Command: `npm run test:server`

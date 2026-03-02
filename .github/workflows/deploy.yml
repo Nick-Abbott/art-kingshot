@@ -16,24 +16,19 @@ jobs:
         with:
           node-version: "22"
           cache: "npm"
-          cache-dependency-path: |
-            server/package-lock.json
-            client/package-lock.json
+          cache-dependency-path: package-lock.json
 
-      - name: Install server deps
-        run: npm --prefix server ci
+      - name: Install deps
+        run: npm ci
 
-      - name: Run server tests
-        run: npm --prefix server test
+      - name: Typecheck
+        run: npm run typecheck
 
-      - name: Install client deps
-        run: npm --prefix client ci
+      - name: Run tests
+        run: npm run test
 
-      - name: Verify i18n keys
-        run: npm --prefix client run test:i18n
-
-      - name: Build client
-        run: npm --prefix client run build
+      - name: Build client + server
+        run: npm run build
 
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.0.0
@@ -45,9 +40,6 @@ jobs:
             set -e
             cd /var/www/app
             git pull
-            cd client
             npm ci
             npm run build
-            cd ../server
-            npm ci
             sudo systemctl restart art-kingshot

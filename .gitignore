@@ -3,3 +3,4 @@ snapshots/
 **/*.sqlite
 **/dist
 AGENTS.local.md
+.env**

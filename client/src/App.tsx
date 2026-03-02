@@ -1,89 +1,42 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useAlliance } from "./hooks/useAlliance";
+import { useSession } from "./hooks/useSession";
 import VikingVengeance from "./VikingVengeance";
 import BearRally from "./BearRally";
 
 function App() {
   const { t } = useTranslation();
-  const [page, setPage] = useState(() => window.localStorage.getItem("currentPage") || "viking");
-  const [authStatus, setAuthStatus] = useState("loading");
-  const [authError, setAuthError] = useState("");
-  const [user, setUser] = useState(null);
-  const [memberships, setMemberships] = useState([]);
-  const [selectedAlliance, setSelectedAlliance] = useState(
-    () => window.localStorage.getItem("selectedAlliance") || ""
+  const [page, setPage] = useState(
+    () => window.localStorage.getItem("currentPage") || "viking"
+  );
+  const { status, user, memberships, error, setError, logout } = useSession();
+  const { selectedAlliance, setSelectedAlliance, canManage } = useAlliance(
+    memberships,
+    user
   );
 
-  function switchPage(newPage) {
+  function switchPage(newPage: string) {
     setPage(newPage);
     window.localStorage.setItem("currentPage", newPage);
   }
 
   useEffect(() => {
-    async function loadSession() {
-      setAuthStatus("loading");
-      setAuthError("");
-      try {
-        const res = await fetch("/api/me");
-        if (res.status === 401) {
-          setUser(null);
-          setMemberships([]);
-          setAuthStatus("unauthenticated");
-          return;
-        }
-        if (!res.ok) {
-          throw new Error(t("auth.loadFailed"));
-        }
-        const data = await res.json();
-        setUser(data.user || null);
-        setMemberships(data.memberships || []);
-        setAuthStatus("authenticated");
-      } catch (error) {
-        setAuthError(t("auth.loadFailed"));
-        setAuthStatus("unauthenticated");
-      }
+    if (error) {
+      setError(t("auth.loadFailed"));
     }
+  }, [error, setError, t]);
 
-    loadSession();
-  }, [t]);
-
-  useEffect(() => {
-    if (authStatus !== "authenticated") return;
-    const allowed = memberships.map((item) => item.allianceId);
-    if (selectedAlliance && allowed.includes(selectedAlliance)) return;
-    const fallback = allowed[0] || "";
-    setSelectedAlliance(fallback);
-    if (fallback) {
-      window.localStorage.setItem("selectedAlliance", fallback);
-    }
-  }, [authStatus, memberships, selectedAlliance]);
-
-  const currentMembership = useMemo(
-    () => memberships.find((item) => item.allianceId === selectedAlliance) || null,
-    [memberships, selectedAlliance]
-  );
-
-  const canManage =
-    Boolean(user?.isAppAdmin) || currentMembership?.role === "alliance_admin";
-
-  function handleAllianceChange(event) {
+  function handleAllianceChange(event: React.ChangeEvent<HTMLSelectElement>) {
     const next = event.target.value;
     setSelectedAlliance(next);
-    window.localStorage.setItem("selectedAlliance", next);
   }
 
   function handleLogin() {
     window.location.href = "/api/auth/discord";
   }
 
-  async function handleLogout() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    setUser(null);
-    setMemberships([]);
-    setAuthStatus("unauthenticated");
-  }
-
-  if (authStatus === "loading") {
+  if (status === "loading") {
     return (
       <div className="app-shell">
         <div className="auth-screen">
@@ -96,7 +49,7 @@ function App() {
     );
   }
 
-  if (authStatus !== "authenticated") {
+  if (status !== "authenticated") {
     return (
       <div className="app-shell">
         <div className="auth-screen">
@@ -104,7 +57,7 @@ function App() {
             <p className="eyebrow">{t("auth.eyebrow")}</p>
             <h1>{t("auth.title")}</h1>
             <p className="hero-subtitle">{t("auth.subtitle")}</p>
-            {authError && <p className="error">{authError}</p>}
+            {error && <p className="error">{error}</p>}
             <div className="auth-actions">
               <button className="primary-button" type="button" onClick={handleLogin}>
                 {t("auth.login")}
@@ -154,7 +107,7 @@ function App() {
             )}
             <span>{user?.displayName}</span>
           </div>
-          <button className="ghost-button small" type="button" onClick={handleLogout}>
+          <button className="ghost-button small" type="button" onClick={logout}>
             {t("auth.logout")}
           </button>
         </div>
@@ -167,15 +120,5 @@ function App() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
 
 export default App;
