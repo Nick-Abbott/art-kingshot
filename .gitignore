@@ -4,3 +4,4 @@ snapshots/
 **/dist
 AGENTS.local.md
 .env**
+test-results/**

@@ -489,7 +489,7 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
                 </p>
               </div>
               <form
-                className="mt-5 flex flex-col gap-4 nav:grid nav:grid-cols-[repeat(4,minmax(0,1fr))_160px] nav:items-end"
+                className="mt-5 flex flex-col gap-4 nav:grid nav:grid-cols-[repeat(3,minmax(0,1fr))_auto] nav:items-end"
                 onSubmit={submitSignup}
               >
                 <label className="ui-field">
@@ -529,7 +529,11 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
                     required
                   />
                 </label>
-                <button className="ui-button nav:col-start-5" type="submit" disabled={busy}>
+                <button
+                  className="ui-button ui-button-wide mt-2 nav:mt-0 nav:justify-self-end"
+                  type="submit"
+                  disabled={busy}
+                >
                   {editingMember ? t("viking.update") : t("viking.saveSignup")}
                 </button>
               </form>

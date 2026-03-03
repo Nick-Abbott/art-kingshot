@@ -336,7 +336,7 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
               </p>
             </div>
             <form
-              className="mt-5 flex flex-col gap-4 nav:grid nav:grid-cols-[repeat(4,minmax(0,1fr))_160px] nav:items-end"
+              className="mt-5 flex flex-col gap-4 nav:grid nav:grid-cols-[repeat(2,minmax(0,1fr))_auto] nav:items-end"
               onSubmit={submitSignup}
             >
               <label className="ui-field">
@@ -368,7 +368,11 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
                   <option value="bear2">{t("bear.bear2")}</option>
                 </select>
               </label>
-              <button className="ui-button nav:col-start-5" type="submit" disabled={busy}>
+              <button
+                className="ui-button ui-button-wide mt-2 nav:mt-0 nav:justify-self-end"
+                type="submit"
+                disabled={busy}
+              >
                 {editingMember ? t("bear.update") : t("bear.register")}
               </button>
             </form>
@@ -391,7 +395,7 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
                 <p className="ui-section-subtitle">{t("bear.sortedByRally")}</p>
               </div>
               <button
-                className="ui-button"
+                className="ui-button ui-button-wide"
                 type="button"
                 onClick={() => resetBearGroup("bear1")}
                 disabled={busy || !canManage}
@@ -449,7 +453,7 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
                 <p className="ui-section-subtitle">{t("bear.sortedByRally")}</p>
               </div>
               <button
-                className="ui-button"
+                className="ui-button ui-button-wide"
                 type="button"
                 onClick={() => resetBearGroup("bear2")}
                 disabled={busy || !canManage}
@@ -505,7 +509,7 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
               <h2 className="ui-section-title">{t("bear.generatorTitle")}</h2>
               <p className="ui-section-subtitle">{t("bear.generatorSubtitle")}</p>
             </div>
-            <div className="mt-5 flex flex-col gap-4 nav:grid nav:grid-cols-[repeat(4,minmax(0,1fr))_160px] nav:items-end">
+            <div className="mt-5 flex flex-col gap-4 nav:grid nav:grid-cols-[repeat(2,minmax(0,1fr))_auto] nav:items-end">
               <label className="ui-field">
                 {t("bear.numberOfHosts")}
                 <input
@@ -529,7 +533,7 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
                 </select>
               </label>
               <button
-                className="ui-button nav:col-start-5"
+                className="ui-button ui-button-wide nav:justify-self-end"
                 type="button"
                 onClick={() => generateRallyOrder(selectedBearGroup)}
                 disabled={

@@ -14,10 +14,9 @@ These instructions are for agents working in this repository.
 ## Required Verification
 
 - UI changes:
-  - Run the snapshot script and review outputs in `snapshots/`.
-  - Command: `CHROME_PATH=my_path node scripts/snapshot.js`
-  - Chrome path: see `AGENTS.local.md` for local `CHROME_PATH`. If `AGENTS.local.md` does not exist, instruct the user to create one and provide the path to their chrome install.
-  - If auth is enabled, pass a dev bypass token (see `AGENTS.local.md`).
+  - Run the Playwright snapshot suite and review outputs in `snapshots/playwright/`.
+    - Command: `DEV_BYPASS_TOKEN=your_token SNAPSHOT_URL=http://localhost:5173 SERVER_URL=http://localhost:3001 npm run snapshots:playwright`
+    - Requires the client and server to be running.
 - Server changes:
   - Run server tests before marking the task complete.
   - Command: `npm run test:server`
@@ -48,3 +47,5 @@ If you cannot run these checks, state what was skipped and why, and list any ris
 - Use `ui-section-header`, `ui-section-title`, `ui-section-subtitle` for section headers.
 - Use `ui-empty-state`, `ui-error`, `ui-success` for status messaging.
 - Use `ui-search` and `ui-search-hint*` for typeahead inputs.
+- Use `ui-tab`, `ui-pill`, `ui-codeblock`, `ui-badge` for recurring UI patterns.
+ - For comprehensive UI screenshots, use the Playwright suite in `playwright/ui-snapshots.spec.ts`.

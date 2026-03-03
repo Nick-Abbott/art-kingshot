@@ -20,13 +20,15 @@
     "test:i18n": "npm run test:i18n --workspace client",
     "test": "npm run test:server && npm run test:i18n && npm run test:client",
     "typecheck": "npm run typecheck --workspace client",
-    "seed:test": "node scripts/seedTestScenario.js"
+    "seed:test": "node scripts/seedTestScenario.js",
+    "snapshots:playwright": "playwright test -c playwright.config.ts"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@playwright/test": "^1.56.1",
     "concurrently": "^9.2.1",
     "dotenv-cli": "^11.0.0",
-    "puppeteer-core": "^24.37.5"
+    "playwright": "^1.56.1"
   }
 }

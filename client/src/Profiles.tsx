@@ -514,7 +514,7 @@ function Profiles({
                     name="allianceId"
                     value={joinAllianceId}
                     onChange={(e) => setJoinAllianceId(e.target.value)}
-                    className="ui-input"
+                    className="ui-select"
                   >
                     <option value="">{t("profiles.allianceNone")}</option>
                     {alliances.map((alliance) => (

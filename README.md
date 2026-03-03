@@ -83,12 +83,13 @@ Root:
 - `node scripts/check-auth-flow.js` — Basic auth/session check (server required)
 - `DEV_BYPASS_TOKEN=your_token node scripts/check-alliance-switch.js` — Smoke check for alliance selection (server required)
 
-Snapshots:
+Playwright snapshots (full UI states):
 ```bash
-node scripts/snapshot.js
+DEV_BYPASS_TOKEN=your_token SNAPSHOT_URL=http://localhost:5173 SERVER_URL=http://localhost:3001 npm run snapshots:playwright
 ```
-This captures desktop/mobile screenshots in light/dark mode to `snapshots/` for UI review.
-If auth is enabled locally, set `DEV_BYPASS_TOKEN` on the server and in the snapshot command.
+Outputs are saved under `snapshots/playwright/`.
+Ensure both the client and server are running before executing the Playwright suite.
+NixOS: use `PLAYWRIGHT_BROWSERS_PATH` from nixpkgs.playwright (no `CHROME_PATH` needed).
 
 ## Notes
 

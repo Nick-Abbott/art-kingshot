@@ -103,6 +103,7 @@ function App() {
             onClick={() => setNavOpen((prev) => !prev)}
             aria-expanded={navOpen}
             aria-label={t("app.menuToggle")}
+            data-testid="nav-toggle"
           >
             <span className="relative h-3 w-5">
               <span className="absolute inset-x-0 top-0 h-0.5 rounded-full bg-current" />
@@ -139,8 +140,8 @@ function App() {
           </div>
 
           <div className="flex flex-col gap-3 nav:flex-row nav:items-center">
-            <div className="relative flex flex-col gap-1">
-              <span className="text-[0.6rem] uppercase tracking-[0.18rem] text-muted">
+            <div className="relative flex flex-col gap-1 nav:flex-row nav:items-center nav:gap-2">
+              <span className="text-[0.6rem] uppercase tracking-[0.18rem] text-muted leading-none nav:translate-y-[1px]">
                 {t("app.profile")}
               </span>
               <DropdownMenu>
@@ -149,6 +150,7 @@ function App() {
                     className="ui-pill ui-pill-outline min-w-[220px]"
                     type="button"
                     disabled={profiles.length === 0}
+                    data-testid="profile-switcher"
                   >
                     {selectedProfile?.playerAvatar ? (
                       <img
