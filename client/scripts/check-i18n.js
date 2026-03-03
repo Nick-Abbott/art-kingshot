@@ -3,6 +3,10 @@ const path = require("path");
 
 const localesDir = path.join(__dirname, "..", "public", "locales");
 const baseLocale = "en";
+const allowedSameValues = new Set([
+  "ART Alliance",
+  "Kingshot",
+]);
 
 function loadJson(locale) {
   const filePath = path.join(localesDir, locale, "translation.json");
@@ -74,7 +78,11 @@ locales
     baseValues.forEach((value, key) => {
       if (!targetValues.has(key)) return;
       const targetValue = targetValues.get(key);
-      if (typeof value === "string" && value === targetValue) {
+      if (
+        typeof value === "string" &&
+        value === targetValue &&
+        !allowedSameValues.has(value)
+      ) {
         sameValues.push(key);
       }
     });
