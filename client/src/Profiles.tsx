@@ -311,12 +311,13 @@ function Profiles({
       name,
       profileId: selectedProfile.id,
     });
-    if (!result.alliance || !result.profile) {
+    const updatedProfile = result.profile;
+    if (!result.alliance || !updatedProfile) {
       setCreateError(t("profiles.errors.createAllianceFailed"));
       return;
     }
     setProfiles((prev) =>
-      prev.map((item) => (item.id === result.profile.id ? result.profile : item))
+      prev.map((item) => (item.id === updatedProfile.id ? updatedProfile : item))
     );
     setCreateSuccess(t("profiles.createdAlliance"));
   }
