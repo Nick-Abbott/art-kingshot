@@ -24,6 +24,20 @@ function flattenKeys(obj, prefix = "") {
   return keys;
 }
 
+function flattenValues(obj, prefix = "") {
+  const values = new Map();
+  Object.keys(obj).forEach((key) => {
+    const value = obj[key];
+    const next = prefix ? `${prefix}.${key}` : key;
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      flattenValues(value, next).forEach((v, k) => values.set(k, v));
+    } else {
+      values.set(next, value);
+    }
+  });
+  return values;
+}
+
 function diffKeys(baseKeys, targetKeys) {
   const missing = [];
   const extra = [];
@@ -46,6 +60,7 @@ if (!locales.includes(baseLocale)) {
 }
 
 const baseKeys = flattenKeys(loadJson(baseLocale));
+const baseValues = flattenValues(loadJson(baseLocale));
 let hasErrors = false;
 
 locales
@@ -53,8 +68,18 @@ locales
   .forEach((locale) => {
     const targetKeys = flattenKeys(loadJson(locale));
     const { missing, extra } = diffKeys(baseKeys, targetKeys);
+    const targetValues = flattenValues(loadJson(locale));
+    const sameValues = [];
 
-    if (missing.length || extra.length) {
+    baseValues.forEach((value, key) => {
+      if (!targetValues.has(key)) return;
+      const targetValue = targetValues.get(key);
+      if (typeof value === "string" && value === targetValue) {
+        sameValues.push(key);
+      }
+    });
+
+    if (missing.length || extra.length || sameValues.length) {
       hasErrors = true;
       console.error(`\nLocale '${locale}' has key mismatches:`);
       if (missing.length) {
@@ -64,6 +89,10 @@ locales
       if (extra.length) {
         console.error(`  Extra (${extra.length}):`);
         extra.sort().forEach((k) => console.error(`    - ${k}`));
+      }
+      if (sameValues.length) {
+        console.error(`  Same as ${baseLocale} (${sameValues.length}):`);
+        sameValues.sort().forEach((k) => console.error(`    - ${k}`));
       }
     }
   });

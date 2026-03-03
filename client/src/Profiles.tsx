@@ -202,6 +202,43 @@ function Profiles({
     }
   }
 
+  async function refreshProfileData() {
+    if (!selectedProfile?.playerId) return;
+    setError("");
+    setSuccess("");
+    setLookupStatus("");
+    try {
+      setLookupStatus(t("profiles.lookupStatus"));
+      const lookup = await lookupPlayer(selectedProfile.playerId);
+      const playerName = extractPlayerName(lookup);
+      const rawAvatar = extractPlayerAvatar(lookup);
+      const playerAvatar = rawAvatar
+        ? `${rawAvatar}${rawAvatar.includes("?") ? "&" : "?"}v=${Date.now()}`
+        : "";
+      const kingdomId = extractKingdomId(lookup);
+      if (!playerName) {
+        throw new Error(t("profiles.errors.lookupFailed"));
+      }
+      const updated = await updateProfile(selectedProfile.id, {
+        playerName: playerName || null,
+        playerAvatar: playerAvatar || null,
+        kingdomId
+      });
+      if (updated) {
+        setProfiles((prev) =>
+          prev.map((item) => (item.id === updated.id ? updated : item))
+        );
+        setSuccess(t("profiles.refreshed"));
+      } else {
+        setError(t("profiles.errors.updateFailed"));
+      }
+    } catch {
+      setError(t("profiles.errors.lookupFailed"));
+    } finally {
+      setLookupStatus("");
+    }
+  }
+
   async function approveProfile(target: Profile, status: "pending" | "active") {
     if (!selectedProfileId) return;
     const updated = await updateAllianceProfile(selectedProfileId, target.id, {
@@ -355,9 +392,20 @@ function Profiles({
 
         {selectedProfile && (
           <section className="panel">
-            <div className="panel-header">
-              <h2>{t("profiles.currentTitle")}</h2>
-              <p>{t("profiles.currentSubtitle")}</p>
+            <div className="panel-header panel-header-split">
+              <div>
+                <h2>{t("profiles.currentTitle")}</h2>
+                <p>{t("profiles.currentSubtitle")}</p>
+              </div>
+              <div className="panel-actions">
+                <button
+                  className="ghost-button"
+                  type="button"
+                  onClick={refreshProfileData}
+                >
+                  {t("profiles.refreshProfile", { defaultValue: "Refresh profile" })}
+                </button>
+              </div>
             </div>
             <div className="roster">
               <div className="roster-card">
@@ -434,6 +482,9 @@ function Profiles({
                 </div>
               </div>
             </div>
+            {lookupStatus && <p className="lookup-status">{lookupStatus}</p>}
+            {error && <p className="error">{error}</p>}
+            {success && <p className="success">{success}</p>}
           </section>
         )}
 

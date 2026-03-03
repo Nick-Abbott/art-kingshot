@@ -211,6 +211,8 @@
       "power": "Power: {{value}}",
       "rallySize": "Rally capacity: {{value}}",
       "none": "Not set"
-    }
+    },
+    "refreshProfile": "Refresh profile",
+    "refreshed": "Profile updated from Kingshot."
   }
 }
