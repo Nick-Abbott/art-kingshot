@@ -10,7 +10,10 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS alliances (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
-  createdAt INTEGER NOT NULL
+  kingdomId INTEGER NOT NULL,
+  createdAt INTEGER NOT NULL,
+  UNIQUE (name, kingdomId),
+  UNIQUE (id, kingdomId)
 );
 
 CREATE TABLE IF NOT EXISTS memberships (
@@ -26,12 +29,14 @@ CREATE TABLE IF NOT EXISTS profiles (
   id TEXT PRIMARY KEY,
   userId TEXT NOT NULL,
   allianceId TEXT NOT NULL,
-  playerId TEXT,
+  playerId TEXT NOT NULL,
   playerName TEXT,
+  kingdomId INTEGER,
   troopCount INTEGER,
   marchCount INTEGER,
   power INTEGER,
-  UNIQUE (userId, allianceId)
+  UNIQUE (userId, allianceId),
+  UNIQUE (playerId)
 );
 
 CREATE TABLE IF NOT EXISTS sessions (

@@ -4,23 +4,23 @@ import type { ApiResponse, BearGroup, BearMember, BearPayload } from "@shared/ty
 export type { BearMember, BearGroup };
 
 export async function fetchBearGroup(
-  allianceId: string,
+  profileId: string,
   group: BearGroup
 ): Promise<BearMember[]> {
-  const res = await apiFetch(`/api/bear/${group}`, { allianceId });
+  const res = await apiFetch(`/api/bear/${group}`, { profileId });
   const payload = res.data as ApiResponse<BearPayload>;
   if (!payload || payload.ok === false) return [];
   return payload.data?.members || [];
 }
 
 export async function upsertBearMember(
-  allianceId: string,
+  profileId: string,
   group: BearGroup,
   payload: { playerId: string; playerName: string; rallySize: number }
 ): Promise<BearMember[]> {
   const res = await apiFetch(`/api/bear/${group}`, {
     method: "POST",
-    allianceId,
+    profileId,
     body: payload
   });
   const data = res.data as ApiResponse<BearPayload>;
@@ -29,12 +29,12 @@ export async function upsertBearMember(
 }
 
 export async function resetBearGroup(
-  allianceId: string,
+  profileId: string,
   group: BearGroup
 ): Promise<BearMember[]> {
   const res = await apiFetch(`/api/bear/${group}`, {
     method: "DELETE",
-    allianceId
+    profileId
   });
   const data = res.data as ApiResponse<BearPayload>;
   if (!data || data.ok === false) return [];
@@ -42,13 +42,13 @@ export async function resetBearGroup(
 }
 
 export async function removeBearMember(
-  allianceId: string,
+  profileId: string,
   group: BearGroup,
   playerId: string
 ): Promise<BearMember[]> {
   const res = await apiFetch(`/api/bear/${group}/${playerId}`, {
     method: "DELETE",
-    allianceId
+    profileId
   });
   const data = res.data as ApiResponse<BearPayload>;
   if (!data || data.ok === false) return [];

@@ -16,7 +16,7 @@ describe("useMembers", () => {
     vi.spyOn(membersApi, "fetchMembers").mockResolvedValue([]);
     vi.spyOn(membersApi, "signupMember").mockResolvedValue([member]);
 
-    const { result } = renderHook(() => useMembers("art"));
+    const { result } = renderHook(() => useMembers("p1"));
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -38,7 +38,7 @@ describe("useMembers", () => {
     vi.spyOn(membersApi, "fetchMembers").mockResolvedValue([member]);
     vi.spyOn(membersApi, "removeMember").mockResolvedValue([]);
 
-    const { result } = renderHook(() => useMembers("art"));
+    const { result } = renderHook(() => useMembers("p1"));
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);

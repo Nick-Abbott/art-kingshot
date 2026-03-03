@@ -24,8 +24,6 @@ const DISCORD_CLIENT_ID = config.discordClientId;
 const DISCORD_CLIENT_SECRET = config.discordClientSecret;
 const DISCORD_REDIRECT_URI = config.discordRedirectUri;
 const SESSION_TTL_MS = config.sessionTtlDays * 24 * 60 * 60 * 1000;
-const DEFAULT_ALLIANCE_ID = config.defaultAllianceId;
-const DEFAULT_ALLIANCE_NAME = config.defaultAllianceName;
 const DEV_BYPASS_TOKEN = config.devBypassToken;
 const isProduction = config.nodeEnv === "production";
 
@@ -40,118 +38,24 @@ fs.mkdirSync(path.dirname(dbPath), { recursive: true });
 const db = new Database(dbPath);
 runMigrations(db, path.join(serverRoot, "db", "migrations"));
 
-function columnExists(table, column) {
-  try {
-    const columns = db.prepare(`PRAGMA table_info(${table})`).all();
-    return columns.some((col) => col.name === column);
-  } catch {
+const rateBuckets = new Map();
+
+function enforceRateLimit(req, res, { key, max, windowMs }) {
+  const now = Date.now();
+  const bucketKey = key || `${req.ip || "unknown"}:${req.path}`;
+  const entry = rateBuckets.get(bucketKey);
+  if (!entry || entry.resetAt <= now) {
+    rateBuckets.set(bucketKey, { count: 1, resetAt: now + windowMs });
+    return true;
+  }
+  if (entry.count >= max) {
+    res.status(429).json({ ok: false, error: "Too many requests." });
     return false;
   }
+  entry.count += 1;
+  return true;
 }
 
-function ensureDefaultAlliance() {
-  const existing = db.prepare("SELECT id FROM alliances WHERE id = ?").get(DEFAULT_ALLIANCE_ID);
-  if (!existing) {
-    db.prepare(
-      "INSERT INTO alliances (id, name, createdAt) VALUES (?, ?, ?)"
-    ).run(DEFAULT_ALLIANCE_ID, DEFAULT_ALLIANCE_NAME, Date.now());
-  }
-}
-
-function migrateMembers(allianceId) {
-  if (columnExists("members", "allianceId")) return;
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS members_new (
-      allianceId TEXT NOT NULL,
-      playerId TEXT NOT NULL,
-      troopCount INTEGER NOT NULL,
-      marchCount INTEGER NOT NULL,
-      power INTEGER NOT NULL,
-      playerName TEXT NOT NULL,
-      PRIMARY KEY (allianceId, playerId)
-    );
-  `);
-  db.prepare(
-    `INSERT INTO members_new (allianceId, playerId, troopCount, marchCount, power, playerName)
-     SELECT ?, playerId, troopCount, marchCount, power, playerName FROM members`
-  ).run(allianceId);
-  db.exec("DROP TABLE members;");
-  db.exec("ALTER TABLE members_new RENAME TO members;");
-}
-
-function migrateMeta(allianceId) {
-  if (columnExists("meta", "allianceId")) return;
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS meta_new (
-      allianceId TEXT NOT NULL,
-      key TEXT NOT NULL,
-      value TEXT NOT NULL,
-      PRIMARY KEY (allianceId, key)
-    );
-  `);
-  db.prepare(
-    `INSERT INTO meta_new (allianceId, key, value)
-     SELECT ?, key, value FROM meta`
-  ).run(allianceId);
-  db.exec("DROP TABLE meta;");
-  db.exec("ALTER TABLE meta_new RENAME TO meta;");
-}
-
-function migrateBear(allianceId) {
-  const bearHasAlliance = columnExists("bear", "allianceId");
-  if (!bearHasAlliance) {
-    db.exec(`
-      CREATE TABLE IF NOT EXISTS bear_new (
-        allianceId TEXT NOT NULL,
-        playerId TEXT NOT NULL,
-        playerName TEXT NOT NULL,
-        rallySize INTEGER NOT NULL,
-        bearGroup TEXT NOT NULL CHECK (bearGroup IN ('bear1', 'bear2')),
-        PRIMARY KEY (allianceId, playerId)
-      );
-    `);
-    if (columnExists("bear", "bearGroup")) {
-      db.prepare(
-        `INSERT INTO bear_new (allianceId, playerId, playerName, rallySize, bearGroup)
-         SELECT ?, playerId, playerName, rallySize, bearGroup FROM bear`
-      ).run(allianceId);
-      db.exec("DROP TABLE bear;");
-      db.exec("ALTER TABLE bear_new RENAME TO bear;");
-    }
-  }
-
-  try {
-    const bear1Exists = db
-      .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='bear1'")
-      .get();
-    const bear2Exists = db
-      .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='bear2'")
-      .get();
-
-    if (bear1Exists) {
-      db.prepare(
-        `INSERT OR IGNORE INTO bear (allianceId, playerId, playerName, rallySize, bearGroup)
-         SELECT ?, playerId, playerName, rallySize, 'bear1' FROM bear1`
-      ).run(allianceId);
-      db.exec("DROP TABLE bear1");
-    }
-
-    if (bear2Exists) {
-      db.prepare(
-        `INSERT OR IGNORE INTO bear (allianceId, playerId, playerName, rallySize, bearGroup)
-         SELECT ?, playerId, playerName, rallySize, 'bear2' FROM bear2`
-      ).run(allianceId);
-      db.exec("DROP TABLE bear2");
-    }
-  } catch (error) {
-    console.log("Migration completed or not needed");
-  }
-}
-
-ensureDefaultAlliance();
-migrateMembers(DEFAULT_ALLIANCE_ID);
-migrateMeta(DEFAULT_ALLIANCE_ID);
-migrateBear(DEFAULT_ALLIANCE_ID);
 
 const selectUserByDiscordId = db.prepare(
   "SELECT id, discordId, displayName, avatar, isAppAdmin FROM users WHERE discordId = ?"
@@ -165,33 +69,104 @@ const updateUser = db.prepare(
 const selectUserById = db.prepare(
   "SELECT id, discordId, displayName, avatar, isAppAdmin FROM users WHERE id = ?"
 );
-const selectMembershipsByUser = db.prepare(
-  `SELECT memberships.userId, memberships.allianceId, memberships.role, alliances.name AS allianceName
-   FROM memberships
-   JOIN alliances ON alliances.id = memberships.allianceId
-   WHERE memberships.userId = ?`
+const selectProfilesByUser = db.prepare(
+  `SELECT profiles.id,
+          profiles.userId,
+          profiles.playerId,
+          profiles.playerName,
+          profiles.playerAvatar,
+          profiles.kingdomId,
+          profiles.allianceId,
+          profiles.status,
+          profiles.role,
+          profiles.troopCount,
+          profiles.marchCount,
+          profiles.power,
+          profiles.rallySize,
+          alliances.name AS allianceName
+   FROM profiles
+   LEFT JOIN alliances ON alliances.id = profiles.allianceId
+   WHERE profiles.userId = ?`
 );
-const insertMembership = db.prepare(
-  "INSERT OR IGNORE INTO memberships (id, userId, allianceId, role, createdAt) VALUES (?, ?, ?, ?, ?)"
+const selectProfileById = db.prepare(
+  `SELECT profiles.id,
+          profiles.userId,
+          profiles.playerId,
+          profiles.playerName,
+          profiles.playerAvatar,
+          profiles.kingdomId,
+          profiles.allianceId,
+          profiles.status,
+          profiles.role,
+          profiles.troopCount,
+          profiles.marchCount,
+          profiles.power,
+          profiles.rallySize,
+          alliances.name AS allianceName
+   FROM profiles
+   LEFT JOIN alliances ON alliances.id = profiles.allianceId
+   WHERE profiles.id = ?`
+);
+const insertProfile = db.prepare(
+  `INSERT INTO profiles (
+     id,
+     userId,
+     playerId,
+     playerName,
+     playerAvatar,
+     kingdomId,
+     allianceId,
+     status,
+     role,
+     troopCount,
+     marchCount,
+     power,
+     rallySize,
+     createdAt,
+     updatedAt
+   ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+);
+const updateProfile = db.prepare(
+  `UPDATE profiles
+   SET playerId = ?,
+       playerName = ?,
+       playerAvatar = ?,
+       kingdomId = ?,
+       allianceId = ?,
+       status = ?,
+       role = ?,
+       troopCount = ?,
+       marchCount = ?,
+       power = ?,
+       rallySize = ?,
+       updatedAt = ?
+   WHERE id = ?`
+);
+const updateProfileFields = db.prepare(
+  `UPDATE profiles
+   SET playerId = ?,
+       playerName = ?,
+       playerAvatar = ?,
+       kingdomId = ?,
+       troopCount = ?,
+       marchCount = ?,
+       power = ?,
+       rallySize = ?,
+       updatedAt = ?
+   WHERE id = ?`
+);
+const updateProfileStatus = db.prepare(
+  `UPDATE profiles
+   SET status = ?,
+       role = ?,
+       updatedAt = ?
+   WHERE id = ?`
 );
 const selectAllianceById = db.prepare(
-  "SELECT id, name FROM alliances WHERE id = ?"
+  "SELECT id, name, kingdomId FROM alliances WHERE id = ?"
 );
 const insertBootstrapRow = db.prepare(
   "INSERT OR IGNORE INTO app_bootstrap (id, createdAt) VALUES (1, ?)"
-);
-const selectProfile = db.prepare(
-  "SELECT playerId, playerName, troopCount, marchCount, power FROM profiles WHERE userId = ? AND allianceId = ?"
-);
-const upsertProfile = db.prepare(
-  `INSERT INTO profiles (id, userId, allianceId, playerId, playerName, troopCount, marchCount, power)
-   VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-   ON CONFLICT(userId, allianceId) DO UPDATE SET
-     playerId=excluded.playerId,
-     playerName=excluded.playerName,
-     troopCount=excluded.troopCount,
-     marchCount=excluded.marchCount,
-     power=excluded.power`
 );
 const insertSession = db.prepare(
   "INSERT INTO sessions (token, userId, expiresAt, createdAt) VALUES (?, ?, ?, ?)"
@@ -283,12 +258,8 @@ function resolveUserFromSession(req) {
   }
   const user = selectUserById.get(session.userId);
   if (!user) return null;
-  const memberships = selectMembershipsByUser.all(user.id);
-  return { user, memberships, sessionToken: token };
-}
-
-function ensureDefaultMembership(userId, role = "member") {
-  insertMembership.run(crypto.randomUUID(), userId, DEFAULT_ALLIANCE_ID, role, Date.now());
+  const profiles = selectProfilesByUser.all(user.id);
+  return { user, profiles, sessionToken: token };
 }
 
 function ensureDevBypassUser() {
@@ -299,7 +270,6 @@ function ensureDevBypassUser() {
     insertUser.run(id, discordId, "Dev Bypass", null, 1, Date.now());
     user = selectUserById.get(id);
   }
-  ensureDefaultMembership(user.id, "alliance_admin");
   return user;
 }
 
@@ -310,37 +280,36 @@ function requireAuth(req, res) {
 }
 
 function requireAlliance(req, res) {
-  const headerAlliance =
-    typeof req.header("x-alliance-id") === "string"
-      ? req.header("x-alliance-id").trim()
+  const profileId =
+    typeof req.header("x-profile-id") === "string"
+      ? req.header("x-profile-id").trim()
       : "";
-  const queryAlliance =
-    typeof req.query?.alliance === "string" ? req.query.alliance.trim() : "";
-  const allianceId = headerAlliance || queryAlliance;
-  const memberships = req.memberships || [];
-  const chosen = allianceId || memberships[0]?.allianceId;
-  if (!chosen) {
-    fail(res, 400, "Alliance is required.");
+  if (!profileId) {
+    fail(res, 400, "Profile is required.");
     return null;
   }
-  const alliance = selectAllianceById.get(chosen);
-  if (!alliance) {
-    fail(res, 400, "Alliance not found.");
+  const profile = selectProfileById.get(profileId);
+  if (!profile) {
+    fail(res, 404, "Profile not found.");
     return null;
   }
-  const membership = memberships.find((item) => item.allianceId === chosen);
-  if (!membership && !req.user?.isAppAdmin) {
-    fail(res, 403, "Not a member of this alliance.");
+  if (profile.userId !== req.user.id && !req.user?.isAppAdmin) {
+    fail(res, 403, "Profile access denied.");
     return null;
   }
-  req.allianceId = chosen;
-  req.allianceRole = membership?.role || "member";
-  return chosen;
+  if (!profile.allianceId || profile.status !== "active") {
+    fail(res, 403, "Profile is not active in an alliance.");
+    return null;
+  }
+  req.profile = profile;
+  req.profileRole = profile.role;
+  req.allianceId = profile.allianceId;
+  return profile.allianceId;
 }
 
 function requireRole(req, res, roles = []) {
   if (req.user?.isAppAdmin) return true;
-  if (roles.includes(req.allianceRole)) return true;
+  if (req.profile && roles.includes(req.profile.role)) return true;
   fail(res, 403, "Insufficient permissions.");
   return false;
 }
@@ -378,14 +347,6 @@ function getDiscordDisplayName(user) {
   return user.global_name || user.username || "Discord User";
 }
 
-function ensureMemberships(userId, isAppAdmin) {
-  const existing = selectMembershipsByUser.all(userId);
-  if (existing.length > 0) return existing;
-  const role = isAppAdmin ? "alliance_admin" : "member";
-  ensureDefaultMembership(userId, role);
-  return selectMembershipsByUser.all(userId);
-}
-
 const {
   requireAuthMiddleware,
   requireAllianceMiddleware,
@@ -398,14 +359,14 @@ app.use((req, res, next) => {
     if (bypass && bypass === DEV_BYPASS_TOKEN) {
       const user = ensureDevBypassUser();
       req.user = user;
-      req.memberships = selectMembershipsByUser.all(user.id);
+      req.profiles = selectProfilesByUser.all(user.id);
       return next();
     }
   }
 
   const auth = resolveUserFromSession(req);
   req.user = auth?.user || null;
-  req.memberships = auth?.memberships || [];
+  req.profiles = auth?.profiles || [];
   req.sessionToken = auth?.sessionToken || null;
   return next();
 });
@@ -448,6 +409,7 @@ const routeContext = {
   DISCORD_REDIRECT_URI,
   SESSION_TTL_MS,
   isProduction,
+  DEV_BYPASS_TOKEN,
   normalizeMemberPayload,
   generateAssignments,
   buildPlayerLookupPayload,
@@ -455,7 +417,6 @@ const routeContext = {
   setCookie,
   clearCookie,
   createSession,
-  ensureMemberships,
   exchangeDiscordToken,
   fetchDiscordUser,
   getDiscordDisplayName,
@@ -465,13 +426,19 @@ const routeContext = {
   requireAuthMiddleware,
   requireAllianceMiddleware,
   requireRoleMiddleware,
+  enforceRateLimit,
   selectUserByDiscordId,
   insertUser,
   updateUser,
   selectUserById,
   insertBootstrapRow,
-  selectProfile,
-  upsertProfile,
+  selectAllianceById,
+  selectProfilesByUser,
+  selectProfileById,
+  insertProfile,
+  updateProfile,
+  updateProfileFields,
+  updateProfileStatus,
   deleteSession,
   membersRepo,
   metaRepo,

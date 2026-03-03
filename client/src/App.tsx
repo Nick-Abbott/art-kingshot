@@ -1,20 +1,26 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useAlliance } from "./hooks/useAlliance";
+import { useProfileSelection } from "./hooks/useProfileSelection";
 import { useSession } from "./hooks/useSession";
 import VikingVengeance from "./VikingVengeance";
 import BearRally from "./BearRally";
+import Profiles from "./Profiles";
 
 function App() {
   const { t } = useTranslation();
   const [page, setPage] = useState(
     () => window.localStorage.getItem("currentPage") || "viking"
   );
-  const { status, user, memberships, error, setError, logout } = useSession();
-  const { selectedAlliance, setSelectedAlliance, canManage } = useAlliance(
-    memberships,
-    user
-  );
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement | null>(null);
+  const { status, user, profiles, setProfiles, error, setError, logout } =
+    useSession();
+  const {
+    selectedProfileId,
+    setSelectedProfileId,
+    selectedProfile,
+    canManage
+  } = useProfileSelection(profiles, user);
 
   function switchPage(newPage: string) {
     setPage(newPage);
@@ -27,10 +33,30 @@ function App() {
     }
   }, [error, setError, t]);
 
-  function handleAllianceChange(event: React.ChangeEvent<HTMLSelectElement>) {
-    const next = event.target.value;
-    setSelectedAlliance(next);
+  function handleProfileSelect(profileId: string) {
+    setSelectedProfileId(profileId);
+    setProfileMenuOpen(false);
   }
+
+  useEffect(() => {
+    function handleClick(event: MouseEvent) {
+      if (!profileMenuRef.current) return;
+      if (!profileMenuRef.current.contains(event.target as Node)) {
+        setProfileMenuOpen(false);
+      }
+    }
+    function handleKey(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setProfileMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, []);
 
   function handleLogin() {
     window.location.href = "/api/auth/discord";
@@ -69,6 +95,11 @@ function App() {
     );
   }
 
+  const showProfilesOnly = profiles.length === 0 || !selectedProfile;
+  const profilePending =
+    selectedProfile &&
+    (selectedProfile.status !== "active" || !selectedProfile.allianceId);
+
   return (
     <div className="app-shell">
       <nav className="app-nav">
@@ -85,18 +116,70 @@ function App() {
           >
             {t("app.tabs.bear")}
           </button>
+          <button
+            onClick={() => switchPage("profiles")}
+            className={`app-tab ${page === "profiles" ? "is-active" : ""}`}
+          >
+            {t("app.tabs.profiles")}
+          </button>
         </div>
         <div className="app-controls">
-          <label className="app-select">
-            <span>{t("app.alliance")}</span>
-            <select value={selectedAlliance} onChange={handleAllianceChange}>
-              {memberships.map((membership) => (
-                <option key={membership.allianceId} value={membership.allianceId}>
-                  {membership.allianceName}
-                </option>
-              ))}
-            </select>
-          </label>
+          <div className="profile-select" ref={profileMenuRef}>
+            <span className="profile-label">{t("app.profile")}</span>
+            <button
+              className="profile-trigger"
+              type="button"
+              onClick={() => setProfileMenuOpen((prev) => !prev)}
+              disabled={profiles.length === 0}
+            >
+              {selectedProfile?.playerAvatar ? (
+                <img src={selectedProfile.playerAvatar} alt="" />
+              ) : (
+                <span className="profile-avatar-fallback">
+                  {(selectedProfile?.playerName || selectedProfile?.playerId || "P")
+                    .slice(0, 1)
+                    .toUpperCase()}
+                </span>
+              )}
+              <span>
+                {selectedProfile?.playerName ||
+                  selectedProfile?.playerId ||
+                  t("app.profileNone")}
+              </span>
+              <span className="profile-caret" aria-hidden="true">
+                ▾
+              </span>
+            </button>
+            {profileMenuOpen && profiles.length > 0 && (
+              <div className="profile-menu" role="listbox">
+                {profiles.map((profile) => (
+                  <button
+                    key={profile.id}
+                    type="button"
+                    className={`profile-option${
+                      profile.id === selectedProfileId ? " is-selected" : ""
+                    }`}
+                    onClick={() => handleProfileSelect(profile.id)}
+                  >
+                    {profile.playerAvatar ? (
+                      <img src={profile.playerAvatar} alt="" />
+                    ) : (
+                      <span className="profile-avatar-fallback">
+                        {(profile.playerName || profile.playerId || "P")
+                          .slice(0, 1)
+                          .toUpperCase()}
+                      </span>
+                    )}
+                    <span>
+                      {profile.playerName ||
+                        profile.playerId ||
+                        t("app.profileFallback")}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <div className="user-chip">
             {user?.avatar ? (
               <img src={user.avatar} alt="" />
@@ -112,10 +195,36 @@ function App() {
           </button>
         </div>
       </nav>
-      {page === "viking" ? (
-        <VikingVengeance allianceId={selectedAlliance} canManage={canManage} />
+      {showProfilesOnly || page === "profiles" || profilePending ? (
+        <Profiles
+          user={user}
+          profiles={profiles}
+          setProfiles={setProfiles}
+          selectedProfile={selectedProfile}
+          selectedProfileId={selectedProfileId}
+        />
+      ) : page === "viking" ? (
+        <VikingVengeance
+          profileId={selectedProfileId}
+          profile={selectedProfile}
+          canManage={canManage}
+          onProfileUpdated={(updated) =>
+            setProfiles((prev) =>
+              prev.map((item) => (item.id === updated.id ? updated : item))
+            )
+          }
+        />
       ) : (
-        <BearRally allianceId={selectedAlliance} canManage={canManage} />
+        <BearRally
+          profileId={selectedProfileId}
+          profile={selectedProfile}
+          canManage={canManage}
+          onProfileUpdated={(updated) =>
+            setProfiles((prev) =>
+              prev.map((item) => (item.id === updated.id ? updated : item))
+            )
+          }
+        />
       )}
     </div>
   );

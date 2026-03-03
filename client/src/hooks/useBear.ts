@@ -7,7 +7,7 @@ import {
   type BearMember
 } from "../api/bear";
 
-export function useBear(allianceId: string) {
+export function useBear(profileId: string) {
   const [bear1Members, setBear1Members] = useState<BearMember[]>([]);
   const [bear2Members, setBear2Members] = useState<BearMember[]>([]);
   const [loading, setLoading] = useState(false);
@@ -15,15 +15,21 @@ export function useBear(allianceId: string) {
   const requestId = useRef(0);
 
   useEffect(() => {
-    if (!allianceId) return;
+    if (!profileId) {
+      setBear1Members([]);
+      setBear2Members([]);
+      setError("");
+      setLoading(false);
+      return;
+    }
     setBear1Members([]);
     setBear2Members([]);
     setError("");
     const current = ++requestId.current;
     setLoading(true);
     Promise.all([
-      fetchBearGroup(allianceId, "bear1"),
-      fetchBearGroup(allianceId, "bear2")
+      fetchBearGroup(profileId, "bear1"),
+      fetchBearGroup(profileId, "bear2")
     ])
       .then(([bear1, bear2]) => {
         if (current !== requestId.current) return;
@@ -38,14 +44,14 @@ export function useBear(allianceId: string) {
         if (current !== requestId.current) return;
         setLoading(false);
       });
-  }, [allianceId]);
+  }, [profileId]);
 
   async function upsertMember(
     group: "bear1" | "bear2",
     payload: { playerId: string; playerName: string; rallySize: number }
   ) {
-    if (!allianceId) return [];
-    const updated = await upsertBearMember(allianceId, group, payload);
+    if (!profileId) return [];
+    const updated = await upsertBearMember(profileId, group, payload);
     if (group === "bear1") {
       setBear1Members(updated);
       setBear2Members((prev) =>
@@ -61,8 +67,8 @@ export function useBear(allianceId: string) {
   }
 
   async function removeMember(group: "bear1" | "bear2", playerId: string) {
-    if (!allianceId) return [];
-    const updated = await removeBearMember(allianceId, group, playerId);
+    if (!profileId) return [];
+    const updated = await removeBearMember(profileId, group, playerId);
     if (group === "bear1") {
       setBear1Members(updated);
     } else {
@@ -72,8 +78,8 @@ export function useBear(allianceId: string) {
   }
 
   async function resetGroup(group: "bear1" | "bear2") {
-    if (!allianceId) return [];
-    const updated = await resetBearGroup(allianceId, group);
+    if (!profileId) return [];
+    const updated = await resetBearGroup(profileId, group);
     if (group === "bear1") {
       setBear1Members(updated);
     } else {
@@ -83,8 +89,8 @@ export function useBear(allianceId: string) {
   }
 
   async function refreshGroup(group: "bear1" | "bear2") {
-    if (!allianceId) return [];
-    const updated = await fetchBearGroup(allianceId, group);
+    if (!profileId) return [];
+    const updated = await fetchBearGroup(profileId, group);
     if (group === "bear1") {
       setBear1Members(updated);
     } else {

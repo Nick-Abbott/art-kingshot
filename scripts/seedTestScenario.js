@@ -44,12 +44,12 @@ function buildGroup(
   return members;
 }
 
-async function postJson(path, body) {
+async function postJson(path, body, profileId) {
   const response = await fetch(`${BASE_URL}${path}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...(ALLIANCE_ID ? { "x-alliance-id": ALLIANCE_ID } : {}),
+      ...(profileId ? { "x-profile-id": profileId } : {}),
       ...(DEV_BYPASS_TOKEN ? { "x-dev-bypass": DEV_BYPASS_TOKEN } : {}),
     },
     body: JSON.stringify(body),
@@ -136,10 +136,19 @@ async function run() {
     )
   );
 
-  await postJson("/api/reset", {});
+  const profileRes = await postJson("/api/profiles", {
+    playerId: "FIDSEED",
+    allianceId: ALLIANCE_ID,
+  });
+  const profileId = profileRes.data?.profile?.id;
+  if (!profileId) {
+    throw new Error("Failed to create seed profile.");
+  }
+
+  await postJson("/api/reset", {}, profileId);
 
   for (const member of members) {
-    await postJson("/api/signup", member);
+    await postJson("/api/signup", member, profileId);
   }
 
   console.log(`Seeded ${members.length} members.`);

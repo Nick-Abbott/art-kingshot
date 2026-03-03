@@ -13,7 +13,7 @@ describe("useBear", () => {
       .mockResolvedValueOnce([]);
     vi.spyOn(bearApi, "upsertBearMember").mockResolvedValue([memberA]);
 
-    const { result } = renderHook(() => useBear("art"));
+    const { result } = renderHook(() => useBear("p1"));
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -30,15 +30,15 @@ describe("useBear", () => {
     expect(result.current.bear1Members).toEqual([]);
   });
 
-  it("clears lists on alliance change", async () => {
+  it("clears lists on profile change", async () => {
     vi.spyOn(bearApi, "fetchBearGroup")
       .mockResolvedValueOnce([memberA])
       .mockResolvedValueOnce([memberB])
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([]);
 
-    const { result, rerender } = renderHook(({ allianceId }) => useBear(allianceId), {
-      initialProps: { allianceId: "art" }
+    const { result, rerender } = renderHook(({ profileId }) => useBear(profileId), {
+      initialProps: { profileId: "p1" }
     });
 
     await waitFor(() => {
@@ -48,7 +48,7 @@ describe("useBear", () => {
     expect(result.current.bear1Members).toEqual([memberA]);
     expect(result.current.bear2Members).toEqual([memberB]);
 
-    rerender({ allianceId: "beta" });
+    rerender({ profileId: "p2" });
 
     expect(result.current.bear1Members).toEqual([]);
     expect(result.current.bear2Members).toEqual([]);

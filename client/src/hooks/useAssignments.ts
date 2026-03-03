@@ -2,18 +2,23 @@ import { useEffect, useRef, useState } from "react";
 import { fetchResults, resetEvent, runAssignments } from "../api/assignments";
 import type { AssignmentResult } from "../api/assignments";
 
-export function useAssignments(allianceId: string) {
+export function useAssignments(profileId: string) {
   const [results, setResults] = useState<AssignmentResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const requestId = useRef(0);
 
   useEffect(() => {
-    if (!allianceId) return;
+    if (!profileId) {
+      setResults(null);
+      setError("");
+      setLoading(false);
+      return;
+    }
     const current = ++requestId.current;
     setLoading(true);
     setError("");
-    fetchResults(allianceId)
+    fetchResults(profileId)
       .then((data) => {
         if (current !== requestId.current) return;
         setResults(data || null);
@@ -26,24 +31,24 @@ export function useAssignments(allianceId: string) {
         if (current !== requestId.current) return;
         setLoading(false);
       });
-  }, [allianceId]);
+  }, [profileId]);
 
   useEffect(() => {
-    if (!allianceId) return;
+    if (!profileId) return;
     setError("");
-  }, [allianceId]);
+  }, [profileId]);
 
   async function run() {
-    if (!allianceId) return null;
-    const data = await runAssignments(allianceId);
+    if (!profileId) return null;
+    const data = await runAssignments(profileId);
     setResults(data || null);
     setError("");
     return data;
   }
 
   async function reset() {
-    if (!allianceId) return;
-    await resetEvent(allianceId);
+    if (!profileId) return;
+    await resetEvent(profileId);
     setResults(null);
     setError("");
   }

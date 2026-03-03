@@ -11,6 +11,7 @@ export type ApiFailure = {
 export type ApiResponse<T> = ApiSuccess<T> | ApiFailure;
 
 export type AllianceRole = "member" | "alliance_admin";
+export type ProfileStatus = "pending" | "active";
 
 export type User = {
   id: string;
@@ -20,16 +21,46 @@ export type User = {
   isAppAdmin?: number | boolean;
 };
 
-export type Membership = {
+export type Alliance = {
+  id: string;
+  name: string;
+  kingdomId: number;
+};
+
+export type Profile = {
+  id: string;
   userId: string;
-  allianceId: string;
+  playerId?: string | null;
+  playerName?: string | null;
+  playerAvatar?: string | null;
+  kingdomId?: number | null;
+  allianceId?: string | null;
+  allianceName?: string | null;
+  userDisplayName?: string | null;
+  status: ProfileStatus;
   role: AllianceRole;
-  allianceName?: string;
+  troopCount?: number | null;
+  marchCount?: number | null;
+  power?: number | null;
+  rallySize?: number | null;
 };
 
 export type SessionPayload = {
   user: User | null;
-  memberships: Membership[];
+  profiles: Profile[];
+};
+
+export type AlliancesPayload = {
+  alliances: Alliance[];
+};
+
+export type AlliancePayload = {
+  alliance: Alliance | null;
+};
+
+export type AllianceCreatePayload = {
+  alliance: Alliance | null;
+  profile: Profile | null;
 };
 
 export type Member = {
@@ -50,10 +81,15 @@ export type ProfileDefaults = {
   troopCount?: number | null;
   marchCount?: number | null;
   power?: number | null;
+  rallySize?: number | null;
+};
+
+export type ProfilesPayload = {
+  profiles: Profile[];
 };
 
 export type ProfilePayload = {
-  profile: ProfileDefaults | null;
+  profile: Profile | null;
 };
 
 export type BearGroup = "bear1" | "bear2";

@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { ApiError, apiFetch } from "../apiClient";
 
 describe("apiFetch", () => {
-  it("adds alliance header and JSON encodes body", async () => {
+  it("adds profile header and JSON encodes body", async () => {
     const fetchSpy = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({ ok: true }), {
         status: 200,
@@ -13,7 +13,7 @@ describe("apiFetch", () => {
 
     await apiFetch("/api/test", {
       method: "POST",
-      allianceId: "art",
+      profileId: "profile-1",
       body: { hello: "world" }
     });
 
@@ -23,7 +23,7 @@ describe("apiFetch", () => {
     const options = args[1] as RequestInit;
     expect(options.method).toBe("POST");
     expect(options.headers).toMatchObject({
-      "x-alliance-id": "art",
+      "x-profile-id": "profile-1",
       "Content-Type": "application/json"
     });
     expect(options.body).toBe(JSON.stringify({ hello: "world" }));

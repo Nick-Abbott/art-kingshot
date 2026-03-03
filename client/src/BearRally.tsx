@@ -3,15 +3,17 @@ import { useTranslation } from "react-i18next";
 import { ApiError } from "./apiClient";
 import { lookupPlayer } from "./api/playerLookup";
 import { useBear } from "./hooks/useBear";
-import { useProfileDefaults } from "./hooks/useProfileDefaults";
+import type { Profile } from "@shared/types";
+import { updateProfile } from "./api/profile";
 
 type Props = {
-  allianceId: string;
+  profileId: string;
+  profile: Profile | null;
   canManage: boolean;
+  onProfileUpdated: (profile: Profile) => void;
 };
 
 type BearForm = {
-  playerId: string;
   rallySize: string;
   bearGroup: "bear1" | "bear2";
   playerName: string;
@@ -21,7 +23,18 @@ function formatNumber(value: number) {
   return new Intl.NumberFormat().format(value);
 }
 
-function BearRally({ allianceId, canManage }: Props) {
+function formatNumberInput(value: string) {
+  const digits = value.replace(/[^0-9]/g, "");
+  if (!digits) return "";
+  return Number(digits).toLocaleString();
+}
+
+function parseNumber(value: string) {
+  const digits = String(value).replace(/[^0-9]/g, "");
+  return digits ? Number(digits) : 0;
+}
+
+function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
   const { t } = useTranslation();
   const {
     bear1Members,
@@ -30,9 +43,8 @@ function BearRally({ allianceId, canManage }: Props) {
     removeMember,
     resetGroup,
     refreshGroup
-  } = useBear(allianceId);
+  } = useBear(profileId);
   const [form, setForm] = useState<BearForm>({
-    playerId: "",
     rallySize: "",
     bearGroup: "bear1",
     playerName: ""
@@ -49,23 +61,18 @@ function BearRally({ allianceId, canManage }: Props) {
     playerId: string;
     bearGroup: "bear1" | "bear2";
   } | null>(null);
-  const { profile, error: profileError } = useProfileDefaults(
-    allianceId,
-    Boolean(editingMember)
-  );
   const [profileWarning, setProfileWarning] = useState("");
 
   useEffect(() => {
-    if (!allianceId) return;
+    if (!profileId) return;
     setEditingMember(null);
     setLookupStatus("");
-  }, [allianceId]);
+  }, [profileId]);
 
   useEffect(() => {
     if (profile || editingMember) return;
     setForm((prev) => ({
       ...prev,
-      playerId: "",
       playerName: ""
     }));
   }, [profile, editingMember]);
@@ -74,16 +81,10 @@ function BearRally({ allianceId, canManage }: Props) {
     if (!profile || editingMember) return;
     setForm((prev) => ({
       ...prev,
-      playerId: profile.playerId || "",
-      playerName: profile.playerName || ""
+      playerName: profile.playerName || "",
+      rallySize: profile.rallySize ? formatNumber(profile.rallySize) : prev.rallySize
     }));
   }, [profile, editingMember]);
-
-  useEffect(() => {
-    if (profileError) {
-      setProfileWarning(profileError);
-    }
-  }, [profileError]);
 
   useEffect(() => {
     if (profile) {
@@ -94,6 +95,10 @@ function BearRally({ allianceId, canManage }: Props) {
   function extractPlayerName(payload: any) {
     const data = payload?.data ?? payload;
     return (
+      data?.data?.data?.name ??
+      data?.data?.data?.nickname ??
+      data?.data?.data?.player_name ??
+      data?.data?.data?.role_name ??
       data?.data?.name ??
       data?.data?.nickname ??
       data?.data?.player_name ??
@@ -129,10 +134,10 @@ function BearRally({ allianceId, canManage }: Props) {
     setError("");
     setBusy(true);
     try {
-      if (!allianceId) {
+      if (!profileId || !profile?.playerId) {
         throw new Error(t("auth.notAuthorizedAction"));
       }
-      const fid = form.playerId.trim();
+      const fid = profile.playerId.trim();
       const inferredSourceGroup =
         form.bearGroup === "bear1"
           ? bear2Members.some((member) => member.playerId === fid)
@@ -150,8 +155,21 @@ function BearRally({ allianceId, canManage }: Props) {
       await upsertMember(form.bearGroup, {
         playerId: fid,
         playerName: resolvedName,
-        rallySize: Number(form.rallySize)
+        rallySize: parseNumber(form.rallySize)
       });
+
+      if (!editingMember) {
+        const updatedProfile = await updateProfile(profileId, {
+          playerId: fid,
+          playerName: resolvedName,
+          rallySize: parseNumber(form.rallySize)
+        });
+        if (updatedProfile) {
+          onProfileUpdated(updatedProfile);
+        } else {
+          setProfileWarning(t("profiles.errors.updateFailed"));
+        }
+      }
 
       const sourceGroup =
         editingMember && editingMember.bearGroup !== form.bearGroup
@@ -161,7 +179,7 @@ function BearRally({ allianceId, canManage }: Props) {
       if (sourceGroup) {
         await refreshGroup(sourceGroup);
       }
-      setForm({ playerId: "", rallySize: "", bearGroup: form.bearGroup, playerName: "" });
+      setForm({ rallySize: "", bearGroup: form.bearGroup, playerName: "" });
       setLookupStatus("");
       setEditingMember(null);
     } catch (submitError: any) {
@@ -179,9 +197,9 @@ function BearRally({ allianceId, canManage }: Props) {
     member: { playerId: string; playerName: string; rallySize: number },
     bearGroup: "bear1" | "bear2"
   ) {
+    if (member.playerId !== profile?.playerId) return;
     setEditingMember({ playerId: member.playerId, bearGroup });
     setForm({
-      playerId: member.playerId,
       rallySize: String(member.rallySize),
       bearGroup: bearGroup,
       playerName: member.playerName || ""
@@ -192,7 +210,7 @@ function BearRally({ allianceId, canManage }: Props) {
 
   function cancelEdit() {
     setEditingMember(null);
-    setForm({ playerId: "", rallySize: "", bearGroup: "bear1", playerName: "" });
+    setForm({ rallySize: "", bearGroup: "bear1", playerName: "" });
     setLookupStatus("");
     setError("");
   }
@@ -307,27 +325,15 @@ function BearRally({ allianceId, canManage }: Props) {
             </div>
             <form className="signup-form" onSubmit={submitSignup}>
               <label>
-                {t("bear.playerId")}
-                <input
-                  name="playerId"
-                  value={form.playerId}
-                  onChange={(e) => setForm({ ...form, playerId: e.target.value })}
-                  placeholder={t("bear.playerId")}
-                  required
-                  disabled={editingMember !== null}
-                  className={editingMember !== null ? "read-only" : ""}
-                />
-              </label>
-              {lookupStatus && <span className="lookup-status">{lookupStatus}</span>}
-              <label>
                 {t("bear.rallySize")}
                 <input
                   name="rallySize"
                   value={form.rallySize}
-                  onChange={(e) => setForm({ ...form, rallySize: e.target.value })}
-                  type="number"
-                  min="1"
-                  placeholder="500000"
+                  onChange={(e) =>
+                    setForm({ ...form, rallySize: formatNumberInput(e.target.value) })
+                  }
+                  inputMode="numeric"
+                  placeholder={formatNumber(500000)}
                   required
                 />
               </label>
@@ -349,6 +355,7 @@ function BearRally({ allianceId, canManage }: Props) {
                 {editingMember ? t("bear.update") : t("bear.register")}
               </button>
             </form>
+            {lookupStatus && <span className="lookup-status">{lookupStatus}</span>}
             {editingMember && (
               <button
                 className="ghost-button button-spacer"
@@ -394,7 +401,7 @@ function BearRally({ allianceId, canManage }: Props) {
                         className="ghost-button small"
                         type="button"
                         onClick={() => startEdit(member, "bear1")}
-                        disabled={busy}
+                        disabled={busy || member.playerId !== profile?.playerId}
                       >
                         {t("bear.edit")}
                       </button>
@@ -402,7 +409,11 @@ function BearRally({ allianceId, canManage }: Props) {
                         className="ghost-button small"
                         type="button"
                         onClick={() => removeMemberHandler("bear1", member.playerId)}
-                        disabled={busy || !canManage}
+                        disabled={
+                          busy ||
+                          member.playerId !== profile?.playerId ||
+                          !canManage
+                        }
                       >
                         {t("bear.remove")}
                       </button>
@@ -445,7 +456,7 @@ function BearRally({ allianceId, canManage }: Props) {
                         className="ghost-button small"
                         type="button"
                         onClick={() => startEdit(member, "bear2")}
-                        disabled={busy}
+                        disabled={busy || member.playerId !== profile?.playerId}
                       >
                         {t("bear.edit")}
                       </button>
@@ -453,7 +464,11 @@ function BearRally({ allianceId, canManage }: Props) {
                         className="ghost-button small"
                         type="button"
                         onClick={() => removeMemberHandler("bear2", member.playerId)}
-                        disabled={busy || !canManage}
+                        disabled={
+                          busy ||
+                          member.playerId !== profile?.playerId ||
+                          !canManage
+                        }
                       >
                         {t("bear.remove")}
                       </button>

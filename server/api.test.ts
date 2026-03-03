@@ -94,7 +94,7 @@ test("unauthenticated access returns 401", async () => {
   }
 });
 
-test("dev bypass allows auth and enforces alliance existence", async () => {
+test("dev bypass allows auth and enforces profile requirement", async () => {
   const dbPath = tmpDbPath();
   process.env.DB_PATH = dbPath;
   process.env.PORT = "0";
@@ -105,15 +105,16 @@ test("dev bypass allows auth and enforces alliance existence", async () => {
     const me = await requestJson(port, "GET", "/api/me", headers);
     assert.equal(me.status, 200);
     assert.equal(me.data.ok, true);
+    assert.ok(Array.isArray(me.data.data.profiles));
 
-    const badAlliance = await requestJson(
+    const missingProfile = await requestJson(
       port,
       "GET",
       "/api/members",
-      { ...headers, "x-alliance-id": "missing" }
+      headers
     );
-    assert.equal(badAlliance.status, 400);
-    assert.equal(badAlliance.data.ok, false);
+    assert.equal(missingProfile.status, 400);
+    assert.equal(missingProfile.data.ok, false);
   } finally {
     httpServer.close();
   }
@@ -127,6 +128,27 @@ test("alliance admin required for destructive endpoints", async () => {
   const { httpServer, port } = await startServer();
   try {
     const headers = { "x-dev-bypass": "test-bypass" };
+    const createProfile = await requestJson(
+      port,
+      "POST",
+      "/api/profiles",
+      { ...headers, "Content-Type": "application/json" },
+      JSON.stringify({ playerId: "FIDTEST", kingdomId: 1459 })
+    );
+    assert.equal(createProfile.status, 200);
+    const profileId = createProfile.data.data.profile.id;
+    const createAlliance = await requestJson(
+      port,
+      "POST",
+      "/api/alliances",
+      { ...headers, "Content-Type": "application/json", "x-profile-id": profileId },
+      JSON.stringify({ tag: "ART", name: "ArtsOFwar" })
+    );
+    assert.equal(createAlliance.status, 200);
+    const profileHeaders = {
+      ...headers,
+      "x-profile-id": createAlliance.data.data.profile.id,
+    };
 
     const signupBody = JSON.stringify({
       playerId: "FID00001",
@@ -139,7 +161,7 @@ test("alliance admin required for destructive endpoints", async () => {
       port,
       "POST",
       "/api/signup",
-      { ...headers, "Content-Type": "application/json" },
+      { ...profileHeaders, "Content-Type": "application/json" },
       signupBody
     );
     assert.equal(signup.status, 200);
@@ -148,9 +170,55 @@ test("alliance admin required for destructive endpoints", async () => {
       port,
       "DELETE",
       "/api/members/FID00001",
-      headers
+      profileHeaders
     );
     assert.equal(remove.status, 200);
+  } finally {
+    httpServer.close();
+  }
+});
+
+test("alliance create and delete updates profile", async () => {
+  const dbPath = tmpDbPath();
+  process.env.DB_PATH = dbPath;
+  process.env.PORT = "0";
+  process.env.DEV_BYPASS_TOKEN = "test-bypass";
+  const { httpServer, port } = await startServer();
+  try {
+    const headers = { "x-dev-bypass": "test-bypass" };
+    const createProfile = await requestJson(
+      port,
+      "POST",
+      "/api/profiles",
+      { ...headers, "Content-Type": "application/json" },
+      JSON.stringify({ playerId: "FIDCREATE", kingdomId: 1459 })
+    );
+    assert.equal(createProfile.status, 200);
+    const profileId = createProfile.data.data.profile.id;
+
+    const createAlliance = await requestJson(
+      port,
+      "POST",
+      "/api/alliances",
+      { ...headers, "Content-Type": "application/json", "x-profile-id": profileId },
+      JSON.stringify({ tag: "XYZ", name: "Test Alliance" })
+    );
+    assert.equal(createAlliance.status, 200);
+    assert.equal(createAlliance.data.data.alliance.id, "xyz");
+    assert.equal(createAlliance.data.data.profile.role, "alliance_admin");
+
+    const deleteAlliance = await requestJson(
+      port,
+      "DELETE",
+      "/api/alliances/xyz",
+      { ...headers, "x-profile-id": profileId }
+    );
+    assert.equal(deleteAlliance.status, 200);
+
+    const me = await requestJson(port, "GET", "/api/me", headers);
+    const updated = me.data.data.profiles.find((p) => p.id === profileId);
+    assert.ok(updated);
+    assert.equal(updated.allianceId, null);
   } finally {
     httpServer.close();
   }

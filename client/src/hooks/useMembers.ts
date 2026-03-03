@@ -1,18 +1,23 @@
 import { useEffect, useRef, useState } from "react";
 import { fetchMembers, removeMember, signupMember, type Member } from "../api/members";
 
-export function useMembers(allianceId: string) {
+export function useMembers(profileId: string) {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const requestId = useRef(0);
 
   useEffect(() => {
-    if (!allianceId) return;
+    if (!profileId) {
+      setMembers([]);
+      setError("");
+      setLoading(false);
+      return;
+    }
     const current = ++requestId.current;
     setLoading(true);
     setError("");
-    fetchMembers(allianceId)
+    fetchMembers(profileId)
       .then((data) => {
         if (current !== requestId.current) return;
         setMembers(data || []);
@@ -25,7 +30,7 @@ export function useMembers(allianceId: string) {
         if (current !== requestId.current) return;
         setLoading(false);
       });
-  }, [allianceId]);
+  }, [profileId]);
 
   async function saveMember(payload: {
     playerId: string;
@@ -34,9 +39,9 @@ export function useMembers(allianceId: string) {
     marchCount: number;
     power: number;
   }) {
-    if (!allianceId) return [];
+    if (!profileId) return [];
     try {
-      const updated = await signupMember(allianceId, payload);
+      const updated = await signupMember(profileId, payload);
       setMembers(updated);
       setError("");
       return updated;
@@ -47,9 +52,9 @@ export function useMembers(allianceId: string) {
   }
 
   async function deleteMember(playerId: string) {
-    if (!allianceId) return [];
+    if (!profileId) return [];
     try {
-      const updated = await removeMember(allianceId, playerId);
+      const updated = await removeMember(profileId, playerId);
       setMembers(updated);
       setError("");
       return updated;

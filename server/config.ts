@@ -32,8 +32,6 @@ const config = {
   discordClientSecret: getEnv("DISCORD_CLIENT_SECRET", { fallback: "" }),
   discordRedirectUri: getEnv("DISCORD_REDIRECT_URI", { fallback: "" }),
   sessionTtlDays: getNumberEnv("SESSION_TTL_DAYS", { fallback: 14 }),
-  defaultAllianceId: getEnv("DEFAULT_ALLIANCE_ID", { fallback: "art" }),
-  defaultAllianceName: getEnv("DEFAULT_ALLIANCE_NAME", { fallback: "ART Alliance" }),
   devBypassToken: getEnv("DEV_BYPASS_TOKEN", { fallback: "" }),
   nodeEnv: getEnv("NODE_ENV", { fallback: "" }),
 };

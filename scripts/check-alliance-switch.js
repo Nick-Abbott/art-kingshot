@@ -17,32 +17,40 @@ async function run() {
   if (!me.res.ok) {
     throw new Error(`Expected /api/me ok, got ${me.res.status}`);
   }
-  const memberships = me.data?.data?.memberships || [];
-  if (memberships.length === 0) {
-    throw new Error("Expected at least one membership.");
-  }
-  const allianceId = memberships[0].allianceId;
+  let profiles = me.data?.data?.profiles || [];
 
-  const implicit = await request("/api/members", { headers });
-  if (!implicit.res.ok) {
-    throw new Error(`Expected implicit alliance to work, got ${implicit.res.status}`);
+  if (profiles.length === 0) {
+    const created = await request("/api/profiles", {
+      method: "POST",
+      headers: { ...headers, "Content-Type": "application/json" },
+      body: JSON.stringify({ playerId: "FIDTEST", allianceId: "art" })
+    });
+    if (!created.res.ok) {
+      throw new Error(`Expected profile create ok, got ${created.res.status}`);
+    }
+    profiles = [created.data?.data?.profile].filter(Boolean);
+  }
+
+  const profileId = profiles[0].id;
+  if (!profileId) {
+    throw new Error("Expected a profile id.");
   }
 
   const explicit = await request("/api/members", {
-    headers: { ...headers, "x-alliance-id": allianceId },
+    headers: { ...headers, "x-profile-id": profileId }
   });
   if (!explicit.res.ok) {
-    throw new Error(`Expected explicit alliance to work, got ${explicit.res.status}`);
+    throw new Error(`Expected profile-scoped members to work, got ${explicit.res.status}`);
   }
 
   const invalid = await request("/api/members", {
-    headers: { ...headers, "x-alliance-id": "invalid-alliance" },
+    headers: { ...headers, "x-profile-id": "invalid-profile" }
   });
-  if (invalid.res.status !== 400) {
-    throw new Error(`Expected invalid alliance to 400, got ${invalid.res.status}`);
+  if (invalid.res.status !== 404) {
+    throw new Error(`Expected invalid profile to 404, got ${invalid.res.status}`);
   }
 
-  console.log("Alliance switch smoke check passed.");
+  console.log("Profile switch smoke check passed.");
 }
 
 run().catch((error) => {

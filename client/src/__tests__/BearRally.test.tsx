@@ -1,6 +1,7 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import BearRally from "../BearRally";
+import type { Profile } from "@shared/types";
 
 const bearMember = {
   playerId: "FID9",
@@ -15,8 +16,6 @@ const resetGroup = vi.fn().mockResolvedValue([]);
 const refreshGroup = vi.fn().mockResolvedValue([]);
 const setBear1Members = vi.fn();
 const setBear2Members = vi.fn();
-
-let profile: any = { playerId: "PROFILE", rallySize: 700000 };
 
 vi.mock("../hooks/useBear", () => ({
   useBear: () => ({
@@ -33,43 +32,81 @@ vi.mock("../hooks/useBear", () => ({
   })
 }));
 
-vi.mock("../hooks/useProfileDefaults", () => ({
-  useProfileDefaults: () => ({
-    profile,
-    loading: false,
-    error: "",
-    saveDefaults: vi.fn(),
-    setProfile: vi.fn()
-  })
+const updateProfile = vi.fn().mockResolvedValue({
+  id: "p1",
+  userId: "u1",
+  playerId: "FID9",
+  playerName: "Bear",
+  allianceId: "art",
+  status: "active",
+  role: "member"
+});
+
+vi.mock("../api/profile", () => ({
+  updateProfile: (...args: any[]) => updateProfile(...args)
 }));
 
-const lookupPlayer = vi.fn().mockResolvedValue({ data: { playerName: "Lookup" } });
+const lookupPlayer = vi.fn().mockResolvedValue({
+  data: { data: { nickname: "Lookup" } }
+});
 vi.mock("../api/playerLookup", () => ({
   lookupPlayer: (...args: any[]) => lookupPlayer(...args)
 }));
 
 describe("BearRally", () => {
+  const baseProfile: Profile = {
+    id: "p1",
+    userId: "u1",
+    playerId: "FID9",
+    playerName: "Bear",
+    allianceId: "art",
+    status: "active",
+    role: "member",
+    rallySize: 700000
+  };
+
   beforeEach(() => {
-    profile = { playerId: "PROFILE", rallySize: 700000 };
+    updateProfile.mockClear();
   });
 
   it("keeps edit values even when profile defaults exist", () => {
-    render(<BearRally allianceId="art" canManage={true} />);
+    render(
+      <BearRally
+        profileId="p1"
+        profile={baseProfile}
+        canManage={true}
+        onProfileUpdated={vi.fn()}
+      />
+    );
 
     fireEvent.click(screen.getAllByText("bear.edit")[0]);
 
-    const playerIdInput = screen.getByLabelText("bear.playerId") as HTMLInputElement;
-    expect(playerIdInput.value).toBe(bearMember.playerId);
+    const rallyInput = screen.getByLabelText("bear.rallySize") as HTMLInputElement;
+    expect(rallyInput.value).toBe(String(bearMember.rallySize));
   });
 
-  it("clears edit mode on alliance switch", () => {
-    const { rerender } = render(<BearRally allianceId="art" canManage={true} />);
+  it("clears edit mode on profile switch", () => {
+    const { rerender } = render(
+      <BearRally
+        profileId="p1"
+        profile={baseProfile}
+        canManage={true}
+        onProfileUpdated={vi.fn()}
+      />
+    );
 
     fireEvent.click(screen.getAllByText("bear.edit")[0]);
 
-    rerender(<BearRally allianceId="beta" canManage={true} />);
+    rerender(
+      <BearRally
+        profileId="p2"
+        profile={{ ...baseProfile, id: "p2" }}
+        canManage={true}
+        onProfileUpdated={vi.fn()}
+      />
+    );
 
-    const playerIdInput = screen.getByLabelText("bear.playerId") as HTMLInputElement;
-    expect(playerIdInput.disabled).toBe(false);
+    const submitButton = screen.getByRole("button", { name: "bear.register" });
+    expect(submitButton).toBeInTheDocument();
   });
 });

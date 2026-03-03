@@ -13,7 +13,7 @@ describe("useSession", () => {
       expect(result.current.status).toBe("unauthenticated");
     });
     expect(result.current.user).toBe(null);
-    expect(result.current.memberships).toEqual([]);
+    expect(result.current.profiles).toEqual([]);
   });
 
   it("sets authenticated on success", async () => {
@@ -26,12 +26,15 @@ describe("useSession", () => {
           displayName: "Test",
           isAppAdmin: 0
         },
-        memberships: [
+        profiles: [
           {
+            id: "p1",
             userId: "u1",
+            playerId: "FID1",
+            playerName: "Alpha",
             allianceId: "art",
-            role: "alliance_admin",
-            allianceName: "ART"
+            status: "active",
+            role: "alliance_admin"
           }
         ]
       }
@@ -43,7 +46,7 @@ describe("useSession", () => {
       expect(result.current.status).toBe("authenticated");
     });
     expect(result.current.user?.displayName).toBe("Test");
-    expect(result.current.memberships).toHaveLength(1);
+    expect(result.current.profiles).toHaveLength(1);
   });
 
   it("surfaces error on fetch error", async () => {

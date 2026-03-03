@@ -3,20 +3,20 @@ import type { ApiResponse, AssignmentResult, ResultsPayload } from "@shared/type
 
 export type { AssignmentResult };
 
-export async function runAssignments(allianceId: string): Promise<AssignmentResult | null> {
-  const res = await apiFetch("/api/run", { method: "POST", allianceId });
+export async function runAssignments(profileId: string): Promise<AssignmentResult | null> {
+  const res = await apiFetch("/api/run", { method: "POST", profileId });
   const payload = res.data as ApiResponse<AssignmentResult>;
   if (!payload || payload.ok === false) return null;
   return payload.data || null;
 }
 
-export async function fetchResults(allianceId: string): Promise<AssignmentResult | null> {
-  const res = await apiFetch("/api/results", { allianceId });
+export async function fetchResults(profileId: string): Promise<AssignmentResult | null> {
+  const res = await apiFetch("/api/results", { profileId });
   const payload = res.data as ApiResponse<ResultsPayload>;
   if (!payload || payload.ok === false) return null;
   return payload.data?.results || null;
 }
 
-export async function resetEvent(allianceId: string) {
-  await apiFetch("/api/reset", { method: "POST", allianceId });
+export async function resetEvent(profileId: string) {
+  await apiFetch("/api/reset", { method: "POST", profileId });
 }

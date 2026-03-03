@@ -1,6 +1,7 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import VikingVengeance from "../VikingVengeance";
+import type { Profile } from "@shared/types";
 
 const member = {
   playerId: "FID1",
@@ -14,7 +15,15 @@ const saveMember = vi.fn().mockResolvedValue([member]);
 const deleteMember = vi.fn().mockResolvedValue([]);
 const setMembers = vi.fn();
 
-let profile: any = { playerId: "PROFILE", troopCount: 5000, marchCount: 5, power: 3000000 };
+const updateProfile = vi.fn().mockResolvedValue({
+  id: "p1",
+  userId: "u1",
+  playerId: "FID1",
+  playerName: "Alpha",
+  allianceId: "art",
+  status: "active",
+  role: "member"
+});
 
 vi.mock("../hooks/useMembers", () => ({
   useMembers: () => ({
@@ -37,40 +46,63 @@ vi.mock("../hooks/useAssignments", () => ({
   })
 }));
 
-vi.mock("../hooks/useProfileDefaults", () => ({
-  useProfileDefaults: () => ({
-    profile,
-    loading: false,
-    error: "",
-    saveDefaults: vi.fn(),
-    setProfile: vi.fn()
-  })
+vi.mock("../api/profile", () => ({
+  updateProfile: (...args: any[]) => updateProfile(...args)
 }));
 
-const lookupPlayer = vi.fn().mockResolvedValue({ data: { playerName: "Lookup" } });
+const lookupPlayer = vi.fn().mockResolvedValue({
+  data: { data: { nickname: "Lookup" } }
+});
 vi.mock("../api/playerLookup", () => ({
   lookupPlayer: (...args: any[]) => lookupPlayer(...args)
 }));
 
 describe("VikingVengeance", () => {
+  const baseProfile: Profile = {
+    id: "p1",
+    userId: "u1",
+    playerId: "FID1",
+    playerName: "Alpha",
+    allianceId: "art",
+    status: "active",
+    role: "member",
+    troopCount: 5000,
+    marchCount: 5,
+    power: 3000000
+  };
+
   beforeEach(() => {
     saveMember.mockClear();
     lookupPlayer.mockClear();
-    profile = { playerId: "PROFILE", troopCount: 5000, marchCount: 5, power: 3000000 };
+    updateProfile.mockClear();
   });
 
   it("keeps edit values even when profile defaults exist", async () => {
-    render(<VikingVengeance allianceId="art" canManage={true} />);
+    render(
+      <VikingVengeance
+        profileId="p1"
+        profile={baseProfile}
+        canManage={true}
+        onProfileUpdated={vi.fn()}
+      />
+    );
 
     const editButton = await screen.findByText("viking.edit");
     fireEvent.click(editButton);
 
-    const playerIdInput = screen.getByLabelText("viking.playerId") as HTMLInputElement;
-    expect(playerIdInput.value).toBe(member.playerId);
+    const troopInput = screen.getByLabelText("viking.troopCount") as HTMLInputElement;
+    expect(troopInput.value).toBe(String(member.troopCount));
   });
 
   it("submits update without triggering lookup", async () => {
-    render(<VikingVengeance allianceId="art" canManage={true} />);
+    render(
+      <VikingVengeance
+        profileId="p1"
+        profile={baseProfile}
+        canManage={true}
+        onProfileUpdated={vi.fn()}
+      />
+    );
 
     fireEvent.click(screen.getByText("viking.edit"));
 
@@ -83,11 +115,15 @@ describe("VikingVengeance", () => {
     expect(lookupPlayer).not.toHaveBeenCalled();
   });
 
-  it("runs player lookup on playerId change in create mode", async () => {
-    render(<VikingVengeance allianceId="art" canManage={true} />);
-
-    const playerIdInput = screen.getByLabelText("viking.playerId") as HTMLInputElement;
-    fireEvent.change(playerIdInput, { target: { value: "FID2" } });
+  it("runs player lookup when profile name is missing", async () => {
+    render(
+      <VikingVengeance
+        profileId="p1"
+        profile={{ ...baseProfile, playerName: "", playerId: "PROFILE" }}
+        canManage={true}
+        onProfileUpdated={vi.fn()}
+      />
+    );
 
     const submitButton = screen.getByRole("button", { name: "viking.saveSignup" });
     fireEvent.click(submitButton);
@@ -97,16 +133,28 @@ describe("VikingVengeance", () => {
     });
   });
 
-  it("clears edit mode on alliance switch", async () => {
+  it("clears edit mode on profile switch", async () => {
     const { rerender } = render(
-      <VikingVengeance allianceId="art" canManage={true} />
+      <VikingVengeance
+        profileId="p1"
+        profile={baseProfile}
+        canManage={true}
+        onProfileUpdated={vi.fn()}
+      />
     );
 
     fireEvent.click(screen.getByText("viking.edit"));
 
-    rerender(<VikingVengeance allianceId="beta" canManage={true} />);
+    rerender(
+      <VikingVengeance
+        profileId="p2"
+        profile={{ ...baseProfile, id: "p2" }}
+        canManage={true}
+        onProfileUpdated={vi.fn()}
+      />
+    );
 
-    const playerIdInput = screen.getByLabelText("viking.playerId") as HTMLInputElement;
-    expect(playerIdInput.disabled).toBe(false);
+    const submitButton = screen.getByRole("button", { name: "viking.saveSignup" });
+    expect(submitButton).toBeInTheDocument();
   });
 });

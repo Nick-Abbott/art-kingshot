@@ -5,11 +5,11 @@ import { lookupPlayer } from "./api/playerLookup";
 import type { AssignmentResult } from "./api/assignments";
 import { useAssignments } from "./hooks/useAssignments";
 import { useMembers } from "./hooks/useMembers";
-import { useProfileDefaults } from "./hooks/useProfileDefaults";
 import type { Member } from "./api/members";
+import type { Profile } from "@shared/types";
+import { updateProfile } from "./api/profile";
 
 type VikingForm = {
-  playerId: string;
   troopCount: string;
   playerName: string;
   marchCount: string;
@@ -17,7 +17,6 @@ type VikingForm = {
 };
 
 const emptyForm: VikingForm = {
-  playerId: "",
   troopCount: "",
   playerName: "",
   marchCount: "4",
@@ -29,29 +28,25 @@ function formatNumber(value: number) {
 }
 
 type Props = {
-  allianceId: string;
+  profileId: string;
+  profile: Profile | null;
   canManage: boolean;
+  onProfileUpdated: (profile: Profile) => void;
 };
 
 type AssignmentMember = AssignmentResult["members"][number];
 
-function VikingVengeance({ allianceId, canManage }: Props) {
+function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Props) {
   const { t } = useTranslation();
   const [form, setForm] = useState<VikingForm>(emptyForm);
-  const { members, setMembers, saveMember, deleteMember } = useMembers(allianceId);
-  const { results, run, reset } = useAssignments(allianceId);
+  const { members, setMembers, saveMember, deleteMember } = useMembers(profileId);
+  const { results, run, reset } = useAssignments(profileId);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [lookupStatus, setLookupStatus] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [editingMember, setEditingMember] = useState<string | null>(null);
-  const [saveDefaults, setSaveDefaults] = useState(true);
   const [lastLookupId, setLastLookupId] = useState("");
-  const {
-    profile,
-    saveDefaults: saveProfileDefaults,
-    error: profileError
-  } = useProfileDefaults(allianceId, Boolean(editingMember));
   const [profileWarning, setProfileWarning] = useState("");
 
   const memberCount = members.length;
@@ -131,10 +126,10 @@ function VikingVengeance({ allianceId, canManage }: Props) {
       : "";
 
   useEffect(() => {
-    if (!allianceId) return;
+    if (!profileId) return;
     setEditingMember(null);
     setLookupStatus("");
-  }, [allianceId]);
+  }, [profileId]);
 
   useEffect(() => {
     if (profile || editingMember) return;
@@ -144,19 +139,12 @@ function VikingVengeance({ allianceId, canManage }: Props) {
   useEffect(() => {
     if (!profile || editingMember) return;
     setForm({
-      playerId: profile.playerId || "",
-      troopCount: profile.troopCount ? String(profile.troopCount) : "",
+      troopCount: profile.troopCount ? formatNumber(profile.troopCount) : "",
       playerName: profile.playerName || "",
       marchCount: profile.marchCount ? String(profile.marchCount) : "4",
       power: profile.power ? formatNumber(profile.power) : ""
     });
   }, [profile, editingMember]);
-
-  useEffect(() => {
-    if (profileError) {
-      setProfileWarning(profileError);
-    }
-  }, [profileError]);
 
   useEffect(() => {
     if (profile) {
@@ -174,14 +162,8 @@ function VikingVengeance({ allianceId, canManage }: Props) {
         : false;
     setForm((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
-      ...(name === "playerId" && !editingMember ? { playerName: "" } : {})
+      [name]: type === "checkbox" ? checked : value
     }));
-
-    if (name === "playerId" && !editingMember) {
-      setLookupStatus("");
-      setLastLookupId("");
-    }
   }
 
   function formatNumberInput(value: string) {
@@ -197,6 +179,13 @@ function VikingVengeance({ allianceId, canManage }: Props) {
     }));
   }
 
+  function updateTroopCount(event: React.ChangeEvent<HTMLInputElement>) {
+    setForm((prev) => ({
+      ...prev,
+      troopCount: formatNumberInput(event.target.value)
+    }));
+  }
+
   function parseNumber(value: string) {
     const digits = String(value).replace(/[^0-9]/g, "");
     return digits ? Number(digits) : 0;
@@ -205,6 +194,10 @@ function VikingVengeance({ allianceId, canManage }: Props) {
   function extractPlayerName(payload: any) {
     const data = payload?.data ?? payload;
     return (
+      data?.data?.data?.name ??
+      data?.data?.data?.nickname ??
+      data?.data?.data?.player_name ??
+      data?.data?.data?.role_name ??
       data?.data?.name ??
       data?.data?.nickname ??
       data?.data?.player_name ??
@@ -221,14 +214,53 @@ function VikingVengeance({ allianceId, canManage }: Props) {
     );
   }
 
-  async function lookupPlayerName(fid: string) {
+  function extractPlayerAvatar(payload: any) {
+    const data = payload?.data ?? payload;
+    return (
+      data?.data?.data?.avatar ??
+      data?.data?.data?.avatar_url ??
+      data?.data?.data?.avatar_image ??
+      data?.data?.data?.headimg ??
+      data?.data?.data?.headimgurl ??
+      data?.data?.data?.icon ??
+      data?.data?.data?.profile?.avatar ??
+      data?.data?.avatar ??
+      data?.data?.avatar_url ??
+      data?.data?.avatar_image ??
+      data?.data?.headimg ??
+      data?.data?.headimgurl ??
+      data?.data?.icon ??
+      data?.data?.profile?.avatar ??
+      data?.avatar ??
+      data?.avatar_url ??
+      data?.headimg ??
+      data?.headimgurl ??
+      data?.icon ??
+      data?.profile?.avatar ??
+      ""
+    );
+  }
+
+  function extractKingdomId(payload: any) {
+    const data = payload?.data ?? payload;
+    const kingdom =
+      data?.data?.data?.kid ??
+      data?.data?.kid ??
+      data?.kid ??
+      null;
+    return Number.isFinite(Number(kingdom)) ? Number(kingdom) : null;
+  }
+
+  async function lookupPlayerProfile(fid: string) {
     setLookupStatus(t("viking.lookup.looking"));
     try {
       const res = await lookupPlayer(fid);
       const name = extractPlayerName(res);
       if (!name) throw new Error(t("viking.errors.noPlayerName"));
       setLookupStatus(t("viking.lookup.found", { name }));
-      return name;
+      const avatar = extractPlayerAvatar(res);
+      const kingdomId = extractKingdomId(res);
+      return { name, avatar, kingdomId };
     } catch (lookupErr) {
       setLookupStatus("");
       throw lookupErr;
@@ -240,34 +272,46 @@ function VikingVengeance({ allianceId, canManage }: Props) {
     setError("");
     setBusy(true);
     try {
-      if (!allianceId) {
+      if (!profileId || !profile?.playerId) {
         throw new Error(t("auth.notAuthorizedAction"));
       }
-      const fid = form.playerId.trim();
+      const fid = profile.playerId.trim();
       let resolvedName = form.playerName;
+      let resolvedAvatar = profile?.playerAvatar || "";
+      let resolvedKingdomId = profile?.kingdomId ?? null;
 
       if (!editingMember && (!resolvedName || fid !== lastLookupId)) {
-        resolvedName = await lookupPlayerName(fid);
+        const lookup = await lookupPlayerProfile(fid);
+        resolvedName = lookup.name;
+        resolvedAvatar = lookup.avatar;
+        resolvedKingdomId = lookup.kingdomId ?? null;
         setLastLookupId(fid);
       }
 
       const updatedMembers = await saveMember({
         playerId: fid,
-        troopCount: Number(form.troopCount),
+        troopCount: parseNumber(form.troopCount),
         playerName: resolvedName,
         marchCount: Number(form.marchCount),
         power: parseNumber(form.power)
       });
       setMembers(updatedMembers);
       setError("");
-      if (saveDefaults && !editingMember) {
-        await saveProfileDefaults({
+      if (!editingMember) {
+        const updatedProfile = await updateProfile(profileId, {
           playerId: fid,
-          troopCount: Number(form.troopCount),
+          troopCount: parseNumber(form.troopCount),
           playerName: resolvedName,
           marchCount: Number(form.marchCount),
-          power: parseNumber(form.power)
+          power: parseNumber(form.power),
+          playerAvatar: resolvedAvatar || null,
+          kingdomId: resolvedKingdomId
         });
+        if (updatedProfile) {
+          onProfileUpdated(updatedProfile);
+        } else {
+          setProfileWarning(t("profiles.errors.updateFailed"));
+        }
       }
       setForm(emptyForm);
       setLookupStatus("");
@@ -280,9 +324,9 @@ function VikingVengeance({ allianceId, canManage }: Props) {
   }
 
   function startEdit(member: Member) {
+    if (member.playerId !== profile?.playerId) return;
     setEditingMember(member.playerId);
     setForm({
-      playerId: member.playerId,
       troopCount: String(member.troopCount),
       playerName: member.playerName || "",
       marchCount: String(member.marchCount),
@@ -436,19 +480,6 @@ function VikingVengeance({ allianceId, canManage }: Props) {
               </div>
               <form className="signup-form" onSubmit={submitSignup}>
                 <label>
-                  {t("viking.playerId")}
-                  <input
-                    name="playerId"
-                    value={form.playerId}
-                    onChange={updateForm}
-                    placeholder={t("viking.playerId")}
-                    required
-                    disabled={editingMember !== null}
-                    className={editingMember !== null ? "read-only" : ""}
-                  />
-                </label>
-                {lookupStatus && <span className="lookup-status">{lookupStatus}</span>}
-                <label>
                   {t("viking.marchCount")}
                   <input
                     name="marchCount"
@@ -467,7 +498,7 @@ function VikingVengeance({ allianceId, canManage }: Props) {
                     value={form.power}
                     onChange={updatePower}
                     inputMode="numeric"
-                    placeholder="33,000,000"
+                    placeholder={formatNumber(33000000)}
                     required
                   />
                 </label>
@@ -476,25 +507,17 @@ function VikingVengeance({ allianceId, canManage }: Props) {
                   <input
                     name="troopCount"
                     value={form.troopCount}
-                    onChange={updateForm}
-                    type="number"
-                    min="1"
-                    placeholder="450000"
+                    onChange={updateTroopCount}
+                    inputMode="numeric"
+                    placeholder={formatNumber(450000)}
                     required
                   />
-                </label>
-                <label className="checkbox-field">
-                  <input
-                    type="checkbox"
-                    checked={saveDefaults}
-                    onChange={(event) => setSaveDefaults(event.target.checked)}
-                  />
-                  <span>{t("viking.saveDefaults")}</span>
                 </label>
                 <button className="primary-button" type="submit" disabled={busy}>
                   {editingMember ? t("viking.update") : t("viking.saveSignup")}
                 </button>
               </form>
+              {lookupStatus && <span className="lookup-status">{lookupStatus}</span>}
               {editingMember && (
                 <button
                   className="ghost-button button-spacer"
@@ -574,7 +597,7 @@ function VikingVengeance({ allianceId, canManage }: Props) {
                           className="ghost-button small"
                           type="button"
                           onClick={() => startEdit(member)}
-                          disabled={busy}
+                          disabled={busy || member.playerId !== profile?.playerId}
                         >
                           {t("viking.edit")}
                         </button>
@@ -582,7 +605,11 @@ function VikingVengeance({ allianceId, canManage }: Props) {
                           className="ghost-button small"
                           type="button"
                           onClick={() => removeSignup(member.playerId)}
-                          disabled={busy || !canManage}
+                          disabled={
+                            busy ||
+                            member.playerId !== profile?.playerId ||
+                            !canManage
+                          }
                         >
                           {t("viking.remove")}
                         </button>

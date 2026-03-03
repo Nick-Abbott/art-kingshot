@@ -12,7 +12,7 @@ type ApiFetchOptions = {
   method?: string;
   headers?: Record<string, string>;
   body?: unknown;
-  allianceId?: string;
+  profileId?: string;
   signal?: AbortSignal;
   allowNonOk?: boolean;
 };
@@ -23,7 +23,7 @@ export async function apiFetch(
     method = "GET",
     headers = {},
     body,
-    allianceId,
+    profileId,
     signal,
     allowNonOk = false
   }: ApiFetchOptions = {}
@@ -31,8 +31,8 @@ export async function apiFetch(
   const finalHeaders: Record<string, string> = { ...headers };
   let payload: BodyInit | undefined;
 
-  if (allianceId) {
-    finalHeaders["x-alliance-id"] = allianceId;
+  if (profileId) {
+    finalHeaders["x-profile-id"] = profileId;
   }
 
   if (body && !(body instanceof FormData)) {

@@ -1,25 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { fetchSession, logout as logoutSession } from "../api/session";
-
-type Membership = {
-  userId: string;
-  allianceId: string;
-  role: string;
-  allianceName?: string;
-};
-
-type User = {
-  id: string;
-  discordId: string;
-  displayName: string;
-  avatar?: string | null;
-  isAppAdmin?: number | boolean;
-};
+import type { Profile, User } from "@shared/types";
 
 export function useSession() {
   const [status, setStatus] = useState("loading");
   const [user, setUser] = useState<User | null>(null);
-  const [memberships, setMemberships] = useState<Membership[]>([]);
+  const [profiles, setProfiles] = useState<Profile[]>([]);
   const [error, setError] = useState("");
 
   const refresh = useCallback(async () => {
@@ -29,7 +15,7 @@ export function useSession() {
       const res = await fetchSession();
       if (res.status === 401) {
         setUser(null);
-        setMemberships([]);
+        setProfiles([]);
         setStatus("unauthenticated");
         return;
       }
@@ -39,7 +25,7 @@ export function useSession() {
         return;
       }
       setUser(res.data?.user || null);
-      setMemberships(res.data?.memberships || []);
+      setProfiles(res.data?.profiles || []);
       setStatus("authenticated");
     } catch (err) {
       setError("Failed to load session.");
@@ -54,14 +40,15 @@ export function useSession() {
   const logout = useCallback(async () => {
     await logoutSession();
     setUser(null);
-    setMemberships([]);
+    setProfiles([]);
     setStatus("unauthenticated");
   }, []);
 
   return {
     status,
     user,
-    memberships,
+    profiles,
+    setProfiles,
     error,
     setError,
     refresh,
