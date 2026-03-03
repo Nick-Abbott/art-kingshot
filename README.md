@@ -11,7 +11,7 @@ This repository powers the primary website for the ART alliance in Kingshot. The
 
 ## Tech Stack
 
-- Client: React + Vite + i18next + TypeScript
+- Client: React + Vite + Tailwind + i18next + TypeScript
 - Server: Express + better-sqlite3 + TypeScript
 - Database: SQLite (local file)
 - Shared types: `shared/types.ts`
@@ -94,3 +94,24 @@ If auth is enabled locally, set `DEV_BYPASS_TOKEN` on the server and in the snap
 
 - Seed script (`npm run seed:test`) requires a running server and a `DEV_BYPASS_TOKEN` if auth is enabled.
 - API conventions live in `docs/api-contract.md`.
+
+## UI Layer
+
+This project uses a small UI layer built on Tailwind utilities and shared `ui-*` classes.
+
+Where it lives:
+- `client/src/styles.css` (`@layer components`) defines `ui-*` classes.
+- `client/src/components/ui` contains shared React primitives (Radix wrappers, buttons, etc).
+
+How to use it:
+- Containers: `ui-card`, `ui-card-muted`, `ui-card-compact`
+- Buttons: `ui-button`, `ui-button-ghost`, `ui-button-run`, `ui-button-sm`, `ui-icon-button`
+- Forms: `ui-field`, `ui-input`, `ui-select`, `ui-field-hint`, `ui-field-error`
+- Sections: `ui-section-header`, `ui-section-title`, `ui-section-subtitle`
+- Status: `ui-empty-state`, `ui-error`, `ui-success`
+- Search: `ui-search`, `ui-search-hint`, `ui-search-hint-typed`, `ui-search-hint-tail`
+- Misc: `ui-badge`, `ui-pill`, `ui-tab`, `ui-codeblock`
+
+Guidance:
+- Prefer these shared classes before writing custom CSS.
+- If a new pattern appears in 2+ places, add a new `ui-*` class.

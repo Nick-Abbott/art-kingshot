@@ -297,36 +297,52 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
   return (
     <>
       <div className="app">
-        <header className="hero">
-          <div className="hero-content">
-            <p className="eyebrow">{t("bear.eyebrow")}</p>
-            <h1>{t("bear.title")}</h1>
-            <p className="hero-subtitle">{t("bear.subtitle")}</p>
+        <header className="relative z-[1] mb-8 flex flex-col gap-6 nav:flex-row nav:items-stretch nav:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.15em] text-accent-dark">
+              {t("bear.eyebrow")}
+            </p>
+            <h1 className="mt-2 font-['DM Serif Display'] text-[clamp(2.4rem,3vw,3.5rem)]">
+              {t("bear.title")}
+            </h1>
+            <p className="mt-3 max-w-xl text-[1.05rem] leading-relaxed text-muted">
+              {t("bear.subtitle")}
+            </p>
           </div>
-          <div className="hero-card">
+          <div className="ui-card-compact grid gap-4 nav:min-w-[240px] nav:grid-cols-2">
             <div>
-              <p className="hero-label">{t("bear.bear1")}</p>
-              <p className="hero-value">{bear1Members.length}</p>
+              <p className="text-xs uppercase tracking-[0.08em] text-muted">
+                {t("bear.bear1")}
+              </p>
+              <p className="text-2xl font-semibold">{bear1Members.length}</p>
             </div>
             <div>
-              <p className="hero-label">{t("bear.bear2")}</p>
-              <p className="hero-value">{bear2Members.length}</p>
+              <p className="text-xs uppercase tracking-[0.08em] text-muted">
+                {t("bear.bear2")}
+              </p>
+              <p className="text-2xl font-semibold">{bear2Members.length}</p>
             </div>
           </div>
         </header>
 
-        <main>
-          <section className="panel">
-            <div className="panel-header">
-              <h2>{editingMember ? t("bear.editSignupTitle") : t("bear.signupTitle")}</h2>
-              <p>
+        <main className="relative z-[1] grid gap-6">
+          <section className="ui-card">
+            <div className="ui-section-header">
+              <h2 className="ui-section-title">
+                {editingMember ? t("bear.editSignupTitle") : t("bear.signupTitle")}
+              </h2>
+              <p className="ui-section-subtitle">
                 {editingMember ? t("bear.editSignupSubtitle") : t("bear.signupSubtitle")}
               </p>
             </div>
-            <form className="signup-form" onSubmit={submitSignup}>
-              <label>
+            <form
+              className="mt-5 flex flex-col gap-4 nav:grid nav:grid-cols-[repeat(4,minmax(0,1fr))_160px] nav:items-end"
+              onSubmit={submitSignup}
+            >
+              <label className="ui-field">
                 {t("bear.rallySize")}
                 <input
+                  className="ui-input"
                   name="rallySize"
                   value={form.rallySize}
                   onChange={(e) =>
@@ -337,9 +353,10 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
                   required
                 />
               </label>
-              <label>
+              <label className="ui-field">
                 {t("bear.bearGroup")}
                 <select
+                  className="ui-select"
                   name="bearGroup"
                   value={form.bearGroup}
                   onChange={(e) =>
@@ -351,32 +368,30 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
                   <option value="bear2">{t("bear.bear2")}</option>
                 </select>
               </label>
-              <button className="primary-button" type="submit" disabled={busy}>
+              <button className="ui-button nav:col-start-5" type="submit" disabled={busy}>
                 {editingMember ? t("bear.update") : t("bear.register")}
               </button>
             </form>
-            {lookupStatus && <span className="lookup-status">{lookupStatus}</span>}
+            {lookupStatus && (
+              <span className="ui-field-hint mt-3">{lookupStatus}</span>
+            )}
             {editingMember && (
-              <button
-                className="ghost-button button-spacer"
-                type="button"
-                onClick={cancelEdit}
-              >
+              <button className="ui-button-ghost mt-3" type="button" onClick={cancelEdit}>
                 {t("bear.cancelEdit")}
               </button>
             )}
-            {profileWarning && <p className="error">{profileWarning}</p>}
-            {error && <p className="error">{error}</p>}
+            {profileWarning && <p className="ui-error">{profileWarning}</p>}
+            {error && <p className="ui-error">{error}</p>}
           </section>
 
-          <section className="panel">
-            <div className="panel-header panel-header-split">
-              <div>
-                <h2>{t("bear.bear1")}</h2>
-                <p>{t("bear.sortedByRally")}</p>
+          <section className="ui-card">
+            <div className="flex flex-col gap-4 nav:flex-row nav:items-start nav:justify-between">
+              <div className="ui-section-header">
+                <h2 className="ui-section-title">{t("bear.bear1")}</h2>
+                <p className="ui-section-subtitle">{t("bear.sortedByRally")}</p>
               </div>
               <button
-                className="primary-button"
+                className="ui-button"
                 type="button"
                 onClick={() => resetBearGroup("bear1")}
                 disabled={busy || !canManage}
@@ -384,21 +399,24 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
                 {t("bear.resetBear1")}
               </button>
             </div>
-            <div className="roster">
+            <div className="mt-5 grid gap-3">
               {sortedBear1.length === 0 ? (
-                <p className="empty">{t("bear.noSignups")}</p>
+                <p className="ui-empty-state">{t("bear.noSignups")}</p>
               ) : (
                 sortedBear1.map((member) => (
-                  <div key={member.playerId} className="roster-card">
+                  <div
+                    key={member.playerId}
+                    className="ui-card-muted flex flex-col gap-3 nav:flex-row nav:items-center nav:justify-between"
+                  >
                     <div>
-                      <p className="roster-name">{member.playerName || member.playerId}</p>
-                      <p className="roster-meta">
+                      <p className="font-semibold">{member.playerName || member.playerId}</p>
+                      <p className="text-sm text-muted">
                         {t("bear.rallySizeMeta", { value: formatNumber(member.rallySize) })}
                       </p>
                     </div>
-                    <div className="roster-actions">
+                    <div className="flex items-center gap-3">
                       <button
-                        className="ghost-button small"
+                        className="ui-button-ghost ui-button-sm"
                         type="button"
                         onClick={() => startEdit(member, "bear1")}
                         disabled={busy || member.playerId !== profile?.playerId}
@@ -406,7 +424,7 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
                         {t("bear.edit")}
                       </button>
                       <button
-                        className="ghost-button small"
+                        className="ui-button-ghost ui-button-sm"
                         type="button"
                         onClick={() => removeMemberHandler("bear1", member.playerId)}
                         disabled={
@@ -424,14 +442,14 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
             </div>
           </section>
 
-          <section className="panel">
-            <div className="panel-header panel-header-split">
-              <div>
-                <h2>{t("bear.bear2")}</h2>
-                <p>{t("bear.sortedByRally")}</p>
+          <section className="ui-card">
+            <div className="flex flex-col gap-4 nav:flex-row nav:items-start nav:justify-between">
+              <div className="ui-section-header">
+                <h2 className="ui-section-title">{t("bear.bear2")}</h2>
+                <p className="ui-section-subtitle">{t("bear.sortedByRally")}</p>
               </div>
               <button
-                className="primary-button"
+                className="ui-button"
                 type="button"
                 onClick={() => resetBearGroup("bear2")}
                 disabled={busy || !canManage}
@@ -439,21 +457,24 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
                 {t("bear.resetBear2")}
               </button>
             </div>
-            <div className="roster">
+            <div className="mt-5 grid gap-3">
               {sortedBear2.length === 0 ? (
-                <p className="empty">{t("bear.noSignups")}</p>
+                <p className="ui-empty-state">{t("bear.noSignups")}</p>
               ) : (
                 sortedBear2.map((member) => (
-                  <div key={member.playerId} className="roster-card">
+                  <div
+                    key={member.playerId}
+                    className="ui-card-muted flex flex-col gap-3 nav:flex-row nav:items-center nav:justify-between"
+                  >
                     <div>
-                      <p className="roster-name">{member.playerName || member.playerId}</p>
-                      <p className="roster-meta">
+                      <p className="font-semibold">{member.playerName || member.playerId}</p>
+                      <p className="text-sm text-muted">
                         {t("bear.rallySizeMeta", { value: formatNumber(member.rallySize) })}
                       </p>
                     </div>
-                    <div className="roster-actions">
+                    <div className="flex items-center gap-3">
                       <button
-                        className="ghost-button small"
+                        className="ui-button-ghost ui-button-sm"
                         type="button"
                         onClick={() => startEdit(member, "bear2")}
                         disabled={busy || member.playerId !== profile?.playerId}
@@ -461,7 +482,7 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
                         {t("bear.edit")}
                       </button>
                       <button
-                        className="ghost-button small"
+                        className="ui-button-ghost ui-button-sm"
                         type="button"
                         onClick={() => removeMemberHandler("bear2", member.playerId)}
                         disabled={
@@ -479,15 +500,16 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
             </div>
           </section>
 
-          <section className="panel">
-            <div className="panel-header">
-              <h2>{t("bear.generatorTitle")}</h2>
-              <p>{t("bear.generatorSubtitle")}</p>
+          <section className="ui-card">
+            <div className="ui-section-header">
+              <h2 className="ui-section-title">{t("bear.generatorTitle")}</h2>
+              <p className="ui-section-subtitle">{t("bear.generatorSubtitle")}</p>
             </div>
-            <div className="signup-form">
-              <label>
+            <div className="mt-5 flex flex-col gap-4 nav:grid nav:grid-cols-[repeat(4,minmax(0,1fr))_160px] nav:items-end">
+              <label className="ui-field">
                 {t("bear.numberOfHosts")}
                 <input
+                  className="ui-input"
                   type="number"
                   value={hostCount}
                   onChange={(e) => setHostCount(Number(e.target.value))}
@@ -495,9 +517,10 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
                   max="50"
                 />
               </label>
-              <label>
+              <label className="ui-field">
                 {t("bear.bearGroup")}
                 <select
+                  className="ui-select"
                   value={selectedBearGroup}
                   onChange={(e) => setSelectedBearGroup(e.target.value as "bear1" | "bear2")}
                 >
@@ -506,7 +529,7 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
                 </select>
               </label>
               <button
-                className="primary-button"
+                className="ui-button nav:col-start-5"
                 type="button"
                 onClick={() => generateRallyOrder(selectedBearGroup)}
                 disabled={
@@ -518,13 +541,11 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
               </button>
             </div>
             {rallyOrder && (
-              <div className="rally-order">
-                <div className="rally-order-output">{rallyOrder}</div>
-                <button
-                  className="ghost-button rally-order-copy"
-                  type="button"
-                  onClick={copyToClipboard}
-                >
+              <div className="mt-5">
+                <div className="ui-codeblock">
+                  {rallyOrder}
+                </div>
+                <button className="ui-button-ghost mt-3" type="button" onClick={copyToClipboard}>
                   {t("bear.copyToClipboard")}
                 </button>
               </div>

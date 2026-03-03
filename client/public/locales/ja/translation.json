@@ -8,7 +8,8 @@
     "alliance": "同盟",
     "profile": "プロフィール",
     "profileFallback": "プロフィール",
-    "profileNone": "プロフィールなし"
+    "profileNone": "プロフィールなし",
+    "menuToggle": "メニューを開く"
   },
   "auth": {
     "eyebrow": "ART同盟",

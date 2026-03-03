@@ -8,7 +8,8 @@
     "alliance": "동맹",
     "profile": "프로필",
     "profileFallback": "프로필",
-    "profileNone": "프로필 없음"
+    "profileNone": "프로필 없음",
+    "menuToggle": "메뉴 열기"
   },
   "auth": {
     "eyebrow": "ART 동맹",

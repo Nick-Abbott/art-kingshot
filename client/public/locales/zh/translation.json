@@ -8,7 +8,8 @@
     "alliance": "联盟",
     "profile": "资料",
     "profileFallback": "资料",
-    "profileNone": "无资料"
+    "profileNone": "无资料",
+    "menuToggle": "打开菜单"
   },
   "auth": {
     "eyebrow": "ART 联盟",

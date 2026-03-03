@@ -352,27 +352,38 @@ function Profiles({
 
   return (
     <div className="app">
-      <header className="hero">
-        <div className="hero-content">
-          <p className="eyebrow">{t("profiles.eyebrow")}</p>
-          <h1>{t("profiles.title")}</h1>
-          <p className="hero-subtitle">{t("profiles.subtitle")}</p>
+      <header className="relative z-[1] mb-8 flex flex-col gap-4 nav:flex-row nav:items-stretch nav:justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-[0.15em] text-accent-dark">
+            {t("profiles.eyebrow")}
+          </p>
+          <h1 className="mt-2 font-['DM Serif Display'] text-[clamp(2.4rem,3vw,3.5rem)]">
+            {t("profiles.title")}
+          </h1>
+          <p className="mt-3 max-w-xl text-[1.05rem] leading-relaxed text-muted">
+            {t("profiles.subtitle")}
+          </p>
           {selectedProfile &&
             selectedProfile.status !== "active" &&
             selectedProfile.allianceId && (
-            <p className="error">{t("profiles.pendingNotice")}</p>
+            <p className="mt-3 font-semibold text-[#9e2a2b]">
+              {t("profiles.pendingNotice")}
+            </p>
           )}
         </div>
       </header>
 
-      <main>
-        <section className="panel">
-          <div className="panel-header">
-            <h2>{t("profiles.createTitle")}</h2>
-            <p>{t("profiles.createSubtitle")}</p>
+      <main className="relative z-[1] grid gap-6">
+        <section className="ui-card">
+          <div className="ui-section-header">
+            <h2 className="ui-section-title">{t("profiles.createTitle")}</h2>
+            <p className="ui-section-subtitle">{t("profiles.createSubtitle")}</p>
           </div>
-          <form className="signup-form" onSubmit={submitProfile}>
-            <label>
+          <form
+            className="mt-5 flex flex-col gap-4 nav:grid nav:grid-cols-[repeat(4,minmax(0,1fr))_160px] nav:items-end"
+            onSubmit={submitProfile}
+          >
+            <label className="ui-field">
               {t("profiles.playerId")}
               <input
                 name="playerId"
@@ -380,67 +391,62 @@ function Profiles({
                 onChange={(e) => setForm({ ...form, playerId: e.target.value })}
                 placeholder="243656992"
                 required
+                className="ui-input"
               />
             </label>
-            {lookupStatus && <span className="lookup-status">{lookupStatus}</span>}
-            <button className="primary-button" type="submit">
+            {lookupStatus && <span className="ui-field-hint">{lookupStatus}</span>}
+            <button className="ui-button nav:col-start-5" type="submit">
               {t("profiles.create")}
             </button>
           </form>
-          {error && <p className="error">{error}</p>}
-          {success && <p className="success">{success}</p>}
+          {error && <p className="ui-error">{error}</p>}
+          {success && <p className="ui-success">{success}</p>}
         </section>
 
         {selectedProfile && (
-          <section className="panel">
-            <div className="panel-header panel-header-split">
-              <div>
-                <h2>{t("profiles.currentTitle")}</h2>
-                <p>{t("profiles.currentSubtitle")}</p>
+          <section className="ui-card">
+            <div className="flex flex-col gap-4 nav:flex-row nav:items-start nav:justify-between">
+              <div className="ui-section-header">
+                <h2 className="ui-section-title">{t("profiles.currentTitle")}</h2>
+                <p className="ui-section-subtitle">{t("profiles.currentSubtitle")}</p>
               </div>
-              <div className="panel-actions">
-                <button
-                  className="ghost-button"
-                  type="button"
-                  onClick={refreshProfileData}
-                >
-                  {t("profiles.refreshProfile", { defaultValue: "Refresh profile" })}
-                </button>
-              </div>
+              <button className="ui-button-ghost" type="button" onClick={refreshProfileData}>
+                {t("profiles.refreshProfile", { defaultValue: "Refresh profile" })}
+              </button>
             </div>
-            <div className="roster">
-              <div className="roster-card">
+            <div className="mt-5 grid gap-3">
+              <div className="ui-card-muted flex flex-col gap-3 nav:flex-row nav:items-center nav:justify-between">
                 <div>
-                  <p className="roster-name">
+                  <p className="font-semibold">
                     {selectedProfile.playerName || selectedProfile.playerId}
                   </p>
-                  <p className="roster-meta">
+                  <p className="text-sm text-muted">
                     {selectedProfile.allianceName || t("profiles.noAlliance")}
                   </p>
                   {selectedProfile.kingdomId ? (
-                    <p className="roster-meta">
+                    <p className="text-sm text-muted">
                       {t("profiles.kingdom", {
                         id: selectedProfile.kingdomId,
                         defaultValue: "Kingdom {{id}}"
                       })}
                     </p>
                   ) : null}
-                  <p className="roster-meta">
+                  <p className="text-sm text-muted">
                     {t("profiles.role", { role: selectedProfile.role })}
                   </p>
                 </div>
-                <span className="badge">
+                <span className="ui-badge">
                   {selectedProfile.status === "active"
                     ? t("profiles.active")
                     : t("profiles.pending")}
                 </span>
               </div>
-              <div className="roster-card">
+              <div className="ui-card-muted">
                 <div>
-                  <p className="roster-name">
+                  <p className="font-semibold">
                     {t("profiles.statsTitle", { defaultValue: "Profile stats" })}
                   </p>
-                  <p className="roster-meta">
+                  <p className="text-sm text-muted">
                     {t("profiles.stats.troopCount", {
                       value:
                         selectedProfile.troopCount !== null &&
@@ -450,7 +456,7 @@ function Profiles({
                       defaultValue: "Troop count: {{value}}"
                     })}
                   </p>
-                  <p className="roster-meta">
+                  <p className="text-sm text-muted">
                     {t("profiles.stats.marchCount", {
                       value:
                         selectedProfile.marchCount !== null &&
@@ -460,7 +466,7 @@ function Profiles({
                       defaultValue: "March count: {{value}}"
                     })}
                   </p>
-                  <p className="roster-meta">
+                  <p className="text-sm text-muted">
                     {t("profiles.stats.power", {
                       value:
                         selectedProfile.power !== null &&
@@ -470,7 +476,7 @@ function Profiles({
                       defaultValue: "Power: {{value}}"
                     })}
                   </p>
-                  <p className="roster-meta">
+                  <p className="text-sm text-muted">
                     {t("profiles.stats.rallySize", {
                       value:
                         selectedProfile.rallySize !== null &&
@@ -483,28 +489,32 @@ function Profiles({
                 </div>
               </div>
             </div>
-            {lookupStatus && <p className="lookup-status">{lookupStatus}</p>}
-            {error && <p className="error">{error}</p>}
-            {success && <p className="success">{success}</p>}
+            {lookupStatus && <p className="ui-field-hint">{lookupStatus}</p>}
+            {error && <p className="ui-error">{error}</p>}
+            {success && <p className="ui-success">{success}</p>}
           </section>
         )}
 
         {selectedProfile && !selectedProfile.allianceId && (
-          <section className="panel">
-            <div className="panel-header">
-              <h2>{t("profiles.joinTitle")}</h2>
-              <p>{t("profiles.joinSubtitle")}</p>
+          <section className="ui-card">
+            <div className="ui-section-header">
+              <h2 className="ui-section-title">{t("profiles.joinTitle")}</h2>
+              <p className="ui-section-subtitle">{t("profiles.joinSubtitle")}</p>
             </div>
             {!selectedProfile.kingdomId ? (
-              <p className="empty">{t("profiles.joinMissingKingdom")}</p>
+              <p className="ui-empty-state">{t("profiles.joinMissingKingdom")}</p>
             ) : (
-              <form className="signup-form" onSubmit={submitJoinRequest}>
-                <label>
+              <form
+                className="mt-5 flex flex-col gap-4 nav:grid nav:grid-cols-[repeat(4,minmax(0,1fr))_160px] nav:items-end"
+                onSubmit={submitJoinRequest}
+              >
+                <label className="ui-field">
                   {t("profiles.alliance")}
                   <select
                     name="allianceId"
                     value={joinAllianceId}
                     onChange={(e) => setJoinAllianceId(e.target.value)}
+                    className="ui-input"
                   >
                     <option value="">{t("profiles.allianceNone")}</option>
                     {alliances.map((alliance) => (
@@ -514,27 +524,32 @@ function Profiles({
                     ))}
                   </select>
                 </label>
-                <button className="primary-button" type="submit">
+                <button className="ui-button nav:col-start-5" type="submit">
                   {t("profiles.join")}
                 </button>
               </form>
             )}
-            {joinError && <p className="error">{joinError}</p>}
-            {joinSuccess && <p className="success">{joinSuccess}</p>}
+            {joinError && <p className="ui-error">{joinError}</p>}
+            {joinSuccess && <p className="ui-success">{joinSuccess}</p>}
           </section>
         )}
 
         {selectedProfile && !selectedProfile.allianceId && (
-          <section className="panel">
-            <div className="panel-header">
-              <h2>{t("profiles.createAllianceTitle")}</h2>
-              <p>{t("profiles.createAllianceSubtitle")}</p>
+          <section className="ui-card">
+            <div className="ui-section-header">
+              <h2 className="ui-section-title">
+                {t("profiles.createAllianceTitle")}
+              </h2>
+              <p className="ui-section-subtitle">{t("profiles.createAllianceSubtitle")}</p>
             </div>
             {!selectedProfile.kingdomId ? (
-              <p className="empty">{t("profiles.joinMissingKingdom")}</p>
+              <p className="ui-empty-state">{t("profiles.joinMissingKingdom")}</p>
             ) : (
-              <form className="signup-form" onSubmit={submitCreateAlliance}>
-                <label>
+              <form
+                className="mt-5 flex flex-col gap-4 nav:grid nav:grid-cols-[repeat(4,minmax(0,1fr))_160px] nav:items-end"
+                onSubmit={submitCreateAlliance}
+              >
+                <label className="ui-field">
                   {t("profiles.allianceTag")}
                   <input
                     name="allianceTag"
@@ -543,9 +558,10 @@ function Profiles({
                     placeholder="ART"
                     maxLength={3}
                     required
+                    className="ui-input"
                   />
                 </label>
-                <label>
+                <label className="ui-field">
                   {t("profiles.allianceName")}
                   <input
                     name="allianceName"
@@ -553,74 +569,76 @@ function Profiles({
                     onChange={(e) => setCreateName(e.target.value)}
                     placeholder="ArtsOFwar"
                     required
+                    className="ui-input"
                   />
                 </label>
-                <button className="primary-button" type="submit">
+                <button className="ui-button nav:col-start-5" type="submit">
                   {t("profiles.createAlliance")}
                 </button>
               </form>
             )}
-            {createError && <p className="error">{createError}</p>}
-            {createSuccess && <p className="success">{createSuccess}</p>}
+            {createError && <p className="ui-error">{createError}</p>}
+            {createSuccess && <p className="ui-success">{createSuccess}</p>}
           </section>
         )}
 
         {canManage && selectedProfile?.status === "active" && (
-          <section className="panel">
-            <div className="panel-header panel-header-split">
-              <div>
-                <h2>{t("profiles.adminTitle")}</h2>
-                <p>{t("profiles.adminSubtitle")}</p>
+          <section className="ui-card">
+            <div className="flex flex-col gap-4 nav:flex-row nav:items-start nav:justify-between">
+              <div className="ui-section-header">
+                <h2 className="ui-section-title">{t("profiles.adminTitle")}</h2>
+                <p className="ui-section-subtitle">{t("profiles.adminSubtitle")}</p>
                 {selectedProfile.allianceName && (
-                  <div className="alliance-header">
-                    <h3 className="alliance-name">{selectedProfile.allianceName}</h3>
-                    <span className="alliance-tag">
+                  <div className="mt-3 inline-flex items-center gap-3">
+                    <h3 className="text-lg font-semibold">
+                      {selectedProfile.allianceName}
+                    </h3>
+                    <span className="rounded-full bg-accent/20 px-3 py-1 text-xs font-bold uppercase tracking-[0.14rem] text-accent">
                       {(selectedProfile.allianceId || "").toUpperCase()}
                     </span>
                   </div>
                 )}
               </div>
               {selectedProfile?.role === "alliance_admin" && (
-                <div className="panel-actions">
-                  <button
-                    className="ghost-button"
-                    type="button"
-                    onClick={handleDeleteAlliance}
-                  >
+                <div className="flex flex-col gap-3 nav:items-end">
+                  <button className="ui-button-ghost" type="button" onClick={handleDeleteAlliance}>
                     {t("profiles.deleteAlliance")}
                   </button>
-                  {deleteError && <p className="error">{deleteError}</p>}
+                  {deleteError && <p className="ui-error">{deleteError}</p>}
                 </div>
               )}
             </div>
             {loadingAdmin ? (
-              <p className="empty">{t("profiles.loading")}</p>
+              <p className="ui-empty-state">{t("profiles.loading")}</p>
             ) : adminProfiles.length === 0 ? (
-              <p className="empty">{t("profiles.adminEmpty")}</p>
+              <p className="ui-empty-state">{t("profiles.adminEmpty")}</p>
             ) : (
               <>
                 {adminProfiles.some((profile) => profile.status !== "active") ? (
                   <>
-                    <h3 className="section-subtitle">
+                    <h3 className="mt-5 text-base font-semibold">
                       {t("profiles.applicantsTitle")}
                     </h3>
-                    <div className="roster">
+                    <div className="mt-3 grid gap-3">
                       {adminProfiles
                         .filter((profile) => profile.status !== "active")
                         .map((profile) => (
-                          <div key={profile.id} className="roster-card">
+                          <div
+                            key={profile.id}
+                            className="ui-card-muted flex flex-col gap-3 nav:flex-row nav:items-center nav:justify-between"
+                          >
                             <div>
-                              <p className="roster-name">
+                              <p className="font-semibold">
                                 {profile.playerName || profile.playerId}
                               </p>
-                              <p className="roster-meta">
+                              <p className="text-sm text-muted">
                                 {profile.userDisplayName || profile.allianceName}
                               </p>
                             </div>
                             {profile.id !== selectedProfile?.id && (
-                              <div className="roster-actions">
+                              <div className="flex items-center gap-3">
                                 <button
-                                  className="ghost-button small"
+                                  className="ui-button-ghost ui-button-sm"
                                   type="button"
                                   onClick={() => approveProfile(profile, "active")}
                                 >
@@ -634,36 +652,39 @@ function Profiles({
                   </>
                 ) : null}
 
-                <h3 className="section-subtitle section-divider">
+                <h3 className="mt-5 border-t border-black/10 pt-4 text-base font-semibold">
                   {t("profiles.membersTitle")}
                 </h3>
-                <div className="roster">
+                <div className="mt-3 grid gap-3">
                   {adminProfiles
                     .filter((profile) => profile.status === "active")
                     .map((profile) => (
-                      <div key={profile.id} className="roster-card">
+                      <div
+                        key={profile.id}
+                        className="ui-card-muted flex flex-col gap-3 nav:flex-row nav:items-center nav:justify-between"
+                      >
                         <div>
-                          <p className="roster-name">
+                          <p className="font-semibold">
                             {profile.playerName || profile.playerId}
                           </p>
-                          <p className="roster-meta">
+                          <p className="text-sm text-muted">
                             {profile.userDisplayName || profile.allianceName}
                           </p>
-                          <p className="roster-meta">
+                          <p className="text-sm text-muted">
                             {t("profiles.role", { role: profile.role })}
                           </p>
                         </div>
                         {profile.id !== selectedProfile?.id && (
-                          <div className="roster-actions">
+                          <div className="flex items-center gap-3">
                             <button
-                              className="ghost-button small"
+                              className="ui-button-ghost ui-button-sm"
                               type="button"
                               onClick={() => approveProfile(profile, "pending")}
                             >
                               {t("profiles.suspend")}
                             </button>
                             <button
-                              className="ghost-button small"
+                              className="ui-button-ghost ui-button-sm"
                               type="button"
                               onClick={() =>
                                 setRole(

@@ -9,6 +9,7 @@ These instructions are for agents working in this repository.
 - Update or add tests when server logic changes.
 - Localize new or changed UI text across all locale files.
 - Shared API types live in `shared/types.ts`; update these when changing request/response shapes.
+- Use the shared UI layer for new UI. Prefer `ui-*` utility classes and UI primitives under `client/src/components/ui`.
 
 ## Required Verification
 
@@ -37,3 +38,13 @@ If you cannot run these checks, state what was skipped and why, and list any ris
 - Smoke checks:
   - `node scripts/check-auth-flow.js`
   - `DEV_BYPASS_TOKEN=your_token node scripts/check-alliance-switch.js`
+
+## UI Layer Usage
+
+- Base styles live in `client/src/styles.css` under `@layer components` with `ui-*` classes.
+- Prefer `ui-card`, `ui-card-muted`, `ui-card-compact` for layout containers.
+- Prefer `ui-input`, `ui-select`, `ui-field`, `ui-field-hint`, `ui-field-error` for forms.
+- Prefer `ui-button`, `ui-button-ghost`, `ui-button-run`, `ui-button-sm`, `ui-icon-button` for actions.
+- Use `ui-section-header`, `ui-section-title`, `ui-section-subtitle` for section headers.
+- Use `ui-empty-state`, `ui-error`, `ui-success` for status messaging.
+- Use `ui-search` and `ui-search-hint*` for typeahead inputs.

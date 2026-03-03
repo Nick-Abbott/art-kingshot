@@ -439,23 +439,33 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
   return (
     <>
       <div className="app">
-        <header className="hero">
-          <div className="hero-content">
-            <p className="eyebrow">{t("viking.eyebrow")}</p>
-            <h1>{t("viking.title")}</h1>
-            <p className="hero-subtitle">{t("viking.subtitle")}</p>
+        <header className="relative z-[1] mb-8 flex flex-col gap-6 nav:flex-row nav:items-stretch nav:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.15em] text-accent-dark">
+              {t("viking.eyebrow")}
+            </p>
+            <h1 className="mt-2 font-['DM Serif Display'] text-[clamp(2.4rem,3vw,3.5rem)]">
+              {t("viking.title")}
+            </h1>
+            <p className="mt-3 max-w-xl text-[1.05rem] leading-relaxed text-muted">
+              {t("viking.subtitle")}
+            </p>
           </div>
-          <div className="hero-card">
+          <div className="ui-card-compact grid gap-4 nav:min-w-[240px] nav:grid-cols-2">
             <div>
-              <p className="hero-label">{t("viking.signedUp")}</p>
-              <p className="hero-value">{memberCount}</p>
+              <p className="text-xs uppercase tracking-[0.08em] text-muted">
+                {t("viking.signedUp")}
+              </p>
+              <p className="text-2xl font-semibold">{memberCount}</p>
             </div>
             <div>
-              <p className="hero-label">{t("viking.minimumIncoming")}</p>
-              <p className="hero-value">200k</p>
+              <p className="text-xs uppercase tracking-[0.08em] text-muted">
+                {t("viking.minimumIncoming")}
+              </p>
+              <p className="text-2xl font-semibold">200k</p>
             </div>
             <button
-              className="ghost-button"
+              className="ui-button-ghost w-full text-xs uppercase tracking-[0.1em] nav:col-span-2"
               type="button"
               onClick={resetAll}
               disabled={busy || !canManage}
@@ -465,23 +475,27 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
           </div>
         </header>
 
-        <main>
+        <main className="relative z-[1] grid gap-6">
           {!results ? (
-            <section className="panel">
-              <div className="panel-header">
-                <h2>
+            <section className="ui-card">
+              <div className="ui-section-header">
+                <h2 className="ui-section-title">
                   {editingMember ? t("viking.editSignupTitle") : t("viking.signupTitle")}
                 </h2>
-                <p>
+                <p className="ui-section-subtitle">
                   {editingMember
                     ? t("viking.editSignupSubtitle")
                     : t("viking.signupSubtitle")}
                 </p>
               </div>
-              <form className="signup-form" onSubmit={submitSignup}>
-                <label>
+              <form
+                className="mt-5 flex flex-col gap-4 nav:grid nav:grid-cols-[repeat(4,minmax(0,1fr))_160px] nav:items-end"
+                onSubmit={submitSignup}
+              >
+                <label className="ui-field">
                   {t("viking.marchCount")}
                   <input
+                    className="ui-input"
                     name="marchCount"
                     value={form.marchCount}
                     onChange={updateForm}
@@ -491,9 +505,10 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
                     required
                   />
                 </label>
-                <label>
+                <label className="ui-field">
                   {t("viking.power")}
                   <input
+                    className="ui-input"
                     name="power"
                     value={form.power}
                     onChange={updatePower}
@@ -502,9 +517,10 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
                     required
                   />
                 </label>
-                <label>
+                <label className="ui-field">
                   {t("viking.troopCount")}
                   <input
+                    className="ui-input"
                     name="troopCount"
                     value={form.troopCount}
                     onChange={updateTroopCount}
@@ -513,14 +529,16 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
                     required
                   />
                 </label>
-                <button className="primary-button" type="submit" disabled={busy}>
+                <button className="ui-button nav:col-start-5" type="submit" disabled={busy}>
                   {editingMember ? t("viking.update") : t("viking.saveSignup")}
                 </button>
               </form>
-              {lookupStatus && <span className="lookup-status">{lookupStatus}</span>}
+              {lookupStatus && (
+                <span className="ui-field-hint mt-3">{lookupStatus}</span>
+              )}
               {editingMember && (
                 <button
-                  className="ghost-button button-spacer"
+                  className="ui-button-ghost mt-3"
                   type="button"
                   onClick={cancelEdit}
                 >
@@ -529,16 +547,19 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
               )}
             </section>
           ) : (
-            <section className="panel">
-              <div className="panel-header">
-                <h2>{t("viking.findAssignmentsTitle")}</h2>
-                <p>{t("viking.findAssignmentsSubtitle")}</p>
+            <section className="ui-card">
+              <div className="ui-section-header">
+                <h2 className="ui-section-title">{t("viking.findAssignmentsTitle")}</h2>
+                <p className="ui-section-subtitle">
+                  {t("viking.findAssignmentsSubtitle")}
+                </p>
               </div>
-              <div className="signup-form">
-                <label>
+              <div className="mt-5">
+                <label className="ui-field">
                   {t("viking.playerName")}
-                  <div className="search-field">
+                  <div className="ui-search">
                     <input
+                      className="ui-input"
                       name="search"
                       value={searchQuery}
                       onChange={(event) => setSearchQuery(event.target.value)}
@@ -553,9 +574,9 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
                       autoComplete="off"
                     />
                     {suggestionTail && (
-                      <div className="autocomplete-hint" aria-hidden="true">
-                        <span className="hint-typed">{searchQuery}</span>
-                        <span className="hint-tail">{suggestionTail}</span>
+                      <div className="ui-search-hint" aria-hidden="true">
+                        <span className="ui-search-hint-typed">{searchQuery}</span>
+                        <span className="ui-search-hint-tail">{suggestionTail}</span>
                       </div>
                     )}
                   </div>
@@ -565,36 +586,39 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
           )}
 
           {!results && (
-            <section className="panel">
-              <div className="panel-header">
-                <h2>{t("viking.rosterTitle")}</h2>
-                <p>{t("viking.rosterSubtitle")}</p>
+            <section className="ui-card">
+              <div className="ui-section-header">
+                <h2 className="ui-section-title">{t("viking.rosterTitle")}</h2>
+                <p className="ui-section-subtitle">{t("viking.rosterSubtitle")}</p>
               </div>
-              <div className="roster">
+              <div className="mt-5 grid gap-3">
                 {sortedMembers.length === 0 ? (
-                  <p className="empty">{t("viking.noSignups")}</p>
+                  <p className="ui-empty-state">{t("viking.noSignups")}</p>
                 ) : (
                   sortedMembers.map((member) => (
-                    <div key={member.playerId} className="roster-card">
+                    <div
+                      key={member.playerId}
+                      className="ui-card-muted flex flex-col gap-3 nav:flex-row nav:items-center nav:justify-between"
+                    >
                       <div>
-                        <p className="roster-name">
+                        <p className="font-semibold">
                           {member.playerName ? member.playerName : member.playerId}
                         </p>
-                        <p className="roster-meta">
+                        <p className="text-sm text-muted">
                           {t("viking.troopsMeta", {
                             value: formatNumber(member.troopCount)
                           })}
                         </p>
-                        <p className="roster-meta">
+                        <p className="text-sm text-muted">
                           {t("viking.powerMeta", { value: formatNumber(member.power) })}
                         </p>
-                        <p className="roster-meta">
+                        <p className="text-sm text-muted">
                           {t("viking.marchesMeta", { value: member.marchCount })}
                         </p>
                       </div>
-                      <div className="roster-actions">
+                      <div className="flex items-center gap-3">
                         <button
-                          className="ghost-button small"
+                          className="ui-button-ghost ui-button-sm"
                           type="button"
                           onClick={() => startEdit(member)}
                           disabled={busy || member.playerId !== profile?.playerId}
@@ -602,7 +626,7 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
                           {t("viking.edit")}
                         </button>
                         <button
-                          className="ghost-button small"
+                          className="ui-button-ghost ui-button-sm"
                           type="button"
                           onClick={() => removeSignup(member.playerId)}
                           disabled={
@@ -618,10 +642,10 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
                   ))
                 )}
               </div>
-              {profileWarning && <p className="error">{profileWarning}</p>}
-              {error && <p className="error">{error}</p>}
+              {profileWarning && <p className="ui-error">{profileWarning}</p>}
+              {error && <p className="ui-error">{error}</p>}
               <button
-                className="run-button"
+                className="ui-button-run mt-4"
                 type="button"
                 onClick={runAssignments}
                 disabled={busy || !canManage}
@@ -631,63 +655,69 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
             </section>
           )}
 
-          <section className="panel results">
-            <div className="panel-header">
-              <h2>{t("viking.assignmentsTitle")}</h2>
-              <p>{t("viking.assignmentsSubtitle")}</p>
+          <section className="ui-card">
+            <div className="ui-section-header">
+              <h2 className="ui-section-title">{t("viking.assignmentsTitle")}</h2>
+              <p className="ui-section-subtitle">{t("viking.assignmentsSubtitle")}</p>
             </div>
             {!results ? (
-              <p className="empty">{t("viking.noAssignments")}</p>
+              <p className="ui-empty-state">{t("viking.noAssignments")}</p>
             ) : (
-              <div className="results-grid">
+              <div className="mt-5 grid gap-4 nav:grid-cols-[repeat(auto-fit,minmax(260px,1fr))]">
                 {filteredResults.map((member) => (
-                  <article key={member.playerId} className="result-card">
-                    <header>
-                      <h3>{member.playerName ? member.playerName : member.playerId}</h3>
-                      <p>
+                  <article key={member.playerId} className="ui-card-muted">
+                    <header className="space-y-1">
+                      <h3 className="text-lg font-semibold">
+                        {member.playerName ? member.playerName : member.playerId}
+                      </h3>
+                      <p className="text-sm text-muted">
                         {t("viking.troopsOutgoing", {
                           value: formatNumber(member.troopCount)
                         })}
                       </p>
-                      <p className="incoming">
+                      <p className="font-semibold text-ink">
                         {t("viking.incoming", {
                           value: formatNumber(member.incomingTotal)
                         })}
                       </p>
-                      <p className="incoming">
+                      <p className="font-semibold text-ink">
                         {t("viking.troopsRemaining", {
                           value: formatNumber(member.troopsRemaining || 0)
                         })}
                       </p>
                       {member.garrisonLeadId ? (
-                        <p className="garrison">
+                        <p className="font-semibold text-accent-dark">
                           {t("viking.garrisonLead", { name: member.garrisonLeadName })}
                         </p>
                       ) : (
-                        <p className="garrison muted">{t("viking.garrisonNone")}</p>
+                        <p className="text-sm text-muted">{t("viking.garrisonNone")}</p>
                       )}
                     </header>
-                    <div className="assignment-section">
-                      <h4>{t("viking.sendTroopsTo")}</h4>
-                      <ul>
+                    <div className="mt-3">
+                      <h4 className="text-sm font-semibold">{t("viking.sendTroopsTo")}</h4>
+                      <ul className="mt-2 grid gap-2 text-sm">
                         {member.outgoing.map((item, index) => (
                           <li key={`${member.playerId}-out-${index}`}>
                             {(item.toName || item.toId)} — {formatNumber(item.troops)}{" "}
                             {item.whaleLead ? (
-                              <span className="tiny">{t("viking.lead")}</span>
+                              <span className="ml-2 inline-flex rounded-md bg-accent/15 px-2 py-0.5 text-[0.65rem] font-semibold text-accent-dark">
+                                {t("viking.lead")}
+                              </span>
                             ) : null}
                           </li>
                         ))}
                       </ul>
                     </div>
-                    <div className="assignment-section">
-                      <h4>{t("viking.receivingFrom")}</h4>
-                      <ul>
+                    <div className="mt-3">
+                      <h4 className="text-sm font-semibold">{t("viking.receivingFrom")}</h4>
+                      <ul className="mt-2 grid gap-2 text-sm">
                         {member.incoming.map((item, index) => (
                           <li key={`${member.playerId}-in-${index}`}>
                             {(item.fromName || item.fromId)} — {formatNumber(item.troops)}{" "}
                             {item.whaleLead ? (
-                              <span className="tiny">{t("viking.lead")}</span>
+                              <span className="ml-2 inline-flex rounded-md bg-accent/15 px-2 py-0.5 text-[0.65rem] font-semibold text-accent-dark">
+                                {t("viking.lead")}
+                              </span>
                             ) : null}
                           </li>
                         ))}

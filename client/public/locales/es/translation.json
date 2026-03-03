@@ -8,7 +8,8 @@
     "alliance": "Alianza",
     "profile": "Perfil",
     "profileFallback": "Perfil",
-    "profileNone": "Sin perfil"
+    "profileNone": "Sin perfil",
+    "menuToggle": "Mostrar menú"
   },
   "auth": {
     "eyebrow": "Alianza ART",
