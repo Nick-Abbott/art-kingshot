@@ -2,8 +2,15 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Alliance, Profile, User } from "@shared/types";
 import { createAlliance, deleteAlliance, fetchAlliances } from "./api/alliances";
-import { createProfile, fetchAllianceProfiles, updateAllianceProfile, updateProfile } from "./api/profile";
+import {
+  createProfile,
+  createAllianceProfile,
+  fetchAllianceProfiles,
+  updateAllianceProfile,
+  updateProfile
+} from "./api/profile";
 import { lookupPlayer } from "./api/playerLookup";
+import { parsePlayerLookup } from "./utils/playerLookup";
 import { ApiError } from "./apiClient";
 
 type Props = {
@@ -41,20 +48,33 @@ function Profiles({
   const [deleteError, setDeleteError] = useState("");
   const [adminProfiles, setAdminProfiles] = useState<Profile[]>([]);
   const [loadingAdmin, setLoadingAdmin] = useState(false);
+  const [addPlayerId, setAddPlayerId] = useState("");
+  const [addPlayerError, setAddPlayerError] = useState("");
+  const [addPlayerSuccess, setAddPlayerSuccess] = useState("");
+  const [addPlayerBusy, setAddPlayerBusy] = useState(false);
+  const [addLookupStatus, setAddLookupStatus] = useState("");
 
   const canManage =
     Boolean(user?.isAppAdmin) || selectedProfile?.role === "alliance_admin";
+
+  async function refreshAdminProfiles(profileId: string) {
+    setLoadingAdmin(true);
+    try {
+      const data = await fetchAllianceProfiles(profileId);
+      setAdminProfiles(data);
+    } catch {
+      setAdminProfiles([]);
+    } finally {
+      setLoadingAdmin(false);
+    }
+  }
 
   useEffect(() => {
     if (!selectedProfileId || !canManage) {
       setAdminProfiles([]);
       return;
     }
-    setLoadingAdmin(true);
-    fetchAllianceProfiles(selectedProfileId)
-      .then((data) => setAdminProfiles(data))
-      .catch(() => setAdminProfiles([]))
-      .finally(() => setLoadingAdmin(false));
+    refreshAdminProfiles(selectedProfileId);
   }, [selectedProfileId, canManage]);
 
   useEffect(() => {
@@ -65,6 +85,10 @@ function Profiles({
     setCreateSuccess("");
     setCreateTag("");
     setCreateName("");
+    setAddPlayerId("");
+    setAddPlayerError("");
+    setAddPlayerSuccess("");
+    setAddLookupStatus("");
     if (!selectedProfile || selectedProfile.allianceId) {
       setAlliances([]);
       return;
@@ -73,66 +97,6 @@ function Profiles({
       .then(setAlliances)
       .catch(() => setAlliances([]));
   }, [selectedProfile]);
-
-  function extractPlayerName(payload: any) {
-    const data = payload?.data ?? payload;
-    return (
-      data?.data?.data?.name ??
-      data?.data?.data?.nickname ??
-      data?.data?.data?.player_name ??
-      data?.data?.data?.role_name ??
-      data?.data?.name ??
-      data?.data?.nickname ??
-      data?.data?.player_name ??
-      data?.data?.role_name ??
-      data?.data?.info?.name ??
-      data?.data?.info?.nickname ??
-      data?.data?.info?.player_name ??
-      data?.data?.info?.role_name ??
-      data?.info?.name ??
-      data?.info?.nickname ??
-      data?.info?.player_name ??
-      data?.info?.role_name ??
-      ""
-    );
-  }
-
-  function extractPlayerAvatar(payload: any) {
-    const data = payload?.data ?? payload;
-    return (
-      data?.data?.data?.avatar ??
-      data?.data?.data?.avatar_url ??
-      data?.data?.data?.avatar_image ??
-      data?.data?.data?.headimg ??
-      data?.data?.data?.headimgurl ??
-      data?.data?.data?.icon ??
-      data?.data?.data?.profile?.avatar ??
-      data?.data?.avatar ??
-      data?.data?.avatar_url ??
-      data?.data?.avatar_image ??
-      data?.data?.headimg ??
-      data?.data?.headimgurl ??
-      data?.data?.icon ??
-      data?.data?.profile?.avatar ??
-      data?.avatar ??
-      data?.avatar_url ??
-      data?.headimg ??
-      data?.headimgurl ??
-      data?.icon ??
-      data?.profile?.avatar ??
-      ""
-    );
-  }
-
-  function extractKingdomId(payload: any) {
-    const data = payload?.data ?? payload;
-    const kingdom =
-      data?.data?.data?.kid ??
-      data?.data?.kid ??
-      data?.kid ??
-      null;
-    return Number.isFinite(Number(kingdom)) ? Number(kingdom) : null;
-  }
 
   async function submitProfile(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -151,12 +115,13 @@ function Profiles({
     try {
       setLookupStatus(t("profiles.lookupStatus"));
       const lookup = await lookupPlayer(form.playerId.trim());
-      playerName = extractPlayerName(lookup);
-      playerAvatar = extractPlayerAvatar(lookup);
-      kingdomId = extractKingdomId(lookup);
-      if (!playerName) {
+      const parsed = parsePlayerLookup(lookup);
+      if (!parsed) {
         throw new Error(t("profiles.errors.lookupFailed"));
       }
+      playerName = parsed.playerName;
+      playerAvatar = parsed.avatar || "";
+      kingdomId = parsed.kingdomId;
       setLookupStatus(t("profiles.lookupFound", { name: playerName }));
     } catch (lookupError) {
       setLookupStatus("");
@@ -202,6 +167,62 @@ function Profiles({
     }
   }
 
+  async function submitAdminAdd(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedProfileId) return;
+    setAddPlayerError("");
+    setAddPlayerSuccess("");
+    setAddLookupStatus("");
+
+    const value = addPlayerId.trim();
+    if (!value) {
+      setAddPlayerError(t("profiles.errors.playerIdRequired"));
+      return;
+    }
+    let playerName = "";
+    let kingdomId: number | null = null;
+    try {
+      setAddLookupStatus(t("profiles.lookupStatus"));
+      const lookup = await lookupPlayer(value);
+      const parsed = parsePlayerLookup(lookup);
+      if (!parsed) {
+        throw new Error(t("profiles.errors.lookupFailed"));
+      }
+      playerName = parsed.playerName;
+      kingdomId = parsed.kingdomId;
+      setAddLookupStatus(t("profiles.lookupFound", { name: playerName }));
+    } catch (lookupError) {
+      setAddLookupStatus("");
+      setAddPlayerError(t("profiles.errors.lookupFailed"));
+      return;
+    }
+    if (
+      selectedProfile?.kingdomId &&
+      kingdomId &&
+      selectedProfile.kingdomId !== kingdomId
+    ) {
+      setAddPlayerError(t("profiles.errors.kingdomMismatch"));
+      return;
+    }
+    setAddPlayerBusy(true);
+    try {
+      const profile = await createAllianceProfile(selectedProfileId, {
+        playerId: value,
+        playerName: playerName || null,
+        kingdomId
+      });
+      if (!profile) {
+        setAddPlayerError(t("profiles.errors.addProfileFailed"));
+        return;
+      }
+      setAddPlayerSuccess(t("profiles.adminAddSuccess"));
+      setAddPlayerId("");
+      await refreshAdminProfiles(selectedProfileId);
+    } finally {
+      setAddPlayerBusy(false);
+    }
+  }
+
   async function refreshProfileData() {
     if (!selectedProfile?.playerId) return;
     setError("");
@@ -210,19 +231,19 @@ function Profiles({
     try {
       setLookupStatus(t("profiles.lookupStatus"));
       const lookup = await lookupPlayer(selectedProfile.playerId);
-      const playerName = extractPlayerName(lookup);
-      const rawAvatar = extractPlayerAvatar(lookup);
+      const parsed = parsePlayerLookup(lookup);
+      if (!parsed) {
+        throw new Error(t("profiles.errors.lookupFailed"));
+      }
+      const playerName = parsed.playerName;
+      const rawAvatar = parsed.avatar || "";
       const playerAvatar = rawAvatar
         ? `${rawAvatar}${rawAvatar.includes("?") ? "&" : "?"}v=${Date.now()}`
         : "";
-      const kingdomId = extractKingdomId(lookup);
-      if (!playerName) {
-        throw new Error(t("profiles.errors.lookupFailed"));
-      }
       const updated = await updateProfile(selectedProfile.id, {
         playerName: playerName || null,
         playerAvatar: playerAvatar || null,
-        kingdomId
+        kingdomId: parsed.kingdomId
       });
       if (updated) {
         setProfiles((prev) =>
@@ -619,6 +640,29 @@ function Profiles({
                 </div>
               )}
             </div>
+            {selectedProfile?.role === "alliance_admin" && (
+              <form
+                className="mt-5 flex flex-col gap-3 nav:grid nav:grid-cols-[minmax(0,1fr)_160px] nav:items-end"
+                onSubmit={submitAdminAdd}
+              >
+                <label className="ui-field">
+                  {t("profiles.adminAddPlayerId")}
+                  <input
+                    className="ui-input"
+                    value={addPlayerId}
+                    onChange={(event) => setAddPlayerId(event.target.value)}
+                    placeholder="243656992"
+                    required
+                  />
+                </label>
+                {addLookupStatus && <span className="ui-field-hint">{addLookupStatus}</span>}
+                <button className="ui-button" type="submit" disabled={addPlayerBusy}>
+                  {t("profiles.adminAddAction")}
+                </button>
+                {addPlayerError && <p className="ui-error">{addPlayerError}</p>}
+                {addPlayerSuccess && <p className="ui-success">{addPlayerSuccess}</p>}
+              </form>
+            )}
             {loadingAdmin ? (
               <p className="ui-empty-state">{t("profiles.loading")}</p>
             ) : adminProfiles.length === 0 ? (
@@ -643,7 +687,7 @@ function Profiles({
                                 {profile.playerName || profile.playerId}
                               </p>
                               <p className="text-sm text-muted">
-                                {profile.userDisplayName || profile.allianceName}
+                                {profile.userDisplayName || t("profiles.unclaimed")}
                               </p>
                             </div>
                             {profile.id !== selectedProfile?.id && (
@@ -686,7 +730,7 @@ function Profiles({
                             {profile.playerName || profile.playerId}
                           </p>
                           <p className="text-sm text-muted">
-                            {profile.userDisplayName || profile.allianceName}
+                            {profile.userDisplayName || t("profiles.unclaimed")}
                           </p>
                           <p className="text-sm text-muted">
                             {t("profiles.role", { role: profile.role })}

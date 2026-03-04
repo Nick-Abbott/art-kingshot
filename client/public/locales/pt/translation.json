@@ -169,6 +169,9 @@
     "currentSubtitle": "Mantenha os dados do seu perfil atualizados.",
     "adminTitle": "Perfis da aliança",
     "adminSubtitle": "Aprove novos perfis e gerencie funções.",
+    "adminAddPlayerId": "Adicionar perfil por ID do jogador",
+    "adminAddAction": "Adicionar perfil",
+    "adminAddSuccess": "Perfil adicionado.",
     "loading": "Carregando perfis...",
     "adminEmpty": "Nenhum perfil para revisar.",
     "approve": "Aprovar",
@@ -179,8 +182,10 @@
     "errors": {
       "playerIdRequired": "O ID do jogador é obrigatório.",
       "createFailed": "Falha ao criar o perfil.",
+      "addProfileFailed": "Falha ao adicionar o perfil.",
       "updateFailed": "Falha ao atualizar o perfil.",
       "lookupFailed": "Falha na busca do jogador.",
+      "kingdomMismatch": "O jogador não está no reino desta aliança.",
       "duplicate": "Já existe um perfil para este ID de jogador.",
       "invalidAlliance": "Aliança não encontrada.",
       "allianceRequired": "Selecione uma aliança para entrar.",
@@ -192,6 +197,7 @@
       "deleteAllianceFailed": "Falha ao excluir a aliança."
     },
     "pendingNotice": "Este perfil está pendente de aprovação pelo admin da aliança.",
+    "unclaimed": "Perfil não reivindicado",
     "lookupStatus": "Procurando jogador...",
     "lookupFound": "Encontrado {{name}}",
     "joinTitle": "Entrar em uma aliança",

@@ -169,6 +169,9 @@
     "currentSubtitle": "Keep your profile details up to date.",
     "adminTitle": "Alliance profiles",
     "adminSubtitle": "Approve new profiles and manage roles.",
+    "adminAddPlayerId": "Add profile by player ID",
+    "adminAddAction": "Add profile",
+    "adminAddSuccess": "Profile added.",
     "loading": "Loading profiles...",
     "adminEmpty": "No profiles to review.",
     "approve": "Approve",
@@ -179,8 +182,10 @@
     "errors": {
       "playerIdRequired": "Player ID is required.",
       "createFailed": "Failed to create profile.",
+      "addProfileFailed": "Failed to add profile.",
       "updateFailed": "Failed to update profile.",
       "lookupFailed": "Player lookup failed.",
+      "kingdomMismatch": "Player is not in this alliance's kingdom.",
       "duplicate": "Profile already exists for this player ID.",
       "invalidAlliance": "Alliance not found.",
       "allianceRequired": "Select an alliance to join.",
@@ -192,6 +197,7 @@
       "deleteAllianceFailed": "Failed to delete alliance."
     },
     "pendingNotice": "This profile is pending approval by an alliance admin.",
+    "unclaimed": "Unclaimed profile",
     "lookupStatus": "Looking up player...",
     "lookupFound": "Found {{name}}",
     "joinTitle": "Join an alliance",

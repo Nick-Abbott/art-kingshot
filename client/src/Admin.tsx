@@ -306,7 +306,7 @@ function Admin({ isAppAdmin }: Props) {
                                 {profile.playerName || profile.playerId}
                               </p>
                               <p className="text-sm text-muted">
-                                {profile.userDisplayName || profile.allianceName}
+                                {profile.userDisplayName || t("profiles.unclaimed")}
                               </p>
                             </div>
                             <div className="flex items-center gap-3">
@@ -349,7 +349,7 @@ function Admin({ isAppAdmin }: Props) {
                             {profile.playerName || profile.playerId}
                           </p>
                           <p className="text-sm text-muted">
-                            {profile.userDisplayName || profile.allianceName}
+                            {profile.userDisplayName || t("profiles.unclaimed")}
                           </p>
                           <p className="text-sm text-muted">
                             {t("admin.role", { role: profile.role })}

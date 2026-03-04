@@ -169,6 +169,9 @@
     "currentSubtitle": "プロフィール情報を最新に保ちます。",
     "adminTitle": "同盟プロフィール",
     "adminSubtitle": "新しいプロフィールを承認し、役割を管理します。",
+    "adminAddPlayerId": "プレイヤーIDでプロフィールを追加",
+    "adminAddAction": "プロフィールを追加",
+    "adminAddSuccess": "プロフィールを追加しました。",
     "loading": "プロフィールを読み込み中...",
     "adminEmpty": "審査するプロフィールはありません。",
     "approve": "承認",
@@ -179,8 +182,10 @@
     "errors": {
       "playerIdRequired": "プレイヤーIDは必須です。",
       "createFailed": "プロフィールの作成に失敗しました。",
+      "addProfileFailed": "プロフィールの追加に失敗しました。",
       "updateFailed": "プロフィールの更新に失敗しました。",
       "lookupFailed": "プレイヤー検索に失敗しました。",
+      "kingdomMismatch": "この同盟の王国に属していません。",
       "duplicate": "このプレイヤーIDのプロフィールは既に存在します。",
       "invalidAlliance": "同盟が見つかりません。",
       "allianceRequired": "参加する同盟を選択してください。",
@@ -192,6 +197,7 @@
       "deleteAllianceFailed": "同盟の削除に失敗しました。"
     },
     "pendingNotice": "このプロフィールは同盟管理者の承認待ちです。",
+    "unclaimed": "未紐付けのプロフィール",
     "lookupStatus": "プレイヤーを検索中...",
     "lookupFound": "{{name}} を見つけました",
     "joinTitle": "同盟に参加",

@@ -10,6 +10,9 @@ These instructions are for agents working in this repository.
 - Localize new or changed UI text across all locale files.
 - Shared API types live in `shared/types.ts`; update these when changing request/response shapes.
 - Use the shared UI layer for new UI. Prefer `ui-*` utility classes and UI primitives under `client/src/components/ui`.
+- When refactoring shared client logic, run `npm run typecheck --workspace client` before broad adoption; migrate one call site at a time to keep the app booting.
+- For client-side schema validation, prefer `zod/mini`-compatible APIs only; avoid full `zod` helpers that are not available in the mini build.
+- Treat test changes as a last resort: only adjust tests after confirming the app builds and boots without runtime errors, and never to mask product regressions.
 
 ## Required Verification
 

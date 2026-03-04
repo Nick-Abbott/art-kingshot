@@ -231,10 +231,11 @@ async function openPage(
     { pageKey: options.pageKey, selectedProfileId: options.selectedProfileId }
   );
 
-  await page.goto(CLIENT_URL, { waitUntil: "domcontentloaded" });
-  await page.waitForResponse((res) => res.url().includes("/api/me"), {
+  const meResponse = page.waitForResponse((res) => res.url().includes("/api/me"), {
     timeout: WAIT_TIMEOUT,
   });
+  await page.goto(CLIENT_URL, { waitUntil: "domcontentloaded" });
+  await meResponse;
   await page
     .getByTestId("profile-switcher")
     .waitFor({ state: "attached", timeout: WAIT_TIMEOUT });

@@ -169,6 +169,9 @@
     "currentSubtitle": "Gardez les informations de votre profil à jour.",
     "adminTitle": "Profils d’alliance",
     "adminSubtitle": "Approuvez les nouveaux profils et gérez les rôles.",
+    "adminAddPlayerId": "Ajouter un profil par ID joueur",
+    "adminAddAction": "Ajouter un profil",
+    "adminAddSuccess": "Profil ajouté.",
     "loading": "Chargement des profils...",
     "adminEmpty": "Aucun profil à examiner.",
     "approve": "Approuver",
@@ -179,8 +182,10 @@
     "errors": {
       "playerIdRequired": "L’ID joueur est obligatoire.",
       "createFailed": "Échec de la création du profil.",
+      "addProfileFailed": "Échec de l’ajout du profil.",
       "updateFailed": "Échec de la mise à jour du profil.",
       "lookupFailed": "Échec de la recherche du joueur.",
+      "kingdomMismatch": "Le joueur n’est pas dans le royaume de cette alliance.",
       "duplicate": "Un profil existe déjà pour cet ID joueur.",
       "invalidAlliance": "Alliance introuvable.",
       "allianceRequired": "Sélectionnez une alliance pour rejoindre.",
@@ -192,6 +197,7 @@
       "deleteAllianceFailed": "Échec de la suppression de l’alliance."
     },
     "pendingNotice": "Ce profil est en attente d’approbation par un admin.",
+    "unclaimed": "Profil non réclamé",
     "lookupStatus": "Recherche du joueur...",
     "lookupFound": "Trouvé {{name}}",
     "joinTitle": "Rejoindre une alliance",

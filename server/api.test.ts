@@ -526,6 +526,66 @@ test("eligible signup lists return active alliance members not yet signed up", a
   }
 });
 
+test("unclaimed profiles can be added by admins and claimed on login", async () => {
+  const dbPath = tmpDbPath();
+  process.env.DB_PATH = dbPath;
+  process.env.PORT = "0";
+  const { httpServer, port } = await startServer();
+  try {
+    const adminHeaders = { Cookie: createSessionCookie(dbPath) };
+    const createAdminProfile = await requestJson(
+      port,
+      "POST",
+      "/api/profiles",
+      { ...adminHeaders, "Content-Type": "application/json" },
+      JSON.stringify({ playerId: "FIDADMIN", kingdomId: 1459 })
+    );
+    assert.equal(createAdminProfile.status, 200);
+    const adminProfileId = createAdminProfile.data.data.profile.id;
+
+    const createAlliance = await requestJson(
+      port,
+      "POST",
+      "/api/alliances",
+      { ...adminHeaders, "Content-Type": "application/json", "x-profile-id": adminProfileId },
+      JSON.stringify({ tag: "ADM", name: "Admin Alliance" })
+    );
+    assert.equal(createAlliance.status, 200);
+    const allianceId = createAlliance.data.data.alliance.id;
+
+    const addUnclaimed = await requestJson(
+      port,
+      "POST",
+      "/api/alliance/profiles",
+      { ...adminHeaders, "Content-Type": "application/json", "x-profile-id": adminProfileId },
+      JSON.stringify({ playerId: "FIDCLAIM", kingdomId: 1459 })
+    );
+    assert.equal(addUnclaimed.status, 200);
+    assert.equal(addUnclaimed.data.data.profile.userId, null);
+    assert.equal(addUnclaimed.data.data.profile.status, "active");
+
+    const memberHeaders = { Cookie: createSessionCookie(dbPath) };
+    const me = await requestJson(port, "GET", "/api/me", memberHeaders);
+    assert.equal(me.status, 200);
+    const userId = me.data.data.user.id;
+
+    const claim = await requestJson(
+      port,
+      "POST",
+      "/api/profiles",
+      { ...memberHeaders, "Content-Type": "application/json" },
+      JSON.stringify({ playerId: "FIDCLAIM", kingdomId: 1459 })
+    );
+    assert.equal(claim.status, 200);
+    assert.equal(claim.data.data.profile.userId, userId);
+    assert.equal(claim.data.data.profile.allianceId, allianceId);
+    assert.equal(claim.data.data.profile.status, "pending");
+    assert.equal(claim.data.data.profile.role, "member");
+  } finally {
+    httpServer.close();
+  }
+});
+
 test("app admin can manage alliances across kingdoms", async () => {
   const dbPath = tmpDbPath();
   process.env.DB_PATH = dbPath;

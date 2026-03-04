@@ -29,7 +29,7 @@ export type Alliance = {
 
 export type Profile = {
   id: string;
-  userId: string;
+  userId: string | null;
   playerId?: string | null;
   playerName?: string | null;
   playerAvatar?: string | null;

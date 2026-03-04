@@ -180,10 +180,52 @@ module.exports = function profileRoutes(ctx) {
     }
 
     const existing = ctx.db
-      .prepare("SELECT id FROM profiles WHERE playerId = ?")
+      .prepare("SELECT * FROM profiles WHERE playerId = ?")
       .get(playerId);
     if (existing) {
-      ctx.fail(res, 409, "Profile already exists for this player ID.");
+      if (existing.userId) {
+        ctx.fail(res, 409, "Profile already exists for this player ID.");
+        return;
+      }
+      const now = Date.now();
+      ctx.db
+        .prepare(
+          `UPDATE profiles
+           SET userId = ?,
+               playerName = ?,
+               playerAvatar = ?,
+               kingdomId = ?,
+               status = 'pending',
+               role = 'member',
+               troopCount = ?,
+               marchCount = ?,
+               power = ?,
+               rallySize = ?,
+               updatedAt = ?
+           WHERE id = ?`
+        )
+        .run(
+          req.user.id,
+          playerName || existing.playerName || null,
+          playerAvatar || existing.playerAvatar || null,
+          Number.isFinite(kingdomId) ? kingdomId : existing.kingdomId,
+          Number.isFinite(troopCount) ? troopCount : existing.troopCount,
+          Number.isFinite(marchCount) ? marchCount : existing.marchCount,
+          Number.isFinite(power) ? power : existing.power,
+          Number.isFinite(rallySize) ? rallySize : existing.rallySize,
+          now,
+          existing.id
+        );
+      if (existing.allianceId) {
+        ctx.db
+          .prepare("DELETE FROM members WHERE allianceId = ? AND playerId = ?")
+          .run(existing.allianceId, playerId);
+        ctx.db
+          .prepare("DELETE FROM bear WHERE allianceId = ? AND playerId = ?")
+          .run(existing.allianceId, playerId);
+      }
+      const claimed = ctx.selectProfileById.get(existing.id);
+      ctx.ok(res, { profile: claimed });
       return;
     }
 
@@ -232,6 +274,61 @@ module.exports = function profileRoutes(ctx) {
     const profile = ctx.selectProfileById.get(id);
     ctx.ok(res, { profile });
   });
+
+  router.post(
+    "/api/alliance/profiles",
+    ctx.requireAuthMiddleware,
+    ctx.requireAllianceMiddleware,
+    ctx.requireRoleMiddleware(["alliance_admin"]),
+    (req, res) => {
+      const body = req.body || {};
+      const playerId =
+        typeof body.playerId === "string" ? body.playerId.trim() : "";
+      const playerName =
+        typeof body.playerName === "string" ? body.playerName.trim() : "";
+      const kingdomId = Number(body.kingdomId);
+      if (!playerId) {
+        ctx.fail(res, 400, "playerId is required.");
+        return;
+      }
+      const existing = ctx.db
+        .prepare("SELECT id, allianceId FROM profiles WHERE playerId = ?")
+        .get(playerId);
+      if (existing) {
+        ctx.fail(res, 409, "Profile already exists for this player ID.");
+        return;
+      }
+
+      const alliance = ctx.selectAllianceById.get(req.allianceId);
+      if (alliance && Number.isFinite(kingdomId) && alliance.kingdomId !== kingdomId) {
+        ctx.fail(res, 400, "Kingdom does not match alliance.");
+        return;
+      }
+
+      const now = Date.now();
+      const id = ctx.crypto.randomUUID();
+      ctx.insertProfile.run(
+        id,
+        null,
+        playerId,
+        playerName || null,
+        null,
+        Number.isFinite(kingdomId) ? kingdomId : req.profile?.kingdomId ?? null,
+        req.allianceId,
+        "active",
+        "member",
+        null,
+        null,
+        null,
+        null,
+        now,
+        now
+      );
+
+      const profile = ctx.selectProfileById.get(id);
+      ctx.ok(res, { profile });
+    }
+  );
 
   router.patch("/api/profiles/:profileId", ctx.requireAuthMiddleware, (req, res) => {
     const profileId =
@@ -348,12 +445,12 @@ module.exports = function profileRoutes(ctx) {
         .prepare(
           `SELECT profiles.id,
                   profiles.userId,
-          profiles.playerId,
-          profiles.playerName,
-          profiles.playerAvatar,
-          profiles.kingdomId,
-          profiles.allianceId,
-          profiles.status,
+                  profiles.playerId,
+                  profiles.playerName,
+                  profiles.playerAvatar,
+                  profiles.kingdomId,
+                  profiles.allianceId,
+                  profiles.status,
                   profiles.role,
                   profiles.troopCount,
                   profiles.marchCount,
@@ -361,7 +458,7 @@ module.exports = function profileRoutes(ctx) {
                   profiles.rallySize,
                   users.displayName AS userDisplayName
            FROM profiles
-           JOIN users ON users.id = profiles.userId
+           LEFT JOIN users ON users.id = profiles.userId
            WHERE profiles.allianceId = ?`
         )
         .all(req.allianceId);

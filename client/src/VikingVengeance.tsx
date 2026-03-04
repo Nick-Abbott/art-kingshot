@@ -9,6 +9,7 @@ import { fetchEligibleMembers } from "./api/members";
 import type { EligibleMember, Member } from "./api/members";
 import type { Profile } from "@shared/types";
 import { updateProfile } from "./api/profile";
+import { parsePlayerLookup } from "./utils/playerLookup";
 
 type VikingForm = {
   troopCount: string;
@@ -242,76 +243,18 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
     return digits ? Number(digits) : 0;
   }
 
-  function extractPlayerName(payload: any) {
-    const data = payload?.data ?? payload;
-    return (
-      data?.data?.data?.name ??
-      data?.data?.data?.nickname ??
-      data?.data?.data?.player_name ??
-      data?.data?.data?.role_name ??
-      data?.data?.name ??
-      data?.data?.nickname ??
-      data?.data?.player_name ??
-      data?.data?.role_name ??
-      data?.data?.info?.name ??
-      data?.data?.info?.nickname ??
-      data?.data?.info?.player_name ??
-      data?.data?.info?.role_name ??
-      data?.info?.name ??
-      data?.info?.nickname ??
-      data?.info?.player_name ??
-      data?.info?.role_name ??
-      ""
-    );
-  }
-
-  function extractPlayerAvatar(payload: any) {
-    const data = payload?.data ?? payload;
-    return (
-      data?.data?.data?.avatar ??
-      data?.data?.data?.avatar_url ??
-      data?.data?.data?.avatar_image ??
-      data?.data?.data?.headimg ??
-      data?.data?.data?.headimgurl ??
-      data?.data?.data?.icon ??
-      data?.data?.data?.profile?.avatar ??
-      data?.data?.avatar ??
-      data?.data?.avatar_url ??
-      data?.data?.avatar_image ??
-      data?.data?.headimg ??
-      data?.data?.headimgurl ??
-      data?.data?.icon ??
-      data?.data?.profile?.avatar ??
-      data?.avatar ??
-      data?.avatar_url ??
-      data?.headimg ??
-      data?.headimgurl ??
-      data?.icon ??
-      data?.profile?.avatar ??
-      ""
-    );
-  }
-
-  function extractKingdomId(payload: any) {
-    const data = payload?.data ?? payload;
-    const kingdom =
-      data?.data?.data?.kid ??
-      data?.data?.kid ??
-      data?.kid ??
-      null;
-    return Number.isFinite(Number(kingdom)) ? Number(kingdom) : null;
-  }
-
   async function lookupPlayerProfile(fid: string) {
     setLookupStatus(t("viking.lookup.looking"));
     try {
       const res = await lookupPlayer(fid);
-      const name = extractPlayerName(res);
-      if (!name) throw new Error(t("viking.errors.noPlayerName"));
-      setLookupStatus(t("viking.lookup.found", { name }));
-      const avatar = extractPlayerAvatar(res);
-      const kingdomId = extractKingdomId(res);
-      return { name, avatar, kingdomId };
+      const parsed = parsePlayerLookup(res);
+      if (!parsed?.playerName) throw new Error(t("viking.errors.noPlayerName"));
+      setLookupStatus(t("viking.lookup.found", { name: parsed.playerName }));
+      return {
+        name: parsed.playerName,
+        avatar: parsed.avatar || "",
+        kingdomId: parsed.kingdomId ?? null
+      };
     } catch (lookupErr) {
       setLookupStatus("");
       throw lookupErr;

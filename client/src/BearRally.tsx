@@ -6,6 +6,7 @@ import { useBear } from "./hooks/useBear";
 import type { EligibleMember, Profile } from "@shared/types";
 import { updateProfile } from "./api/profile";
 import { fetchEligibleBearMembers } from "./api/bear";
+import { parsePlayerLookup } from "./utils/playerLookup";
 
 type Props = {
   profileId: string;
@@ -143,37 +144,14 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
     }
   }, [canManage, profile?.playerId, editingMember]);
 
-  function extractPlayerName(payload: any) {
-    const data = payload?.data ?? payload;
-    return (
-      data?.data?.data?.name ??
-      data?.data?.data?.nickname ??
-      data?.data?.data?.player_name ??
-      data?.data?.data?.role_name ??
-      data?.data?.name ??
-      data?.data?.nickname ??
-      data?.data?.player_name ??
-      data?.data?.role_name ??
-      data?.data?.info?.name ??
-      data?.data?.info?.nickname ??
-      data?.data?.info?.player_name ??
-      data?.data?.info?.role_name ??
-      data?.info?.name ??
-      data?.info?.nickname ??
-      data?.info?.player_name ??
-      data?.info?.role_name ??
-      ""
-    );
-  }
-
   async function lookupPlayerName(fid: string) {
     setLookupStatus(t("bear.lookup.looking"));
     try {
       const res = await lookupPlayer(fid);
-      const name = extractPlayerName(res);
-      if (!name) throw new Error(t("bear.errors.noPlayerName"));
-      setLookupStatus(t("bear.lookup.found", { name }));
-      return name;
+      const parsed = parsePlayerLookup(res);
+      if (!parsed?.playerName) throw new Error(t("bear.errors.noPlayerName"));
+      setLookupStatus(t("bear.lookup.found", { name: parsed.playerName }));
+      return parsed.playerName;
     } catch (lookupErr) {
       setLookupStatus("");
       throw lookupErr;

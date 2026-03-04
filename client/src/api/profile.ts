@@ -75,3 +75,17 @@ export async function updateAllianceProfile(
   if (!data || data.ok === false) return null;
   return data.data?.profile || null;
 }
+
+export async function createAllianceProfile(
+  profileId: string,
+  payload: { playerId: string; playerName?: string | null; kingdomId?: number | null }
+): Promise<Profile | null> {
+  const res = await apiFetch("/api/alliance/profiles", {
+    method: "POST",
+    profileId,
+    body: payload
+  });
+  const data = res.data as ApiResponse<ProfilePayload>;
+  if (!data || data.ok === false) return null;
+  return data.data?.profile || null;
+}

@@ -68,7 +68,7 @@ module.exports = function adminRoutes(ctx) {
                   profiles.rallySize,
                   users.displayName AS userDisplayName
            FROM profiles
-           JOIN users ON users.id = profiles.userId
+           LEFT JOIN users ON users.id = profiles.userId
            WHERE profiles.allianceId = ?`
         )
         .all(allianceId);

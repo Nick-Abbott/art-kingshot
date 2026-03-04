@@ -169,6 +169,9 @@
     "currentSubtitle": "保持资料信息最新。",
     "adminTitle": "联盟资料",
     "adminSubtitle": "批准新资料并管理角色。",
+    "adminAddPlayerId": "通过玩家ID添加资料",
+    "adminAddAction": "添加资料",
+    "adminAddSuccess": "资料已添加。",
     "loading": "正在加载资料…",
     "adminEmpty": "没有需要审核的资料。",
     "approve": "批准",
@@ -179,8 +182,10 @@
     "errors": {
       "playerIdRequired": "玩家ID为必填项。",
       "createFailed": "创建资料失败。",
+      "addProfileFailed": "添加资料失败。",
       "updateFailed": "更新资料失败。",
       "lookupFailed": "玩家查询失败。",
+      "kingdomMismatch": "该玩家不在此联盟的王国。",
       "duplicate": "该玩家ID已存在资料。",
       "invalidAlliance": "未找到联盟。",
       "allianceRequired": "请选择要加入的联盟。",
@@ -192,6 +197,7 @@
       "deleteAllianceFailed": "删除联盟失败。"
     },
     "pendingNotice": "该资料等待联盟管理员审核。",
+    "unclaimed": "未认领资料",
     "lookupStatus": "正在查询玩家…",
     "lookupFound": "已找到 {{name}}",
     "joinTitle": "加入联盟",
