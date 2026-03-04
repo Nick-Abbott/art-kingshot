@@ -246,8 +246,19 @@ function Profiles({
     });
     if (!updated) return;
     setAdminProfiles((prev) =>
-      prev.map((item) => (item.id === updated.id ? updated : item))
+      updated.allianceId && updated.allianceId === selectedProfile?.allianceId
+        ? prev.map((item) => (item.id === updated.id ? updated : item))
+        : prev.filter((item) => item.id !== updated.id)
     );
+  }
+
+  async function rejectProfile(target: Profile) {
+    if (!selectedProfileId) return;
+    const updated = await updateAllianceProfile(selectedProfileId, target.id, {
+      action: "reject"
+    });
+    if (!updated) return;
+    setAdminProfiles((prev) => prev.filter((item) => item.id !== updated.id));
   }
 
   async function setRole(target: Profile, role: "member" | "alliance_admin") {
@@ -352,7 +363,7 @@ function Profiles({
 
   return (
     <div className="app">
-      <header className="relative z-[1] mb-8 flex flex-col gap-4 nav:flex-row nav:items-stretch nav:justify-between">
+      <header className="relative z-[1] mb-8 flex flex-col gap-4 nav:flex-row nav:items-start nav:justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.15em] text-accent-dark">
             {t("profiles.eyebrow")}
@@ -643,6 +654,13 @@ function Profiles({
                                   onClick={() => approveProfile(profile, "active")}
                                 >
                                   {t("profiles.approve")}
+                                </button>
+                                <button
+                                  className="ui-button-ghost ui-button-sm"
+                                  type="button"
+                                  onClick={() => rejectProfile(profile)}
+                                >
+                                  {t("profiles.reject")}
                                 </button>
                               </div>
                             )}

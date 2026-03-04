@@ -92,6 +92,24 @@ export type ProfilePayload = {
   profile: Profile | null;
 };
 
+export type AllianceProfileUpdateRequest = {
+  status?: ProfileStatus;
+  role?: AllianceRole;
+  action?: "reject";
+};
+
+export type AdminKingdomsPayload = {
+  kingdoms: number[];
+};
+
+export type AdminAlliancesPayload = {
+  alliances: Alliance[];
+};
+
+export type AdminProfileLookupPayload = {
+  profile: Profile | null;
+};
+
 export type BearGroup = "bear1" | "bear2";
 
 export type BearMember = {

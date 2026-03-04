@@ -388,6 +388,30 @@ module.exports = function profileRoutes(ctx) {
       }
 
       const body = req.body || {};
+      if (body.action === "reject") {
+        if (profile.status !== "pending") {
+          ctx.fail(res, 400, "Only pending profiles can be rejected.");
+          return;
+        }
+        ctx.updateProfile.run(
+          profile.playerId,
+          profile.playerName || null,
+          profile.playerAvatar || null,
+          profile.kingdomId,
+          null,
+          "pending",
+          "member",
+          profile.troopCount ?? null,
+          profile.marchCount ?? null,
+          profile.power ?? null,
+          profile.rallySize ?? null,
+          Date.now(),
+          profile.id
+        );
+        const updated = ctx.selectProfileById.get(profile.id);
+        ctx.ok(res, { profile: updated });
+        return;
+      }
       const status =
         body.status === "active" || body.status === "pending"
           ? body.status
@@ -448,31 +472,6 @@ module.exports = function profileRoutes(ctx) {
     } catch (error) {
       ctx.fail(res, 502, "Lookup request failed.");
     }
-  });
-
-  router.post("/api/dev/delete-user", ctx.requireAuthMiddleware, (req, res) => {
-    if (ctx.isProduction) {
-      ctx.fail(res, 403, "Not allowed in production.");
-      return;
-    }
-    const bypass =
-      typeof req.header("x-dev-bypass") === "string"
-        ? req.header("x-dev-bypass").trim()
-        : "";
-    if (!ctx.DEV_BYPASS_TOKEN || bypass !== ctx.DEV_BYPASS_TOKEN) {
-      ctx.fail(res, 403, "Dev bypass token required.");
-      return;
-    }
-    if (!req.user || req.user.discordId !== "dev-bypass") {
-      ctx.fail(res, 403, "Only dev bypass user can be deleted.");
-      return;
-    }
-
-    ctx.db.prepare("DELETE FROM profiles WHERE userId = ?").run(req.user.id);
-    ctx.db.prepare("DELETE FROM sessions WHERE userId = ?").run(req.user.id);
-    ctx.db.prepare("DELETE FROM users WHERE id = ?").run(req.user.id);
-
-    ctx.ok(res, { ok: true });
   });
 
   return router;

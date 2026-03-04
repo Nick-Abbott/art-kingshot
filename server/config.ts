@@ -32,7 +32,6 @@ const config = {
   discordClientSecret: getEnv("DISCORD_CLIENT_SECRET", { fallback: "" }),
   discordRedirectUri: getEnv("DISCORD_REDIRECT_URI", { fallback: "" }),
   sessionTtlDays: getNumberEnv("SESSION_TTL_DAYS", { fallback: 14 }),
-  devBypassToken: getEnv("DEV_BYPASS_TOKEN", { fallback: "" }),
   nodeEnv: getEnv("NODE_ENV", { fallback: "" }),
 };
 

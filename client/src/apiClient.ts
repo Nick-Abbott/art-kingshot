@@ -34,7 +34,6 @@ export async function apiFetch(
   if (profileId) {
     finalHeaders["x-profile-id"] = profileId;
   }
-
   if (body && !(body instanceof FormData)) {
     if (!finalHeaders["Content-Type"]) {
       finalHeaders["Content-Type"] = "application/json";

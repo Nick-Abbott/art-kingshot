@@ -15,8 +15,8 @@ These instructions are for agents working in this repository.
 
 - UI changes:
   - Run the Playwright snapshot suite and review outputs in `snapshots/playwright/`.
-    - Command: `DEV_BYPASS_TOKEN=your_token SNAPSHOT_URL=http://localhost:5173 SERVER_URL=http://localhost:3001 npm run snapshots:playwright`
-    - Requires the client and server to be running.
+    - Command: `npm run snapshots:playwright`
+    - One-shot local runner (starts server + client, uses a separate DB and seeded session token) on alternate ports.
 - Server changes:
   - Run server tests before marking the task complete.
   - Command: `npm run test:server`
@@ -36,7 +36,7 @@ If you cannot run these checks, state what was skipped and why, and list any ris
 - i18n key check: `npm run test:i18n`
 - Smoke checks:
   - `node scripts/check-auth-flow.js`
-  - `DEV_BYPASS_TOKEN=your_token node scripts/check-alliance-switch.js`
+  - `SESSION_TOKEN=your_token node scripts/check-alliance-switch.js`
 
 ## UI Layer Usage
 

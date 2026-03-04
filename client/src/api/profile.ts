@@ -1,5 +1,11 @@
 import { apiFetch } from "../apiClient";
-import type { ApiResponse, Profile, ProfilePayload, ProfilesPayload } from "@shared/types";
+import type {
+  AllianceProfileUpdateRequest,
+  ApiResponse,
+  Profile,
+  ProfilePayload,
+  ProfilesPayload
+} from "@shared/types";
 
 export async function fetchProfiles(): Promise<Profile[]> {
   const res = await apiFetch("/api/profiles");
@@ -58,7 +64,7 @@ export async function fetchAllianceProfiles(profileId: string): Promise<Profile[
 export async function updateAllianceProfile(
   profileId: string,
   targetProfileId: string,
-  payload: { status?: "pending" | "active"; role?: "member" | "alliance_admin" }
+  payload: AllianceProfileUpdateRequest
 ): Promise<Profile | null> {
   const res = await apiFetch(`/api/alliance/profiles/${targetProfileId}`, {
     method: "PATCH",

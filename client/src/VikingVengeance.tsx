@@ -439,7 +439,7 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
   return (
     <>
       <div className="app">
-        <header className="relative z-[1] mb-8 flex flex-col gap-6 nav:flex-row nav:items-stretch nav:justify-between">
+        <header className="relative z-[1] mb-8 flex flex-col gap-6 nav:flex-row nav:items-start nav:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.15em] text-accent-dark">
               {t("viking.eyebrow")}
@@ -456,13 +456,17 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
               <p className="text-xs uppercase tracking-[0.08em] text-muted">
                 {t("viking.signedUp")}
               </p>
-              <p className="text-2xl font-semibold">{memberCount}</p>
+              <p className="text-2xl font-semibold" data-testid="viking-signed-count">
+                {memberCount}
+              </p>
             </div>
             <div>
               <p className="text-xs uppercase tracking-[0.08em] text-muted">
                 {t("viking.minimumIncoming")}
               </p>
-              <p className="text-2xl font-semibold">200k</p>
+              <p className="text-2xl font-semibold" data-testid="viking-minimum-incoming">
+                200k
+              </p>
             </div>
             <button
               className="ui-button-ghost w-full text-xs uppercase tracking-[0.1em] nav:col-span-2"
@@ -590,12 +594,12 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
           )}
 
           {!results && (
-            <section className="ui-card">
+            <section className="ui-card" data-testid="viking-roster">
               <div className="ui-section-header">
                 <h2 className="ui-section-title">{t("viking.rosterTitle")}</h2>
                 <p className="ui-section-subtitle">{t("viking.rosterSubtitle")}</p>
               </div>
-              <div className="mt-5 grid gap-3">
+              <div className="mt-5 grid gap-3" data-testid="viking-roster-list">
                 {sortedMembers.length === 0 ? (
                   <p className="ui-empty-state">{t("viking.noSignups")}</p>
                 ) : (

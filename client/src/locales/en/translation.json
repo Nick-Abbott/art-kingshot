@@ -3,7 +3,8 @@
     "tabs": {
       "viking": "Viking Vengeance",
       "bear": "Bear Rally",
-      "profiles": "Profiles"
+      "profiles": "Profiles",
+      "admin": "Admin"
     },
     "alliance": "Alliance",
     "profile": "Profile",
@@ -167,6 +168,7 @@
     "loading": "Loading profiles...",
     "adminEmpty": "No profiles to review.",
     "approve": "Approve",
+    "reject": "Reject",
     "suspend": "Suspend",
     "makeAdmin": "Make admin",
     "makeMember": "Make member",
@@ -215,5 +217,46 @@
     },
     "refreshProfile": "Refresh profile",
     "refreshed": "Profile updated from Kingshot."
+  },
+  "admin": {
+    "eyebrow": "Admin Console",
+    "title": "Alliance Admin Panel",
+    "subtitle": "Review alliance membership across kingdoms without switching profiles.",
+    "selectTitle": "Select scope",
+    "selectSubtitle": "Choose a kingdom and alliance to manage.",
+    "kingdom": "Kingdom",
+    "kingdomPlaceholder": "Select a kingdom",
+    "kingdomValue": "Kingdom {{id}}",
+    "alliance": "Alliance",
+    "alliancePlaceholder": "Select an alliance",
+    "allianceTitle": "Alliance access",
+    "allianceSubtitle": "{{name}} ({{tag}})",
+    "applicantsTitle": "Applicants",
+    "membersTitle": "Members",
+    "approve": "Approve",
+    "reject": "Reject",
+    "suspend": "Suspend",
+    "makeAdmin": "Make admin",
+    "makeMember": "Make member",
+    "role": "Role: {{role}}",
+    "deleteAlliance": "Delete alliance",
+    "deleteAllianceConfirm": "Delete {{name}}? This removes all members and cannot be undone.",
+    "deleteFailed": "Failed to delete alliance.",
+    "loadFailed": "Failed to load alliance data.",
+    "loading": "Loading alliance data...",
+    "noApplicants": "No pending applications.",
+    "notAuthorized": "You must be an app admin to view this page.",
+    "profileLookup": {
+      "title": "Profile lookup",
+      "subtitle": "Find a profile by ID or player ID to verify or remove it.",
+      "label": "Profile ID",
+      "placeholder": "Paste the profile or player ID",
+      "cta": "Lookup",
+      "notFound": "No profile found for that ID.",
+      "error": "Unable to load profile details.",
+      "delete": "Delete profile",
+      "confirmDelete": "Delete this profile? This cannot be undone.",
+      "meta": "ID {{id}} · Kingdom {{kingdomId}}"
+    }
   }
 }

@@ -1,6 +1,6 @@
 const BASE_URL = process.env.VIKING_APP_URL || "http://localhost:3001";
 const ALLIANCE_ID = process.env.ALLIANCE_ID || "art";
-const DEV_BYPASS_TOKEN = process.env.DEV_BYPASS_TOKEN || "";
+const SESSION_TOKEN = process.env.SESSION_TOKEN || "";
 
 function mulberry32(seed) {
   return function () {
@@ -45,12 +45,15 @@ function buildGroup(
 }
 
 async function postJson(path, body, profileId) {
+  if (!SESSION_TOKEN) {
+    throw new Error("SESSION_TOKEN is required to seed data.");
+  }
   const response = await fetch(`${BASE_URL}${path}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       ...(profileId ? { "x-profile-id": profileId } : {}),
-      ...(DEV_BYPASS_TOKEN ? { "x-dev-bypass": DEV_BYPASS_TOKEN } : {}),
+      Cookie: `ak_session=${SESSION_TOKEN}`,
     },
     body: JSON.stringify(body),
   });
@@ -137,7 +140,7 @@ async function run() {
   );
 
   const profileRes = await postJson("/api/profiles", {
-    playerId: "FIDSEED",
+    playerId: `FID${Math.floor(Math.random() * 900000 + 100000)}`,
     allianceId: ALLIANCE_ID,
   });
   const profileId = profileRes.data?.profile?.id;

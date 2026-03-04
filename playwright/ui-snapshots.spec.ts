@@ -1,6 +1,8 @@
 import { test } from "@playwright/test";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+const Database = require("better-sqlite3");
 
 type ProfileSeed = {
   id: string;
@@ -10,11 +12,44 @@ type ProfileSeed = {
 
 const CLIENT_URL = process.env.SNAPSHOT_URL || "http://localhost:5173";
 const SERVER_URL = process.env.SERVER_URL || "http://localhost:3001";
-const DEV_BYPASS_TOKEN = process.env.DEV_BYPASS_TOKEN || "";
+const DB_PATH = process.env.PLAYWRIGHT_DB_PATH || "";
+const CLIENT_HOST = new URL(CLIENT_URL).hostname;
+
+let sessionToken = "";
 
 function requireEnv(name: string, value: string) {
   if (!value) {
     throw new Error(`${name} is required for Playwright UI snapshots.`);
+  }
+}
+
+function createSessionToken() {
+  const db = new Database(DB_PATH);
+  const now = Date.now();
+  const userId = crypto.randomUUID();
+  const token = crypto.randomBytes(32).toString("hex");
+  db.prepare(
+    "INSERT INTO users (id, discordId, displayName, avatar, isAppAdmin, createdAt) VALUES (?, ?, ?, ?, ?, ?)"
+  ).run(userId, `playwright-${userId}`, "Playwright", null, 0, now);
+  db.prepare(
+    "INSERT INTO sessions (token, userId, expiresAt, createdAt) VALUES (?, ?, ?, ?)"
+  ).run(token, userId, now + 14 * 24 * 60 * 60 * 1000, now);
+  db.close();
+  return token;
+}
+
+function authHeaders() {
+  return { Cookie: `ak_session=${sessionToken}` };
+}
+
+async function assertSession(request: Parameters<typeof test>[0]["request"]) {
+  const { res, json } = await apiJson(request, `${SERVER_URL}/api/me`, {
+    headers: authHeaders(),
+  });
+  if (!res.ok()) {
+    throw new Error(
+      `Session token invalid: ${res.status()} ${JSON.stringify(json)}`
+    );
   }
 }
 
@@ -32,13 +67,6 @@ async function apiJson(
   return { res, json };
 }
 
-async function resetDevUser(request: Parameters<typeof test>[0]["request"]) {
-  await apiJson(request, `${SERVER_URL}/api/dev/delete-user`, {
-    method: "POST",
-    headers: { "x-dev-bypass": DEV_BYPASS_TOKEN },
-  });
-}
-
 async function createProfile(
   request: Parameters<typeof test>[0]["request"],
   payload: { playerId: string; playerName: string; kingdomId: number }
@@ -47,7 +75,7 @@ async function createProfile(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-dev-bypass": DEV_BYPASS_TOKEN,
+      ...authHeaders(),
     },
     data: payload,
   });
@@ -68,7 +96,7 @@ async function createAlliance(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-dev-bypass": DEV_BYPASS_TOKEN,
+        ...authHeaders(),
         "x-profile-id": profileId,
       },
       data: { tag, name: baseName },
@@ -92,7 +120,7 @@ async function setPendingJoin(
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
-      "x-dev-bypass": DEV_BYPASS_TOKEN,
+      ...authHeaders(),
     },
     data: { allianceId },
   });
@@ -107,7 +135,7 @@ async function approveProfile(
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
-      "x-dev-bypass": DEV_BYPASS_TOKEN,
+      ...authHeaders(),
       "x-profile-id": adminProfileId,
     },
     data: { status: "active" },
@@ -124,7 +152,7 @@ async function createVikingSignup(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-dev-bypass": DEV_BYPASS_TOKEN,
+      ...authHeaders(),
       "x-profile-id": profileId,
     },
     data: {
@@ -147,7 +175,7 @@ async function createBearSignup(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-dev-bypass": DEV_BYPASS_TOKEN,
+      ...authHeaders(),
       "x-profile-id": profileId,
     },
     data: {
@@ -210,24 +238,28 @@ async function snapshotPage(
 }
 
 test("ui snapshots", async ({ browser, request }, testInfo) => {
-  requireEnv("DEV_BYPASS_TOKEN", DEV_BYPASS_TOKEN);
-
-  await resetDevUser(request);
+  requireEnv("PLAYWRIGHT_DB_PATH", DB_PATH);
+  sessionToken = createSessionToken();
+  await assertSession(request);
 
   const kingdomId = 9000 + Math.floor(Math.random() * 1000);
+  const runToken = `${Date.now()}${Math.floor(Math.random() * 1000)
+    .toString()
+    .padStart(3, "0")}`;
+  const buildPlayerId = (suffix: number) => `FID${runToken}${suffix}`;
 
   const profileA = await createProfile(request, {
-    playerId: "FID10001",
+    playerId: buildPlayerId(1),
     playerName: "Professor Muffin",
     kingdomId,
   });
   const profileB = await createProfile(request, {
-    playerId: "FID10002",
+    playerId: buildPlayerId(2),
     playerName: "MuffinMan",
     kingdomId,
   });
   const profileC = await createProfile(request, {
-    playerId: "FID10003",
+    playerId: buildPlayerId(3),
     playerName: "StaleMuffin",
     kingdomId,
   });
@@ -235,10 +267,13 @@ test("ui snapshots", async ({ browser, request }, testInfo) => {
   const alliance = await createAlliance(request, profileA.id);
   await setPendingJoin(request, profileB.id, alliance.alliance.id);
 
-  const contextWithAuth = await browser.newContext({
-    baseURL: CLIENT_URL,
-    extraHTTPHeaders: { "x-dev-bypass": DEV_BYPASS_TOKEN },
-  });
+  const contextWithAuth = await browser.newContext({ baseURL: CLIENT_URL });
+  await contextWithAuth.addCookies([
+    { name: "ak_session", value: sessionToken, domain: CLIENT_HOST, path: "/" },
+  ]);
+  await contextWithAuth.addInitScript((token) => {
+    document.cookie = `ak_session=${token}; path=/`;
+  }, sessionToken);
 
   try {
     const contextLoggedOut = await browser.newContext({ baseURL: CLIENT_URL });

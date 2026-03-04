@@ -57,14 +57,14 @@ Server:
 - `SESSION_TTL_DAYS`: Session length in days (default `14`)
 - `DEFAULT_ALLIANCE_ID`: Default alliance slug/id (default `art`)
 - `DEFAULT_ALLIANCE_NAME`: Default alliance name (default `ART Alliance`)
-- `DEV_BYPASS_TOKEN`: Local-only bypass token for scripts (optional, non-production)
  - `NODE_ENV`: `production` enables secure cookies (optional)
 
 Scripts:
 - `VIKING_APP_URL`: Base URL for seed script (default `http://localhost:3001`)
 - `ALLIANCE_ID`: Alliance slug/id for seed script (default `art`)
-- `DEV_BYPASS_TOKEN`: Passed via `x-dev-bypass` header for local seeding
+- `SESSION_TOKEN`: Session token used by local scripts (passed via `Cookie: ak_session=...`)
 - `SNAPSHOT_URL`: Base URL for snapshot script (default `http://localhost:5173`)
+- `PLAYWRIGHT_DB_PATH`: DB path used by Playwright to seed sessions (default set by snapshot runner)
 - `CHROME_PATH` / `GOOGLE_CHROME_BIN`: Chrome executable for Puppeteer
 
 ## Scripts
@@ -81,19 +81,24 @@ Root:
 - `npm run test:i18n` — Verify i18n keys
 - `npm run seed:test` — Seed test scenario data
 - `node scripts/check-auth-flow.js` — Basic auth/session check (server required)
-- `DEV_BYPASS_TOKEN=your_token node scripts/check-alliance-switch.js` — Smoke check for alliance selection (server required)
+- `SESSION_TOKEN=your_token node scripts/check-alliance-switch.js` — Smoke check for alliance selection (server required)
+- `node scripts/seedSession.js --db server/data/viking.sqlite` — Create a DB session token for local scripts
 
 Playwright snapshots (full UI states):
 ```bash
-DEV_BYPASS_TOKEN=your_token SNAPSHOT_URL=http://localhost:5173 SERVER_URL=http://localhost:3001 npm run snapshots:playwright
+npm run snapshots:playwright
 ```
 Outputs are saved under `snapshots/playwright/`.
-Ensure both the client and server are running before executing the Playwright suite.
-NixOS: use `PLAYWRIGHT_BROWSERS_PATH` from nixpkgs.playwright (no `CHROME_PATH` needed).
+
+This script is one-shot and runs without manual setup:
+- Starts server on `http://localhost:3002` with `DB_PATH=server/data/viking.playwright.sqlite`
+- Starts client on `http://localhost:5174`
+- Playwright tests seed session tokens directly in the Playwright DB
+If you want to change ports or DB, edit the script in `package.json`.
 
 ## Notes
 
-- Seed script (`npm run seed:test`) requires a running server and a `DEV_BYPASS_TOKEN` if auth is enabled.
+- Seed script (`npm run seed:test`) requires a running server and a `SESSION_TOKEN`.
 - API conventions live in `docs/api-contract.md`.
 
 ## UI Layer

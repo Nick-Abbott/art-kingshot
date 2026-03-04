@@ -297,7 +297,7 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
   return (
     <>
       <div className="app">
-        <header className="relative z-[1] mb-8 flex flex-col gap-6 nav:flex-row nav:items-stretch nav:justify-between">
+        <header className="relative z-[1] mb-8 flex flex-col gap-6 nav:flex-row nav:items-start nav:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.15em] text-accent-dark">
               {t("bear.eyebrow")}
@@ -314,13 +314,17 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
               <p className="text-xs uppercase tracking-[0.08em] text-muted">
                 {t("bear.bear1")}
               </p>
-              <p className="text-2xl font-semibold">{bear1Members.length}</p>
+              <p className="text-2xl font-semibold" data-testid="bear1-count">
+                {bear1Members.length}
+              </p>
             </div>
             <div>
               <p className="text-xs uppercase tracking-[0.08em] text-muted">
                 {t("bear.bear2")}
               </p>
-              <p className="text-2xl font-semibold">{bear2Members.length}</p>
+              <p className="text-2xl font-semibold" data-testid="bear2-count">
+                {bear2Members.length}
+              </p>
             </div>
           </div>
         </header>
@@ -403,7 +407,7 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
                 {t("bear.resetBear1")}
               </button>
             </div>
-            <div className="mt-5 grid gap-3">
+            <div className="mt-5 grid gap-3" data-testid="bear1-list">
               {sortedBear1.length === 0 ? (
                 <p className="ui-empty-state">{t("bear.noSignups")}</p>
               ) : (
@@ -461,7 +465,7 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
                 {t("bear.resetBear2")}
               </button>
             </div>
-            <div className="mt-5 grid gap-3">
+            <div className="mt-5 grid gap-3" data-testid="bear2-list">
               {sortedBear2.length === 0 ? (
                 <p className="ui-empty-state">{t("bear.noSignups")}</p>
               ) : (

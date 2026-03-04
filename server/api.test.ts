@@ -3,6 +3,8 @@ const assert = require("node:assert/strict");
 const http = require("node:http");
 const path = require("node:path");
 const fs = require("node:fs");
+const crypto = require("node:crypto");
+const Database = require("better-sqlite3");
 
 type ServerHandle = {
   httpServer: import("node:http").Server;
@@ -81,8 +83,22 @@ function tmpDbPath() {
   return path.join(dir, "test.sqlite");
 }
 
+function createSessionCookie(dbPath, { isAppAdmin = false } = {}) {
+  const db = new Database(dbPath);
+  const now = Date.now();
+  const userId = crypto.randomUUID();
+  const token = crypto.randomBytes(32).toString("hex");
+  db.prepare(
+    "INSERT INTO users (id, discordId, displayName, avatar, isAppAdmin, createdAt) VALUES (?, ?, ?, ?, ?, ?)"
+  ).run(userId, `test-${userId}`, "Test User", null, isAppAdmin ? 1 : 0, now);
+  db.prepare(
+    "INSERT INTO sessions (token, userId, expiresAt, createdAt) VALUES (?, ?, ?, ?)"
+  ).run(token, userId, now + 7 * 24 * 60 * 60 * 1000, now);
+  db.close();
+  return `ak_session=${token}`;
+}
+
 test("unauthenticated access returns 401", async () => {
-  delete process.env.DEV_BYPASS_TOKEN;
   process.env.DB_PATH = tmpDbPath();
   process.env.PORT = "0";
   const { httpServer, port } = await startServer();
@@ -94,14 +110,13 @@ test("unauthenticated access returns 401", async () => {
   }
 });
 
-test("dev bypass allows auth and enforces profile requirement", async () => {
+test("session auth allows access and enforces profile requirement", async () => {
   const dbPath = tmpDbPath();
   process.env.DB_PATH = dbPath;
   process.env.PORT = "0";
-  process.env.DEV_BYPASS_TOKEN = "test-bypass";
   const { httpServer, port } = await startServer();
   try {
-    const headers = { "x-dev-bypass": "test-bypass" };
+    const headers = { Cookie: createSessionCookie(dbPath) };
     const me = await requestJson(port, "GET", "/api/me", headers);
     assert.equal(me.status, 200);
     assert.equal(me.data.ok, true);
@@ -124,10 +139,9 @@ test("alliance admin required for destructive endpoints", async () => {
   const dbPath = tmpDbPath();
   process.env.DB_PATH = dbPath;
   process.env.PORT = "0";
-  process.env.DEV_BYPASS_TOKEN = "test-bypass";
   const { httpServer, port } = await startServer();
   try {
-    const headers = { "x-dev-bypass": "test-bypass" };
+    const headers = { Cookie: createSessionCookie(dbPath) };
     const createProfile = await requestJson(
       port,
       "POST",
@@ -182,10 +196,9 @@ test("alliance create and delete updates profile", async () => {
   const dbPath = tmpDbPath();
   process.env.DB_PATH = dbPath;
   process.env.PORT = "0";
-  process.env.DEV_BYPASS_TOKEN = "test-bypass";
   const { httpServer, port } = await startServer();
   try {
-    const headers = { "x-dev-bypass": "test-bypass" };
+    const headers = { Cookie: createSessionCookie(dbPath) };
     const createProfile = await requestJson(
       port,
       "POST",
@@ -219,6 +232,126 @@ test("alliance create and delete updates profile", async () => {
     const updated = me.data.data.profiles.find((p) => p.id === profileId);
     assert.ok(updated);
     assert.equal(updated.allianceId, null);
+  } finally {
+    httpServer.close();
+  }
+});
+
+test("app admin can manage alliances across kingdoms", async () => {
+  const dbPath = tmpDbPath();
+  process.env.DB_PATH = dbPath;
+  process.env.PORT = "0";
+  const { httpServer, port } = await startServer();
+  try {
+    const headers = { Cookie: createSessionCookie(dbPath, { isAppAdmin: true }) };
+    const createAdminProfile = await requestJson(
+      port,
+      "POST",
+      "/api/profiles",
+      { ...headers, "Content-Type": "application/json" },
+      JSON.stringify({ playerId: "FIDADMIN", kingdomId: 1459 })
+    );
+    assert.equal(createAdminProfile.status, 200);
+    const adminProfileId = createAdminProfile.data.data.profile.id;
+
+    const createAlliance = await requestJson(
+      port,
+      "POST",
+      "/api/alliances",
+      { ...headers, "Content-Type": "application/json", "x-profile-id": adminProfileId },
+      JSON.stringify({ tag: "ADM", name: "Admin Alliance" })
+    );
+    assert.equal(createAlliance.status, 200);
+    const allianceId = createAlliance.data.data.alliance.id;
+
+    const createMemberProfile = await requestJson(
+      port,
+      "POST",
+      "/api/profiles",
+      { ...headers, "Content-Type": "application/json" },
+      JSON.stringify({ playerId: "FIDMEM", kingdomId: 1459 })
+    );
+    assert.equal(createMemberProfile.status, 200);
+    const memberProfileId = createMemberProfile.data.data.profile.id;
+
+    const joinAlliance = await requestJson(
+      port,
+      "PATCH",
+      `/api/profiles/${memberProfileId}`,
+      { ...headers, "Content-Type": "application/json" },
+      JSON.stringify({ allianceId })
+    );
+    assert.equal(joinAlliance.status, 200);
+
+    const createRejectProfile = await requestJson(
+      port,
+      "POST",
+      "/api/profiles",
+      { ...headers, "Content-Type": "application/json" },
+      JSON.stringify({ playerId: "FIDREJECT", kingdomId: 1459 })
+    );
+    assert.equal(createRejectProfile.status, 200);
+    const rejectProfileId = createRejectProfile.data.data.profile.id;
+
+    const joinToReject = await requestJson(
+      port,
+      "PATCH",
+      `/api/profiles/${rejectProfileId}`,
+      { ...headers, "Content-Type": "application/json" },
+      JSON.stringify({ allianceId })
+    );
+    assert.equal(joinToReject.status, 200);
+
+    const kingdoms = await requestJson(port, "GET", "/api/admin/kingdoms", headers);
+    assert.equal(kingdoms.status, 200);
+    assert.ok(kingdoms.data.data.kingdoms.includes(1459));
+
+    const alliances = await requestJson(
+      port,
+      "GET",
+      `/api/admin/alliances?kingdomId=1459`,
+      headers
+    );
+    assert.equal(alliances.status, 200);
+    assert.equal(alliances.data.data.alliances[0].id, allianceId);
+
+    const profiles = await requestJson(
+      port,
+      "GET",
+      `/api/admin/alliances/${allianceId}/profiles`,
+      headers
+    );
+    assert.equal(profiles.status, 200);
+    const pending = profiles.data.data.profiles.find((p) => p.id === memberProfileId);
+    assert.ok(pending);
+
+    const approve = await requestJson(
+      port,
+      "PATCH",
+      `/api/admin/alliances/${allianceId}/profiles/${memberProfileId}`,
+      { ...headers, "Content-Type": "application/json" },
+      JSON.stringify({ status: "active" })
+    );
+    assert.equal(approve.status, 200);
+    assert.equal(approve.data.data.profile.status, "active");
+
+    const reject = await requestJson(
+      port,
+      "PATCH",
+      `/api/admin/alliances/${allianceId}/profiles/${rejectProfileId}`,
+      { ...headers, "Content-Type": "application/json" },
+      JSON.stringify({ action: "reject" })
+    );
+    assert.equal(reject.status, 200);
+    assert.equal(reject.data.data.profile.allianceId, null);
+
+    const deleteAlliance = await requestJson(
+      port,
+      "DELETE",
+      `/api/admin/alliances/${allianceId}`,
+      headers
+    );
+    assert.equal(deleteAlliance.status, 200);
   } finally {
     httpServer.close();
   }

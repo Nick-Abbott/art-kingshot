@@ -5,6 +5,7 @@ import { useSession } from "./hooks/useSession";
 import VikingVengeance from "./VikingVengeance";
 import BearRally from "./BearRally";
 import Profiles from "./Profiles";
+import Admin from "./Admin";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -48,6 +49,19 @@ function App() {
     window.location.href = "/api/auth/discord";
   }
 
+  const showProfilesOnly = profiles.length === 0 || !selectedProfile;
+  const profilePending =
+    selectedProfile &&
+    (selectedProfile.status !== "active" || !selectedProfile.allianceId);
+  const showAdmin = Boolean(user?.isAppAdmin);
+
+  useEffect(() => {
+    if (!showAdmin && page === "admin") {
+      setPage("profiles");
+      window.localStorage.setItem("currentPage", "profiles");
+    }
+  }, [page, showAdmin]);
+
   if (status === "loading") {
     return (
       <div className="app-shell">
@@ -84,11 +98,6 @@ function App() {
       </div>
     );
   }
-
-  const showProfilesOnly = profiles.length === 0 || !selectedProfile;
-  const profilePending =
-    selectedProfile &&
-    (selectedProfile.status !== "active" || !selectedProfile.allianceId);
 
   return (
     <div className="app-shell">
@@ -137,6 +146,14 @@ function App() {
             >
               {t("app.tabs.profiles")}
             </button>
+            {showAdmin && (
+              <button
+                onClick={() => switchPage("admin")}
+                className={`ui-tab ${page === "admin" ? "ui-tab-active" : ""}`}
+              >
+                {t("app.tabs.admin")}
+              </button>
+            )}
           </div>
 
           <div className="flex flex-col gap-3 nav:flex-row nav:items-center">
@@ -225,7 +242,9 @@ function App() {
           </div>
         </div>
       </nav>
-      {showProfilesOnly || page === "profiles" || profilePending ? (
+      {page === "admin" && showAdmin ? (
+        <Admin isAppAdmin={showAdmin} />
+      ) : showProfilesOnly || page === "profiles" || profilePending ? (
         <Profiles
           user={user}
           profiles={profiles}

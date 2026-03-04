@@ -13,6 +13,7 @@ const membersRoutes = require("./routes/members");
 const assignmentsRoutes = require("./routes/assignments");
 const bearRoutes = require("./routes/bear");
 const profileRoutes = require("./routes/profile");
+const adminRoutes = require("./routes/admin");
 const { createMembersRepo } = require("./repos/membersRepo");
 const { createMetaRepo } = require("./repos/metaRepo");
 import type { Member } from "../shared/types";
@@ -24,7 +25,6 @@ const DISCORD_CLIENT_ID = config.discordClientId;
 const DISCORD_CLIENT_SECRET = config.discordClientSecret;
 const DISCORD_REDIRECT_URI = config.discordRedirectUri;
 const SESSION_TTL_MS = config.sessionTtlDays * 24 * 60 * 60 * 1000;
-const DEV_BYPASS_TOKEN = config.devBypassToken;
 const isProduction = config.nodeEnv === "production";
 
 app.use(express.json());
@@ -262,17 +262,6 @@ function resolveUserFromSession(req) {
   return { user, profiles, sessionToken: token };
 }
 
-function ensureDevBypassUser() {
-  const discordId = "dev-bypass";
-  let user = selectUserByDiscordId.get(discordId);
-  if (!user) {
-    const id = crypto.randomUUID();
-    insertUser.run(id, discordId, "Dev Bypass", null, 1, Date.now());
-    user = selectUserById.get(id);
-  }
-  return user;
-}
-
 function requireAuth(req, res) {
   if (req.user) return true;
   fail(res, 401, "Authentication required.");
@@ -354,16 +343,6 @@ const {
 } = createAccessMiddleware({ requireAuth, requireAlliance, requireRole });
 
 app.use((req, res, next) => {
-  if (!isProduction && DEV_BYPASS_TOKEN) {
-    const bypass = typeof req.header("x-dev-bypass") === "string" ? req.header("x-dev-bypass").trim() : "";
-    if (bypass && bypass === DEV_BYPASS_TOKEN) {
-      const user = ensureDevBypassUser();
-      req.user = user;
-      req.profiles = selectProfilesByUser.all(user.id);
-      return next();
-    }
-  }
-
   const auth = resolveUserFromSession(req);
   req.user = auth?.user || null;
   req.profiles = auth?.profiles || [];
@@ -409,7 +388,6 @@ const routeContext = {
   DISCORD_REDIRECT_URI,
   SESSION_TTL_MS,
   isProduction,
-  DEV_BYPASS_TOKEN,
   normalizeMemberPayload,
   generateAssignments,
   buildPlayerLookupPayload,
@@ -449,6 +427,7 @@ app.use(membersRoutes(routeContext));
 app.use(assignmentsRoutes(routeContext));
 app.use(profileRoutes(routeContext));
 app.use(bearRoutes(routeContext));
+app.use(adminRoutes(routeContext));
 
 if (require.main === module) {
   app.listen(port, () => {

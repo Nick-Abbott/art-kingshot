@@ -1,5 +1,5 @@
 const BASE_URL = process.env.VIKING_APP_URL || "http://localhost:3001";
-const DEV_BYPASS_TOKEN = process.env.DEV_BYPASS_TOKEN || "";
+const SESSION_TOKEN = process.env.SESSION_TOKEN || "";
 
 async function request(path, options = {}) {
   const res = await fetch(`${BASE_URL}${path}`, options);
@@ -8,11 +8,11 @@ async function request(path, options = {}) {
 }
 
 async function run() {
-  if (!DEV_BYPASS_TOKEN) {
-    throw new Error("DEV_BYPASS_TOKEN is required for this smoke check.");
+  if (!SESSION_TOKEN) {
+    throw new Error("SESSION_TOKEN is required for this smoke check.");
   }
 
-  const headers = { "x-dev-bypass": DEV_BYPASS_TOKEN };
+  const headers = { Cookie: `ak_session=${SESSION_TOKEN}` };
   const me = await request("/api/me", { headers });
   if (!me.res.ok) {
     throw new Error(`Expected /api/me ok, got ${me.res.status}`);
@@ -20,10 +20,11 @@ async function run() {
   let profiles = me.data?.data?.profiles || [];
 
   if (profiles.length === 0) {
+    const playerId = `FID${Math.floor(Math.random() * 900000 + 100000)}`;
     const created = await request("/api/profiles", {
       method: "POST",
       headers: { ...headers, "Content-Type": "application/json" },
-      body: JSON.stringify({ playerId: "FIDTEST", allianceId: "art" })
+      body: JSON.stringify({ playerId, allianceId: "art" })
     });
     if (!created.res.ok) {
       throw new Error(`Expected profile create ok, got ${created.res.status}`);
