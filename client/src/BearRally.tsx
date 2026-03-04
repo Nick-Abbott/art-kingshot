@@ -137,7 +137,7 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
       if (!profileId || !profile?.playerId) {
         throw new Error(t("auth.notAuthorizedAction"));
       }
-      const fid = profile.playerId.trim();
+      const fid = (editingMember?.playerId || profile.playerId).trim();
       const inferredSourceGroup =
         form.bearGroup === "bear1"
           ? bear2Members.some((member) => member.playerId === fid)
@@ -197,7 +197,7 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
     member: { playerId: string; playerName: string; rallySize: number },
     bearGroup: "bear1" | "bear2"
   ) {
-    if (member.playerId !== profile?.playerId) return;
+    if (member.playerId !== profile?.playerId && !canManage) return;
     setEditingMember({ playerId: member.playerId, bearGroup });
     setForm({
       rallySize: String(member.rallySize),
@@ -427,7 +427,10 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
                         className="ui-button-ghost ui-button-sm"
                         type="button"
                         onClick={() => startEdit(member, "bear1")}
-                        disabled={busy || member.playerId !== profile?.playerId}
+                        disabled={
+                          busy ||
+                          (!canManage && member.playerId !== profile?.playerId)
+                        }
                       >
                         {t("bear.edit")}
                       </button>
@@ -437,8 +440,7 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
                         onClick={() => removeMemberHandler("bear1", member.playerId)}
                         disabled={
                           busy ||
-                          member.playerId !== profile?.playerId ||
-                          !canManage
+                          (!canManage && member.playerId !== profile?.playerId)
                         }
                       >
                         {t("bear.remove")}
@@ -485,7 +487,10 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
                         className="ui-button-ghost ui-button-sm"
                         type="button"
                         onClick={() => startEdit(member, "bear2")}
-                        disabled={busy || member.playerId !== profile?.playerId}
+                        disabled={
+                          busy ||
+                          (!canManage && member.playerId !== profile?.playerId)
+                        }
                       >
                         {t("bear.edit")}
                       </button>
@@ -495,8 +500,7 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
                         onClick={() => removeMemberHandler("bear2", member.playerId)}
                         disabled={
                           busy ||
-                          member.playerId !== profile?.playerId ||
-                          !canManage
+                          (!canManage && member.playerId !== profile?.playerId)
                         }
                       >
                         {t("bear.remove")}

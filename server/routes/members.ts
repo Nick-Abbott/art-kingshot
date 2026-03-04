@@ -26,6 +26,11 @@ module.exports = function membersRoutes(ctx) {
         ctx.fail(res, 400, normalized.error);
         return;
       }
+      const canManage = req.user?.isAppAdmin || req.profileRole === "alliance_admin";
+      if (!canManage && req.profile?.playerId !== normalized.playerId) {
+        ctx.fail(res, 403, "Cannot update another member.");
+        return;
+      }
 
       const members = ctx.membersRepo.upsert(allianceId, normalized);
       ctx.ok(res, { members });

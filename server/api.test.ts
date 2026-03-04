@@ -237,6 +237,92 @@ test("alliance create and delete updates profile", async () => {
   }
 });
 
+test("alliance admin can edit other signups, members cannot", async () => {
+  const dbPath = tmpDbPath();
+  process.env.DB_PATH = dbPath;
+  process.env.PORT = "0";
+  const { httpServer, port } = await startServer();
+  try {
+    const headers = { Cookie: createSessionCookie(dbPath) };
+    const createAdminProfile = await requestJson(
+      port,
+      "POST",
+      "/api/profiles",
+      { ...headers, "Content-Type": "application/json" },
+      JSON.stringify({ playerId: "FIDADMIN", kingdomId: 1459 })
+    );
+    const adminProfileId = createAdminProfile.data.data.profile.id;
+
+    const createAlliance = await requestJson(
+      port,
+      "POST",
+      "/api/alliances",
+      { ...headers, "Content-Type": "application/json", "x-profile-id": adminProfileId },
+      JSON.stringify({ tag: "ADM", name: "Admin Alliance" })
+    );
+    const allianceId = createAlliance.data.data.alliance.id;
+
+    const createMemberProfile = await requestJson(
+      port,
+      "POST",
+      "/api/profiles",
+      { ...headers, "Content-Type": "application/json" },
+      JSON.stringify({ playerId: "FIDMEM", kingdomId: 1459 })
+    );
+    const memberProfileId = createMemberProfile.data.data.profile.id;
+
+    await requestJson(
+      port,
+      "PATCH",
+      `/api/profiles/${memberProfileId}`,
+      { ...headers, "Content-Type": "application/json" },
+      JSON.stringify({ allianceId })
+    );
+
+    await requestJson(
+      port,
+      "PATCH",
+      `/api/alliance/profiles/${memberProfileId}`,
+      { ...headers, "Content-Type": "application/json", "x-profile-id": adminProfileId },
+      JSON.stringify({ status: "active" })
+    );
+
+    const memberHeaders = { ...headers, "x-profile-id": memberProfileId };
+    const memberAttempt = await requestJson(
+      port,
+      "POST",
+      "/api/signup",
+      { ...memberHeaders, "Content-Type": "application/json" },
+      JSON.stringify({
+        playerId: "FIDOTHER",
+        troopCount: 1000,
+        playerName: "Other",
+        marchCount: 4,
+        power: 2000000,
+      })
+    );
+    assert.equal(memberAttempt.status, 403);
+
+    const adminHeaders = { ...headers, "x-profile-id": adminProfileId };
+    const adminAttempt = await requestJson(
+      port,
+      "POST",
+      "/api/signup",
+      { ...adminHeaders, "Content-Type": "application/json" },
+      JSON.stringify({
+        playerId: "FIDOTHER",
+        troopCount: 1000,
+        playerName: "Other",
+        marchCount: 4,
+        power: 2000000,
+      })
+    );
+    assert.equal(adminAttempt.status, 200);
+  } finally {
+    httpServer.close();
+  }
+});
+
 test("app admin can manage alliances across kingdoms", async () => {
   const dbPath = tmpDbPath();
   process.env.DB_PATH = dbPath;

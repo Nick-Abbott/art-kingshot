@@ -275,7 +275,7 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
       if (!profileId || !profile?.playerId) {
         throw new Error(t("auth.notAuthorizedAction"));
       }
-      const fid = profile.playerId.trim();
+      const fid = (editingMember || profile.playerId).trim();
       let resolvedName = form.playerName;
       let resolvedAvatar = profile?.playerAvatar || "";
       let resolvedKingdomId = profile?.kingdomId ?? null;
@@ -324,7 +324,7 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
   }
 
   function startEdit(member: Member) {
-    if (member.playerId !== profile?.playerId) return;
+    if (member.playerId !== profile?.playerId && !canManage) return;
     setEditingMember(member.playerId);
     setForm({
       troopCount: String(member.troopCount),
@@ -629,7 +629,10 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
                           className="ui-button-ghost ui-button-sm"
                           type="button"
                           onClick={() => startEdit(member)}
-                          disabled={busy || member.playerId !== profile?.playerId}
+                          disabled={
+                            busy ||
+                            (!canManage && member.playerId !== profile?.playerId)
+                          }
                         >
                           {t("viking.edit")}
                         </button>
@@ -638,9 +641,7 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
                           type="button"
                           onClick={() => removeSignup(member.playerId)}
                           disabled={
-                            busy ||
-                            member.playerId !== profile?.playerId ||
-                            !canManage
+                            busy || (!canManage && member.playerId !== profile?.playerId)
                           }
                         >
                           {t("viking.remove")}

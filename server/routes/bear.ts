@@ -49,6 +49,11 @@ module.exports = function bearRoutes(ctx) {
         ctx.fail(res, 400, "rallySize must be a positive number.");
         return;
       }
+      const canManage = req.user?.isAppAdmin || req.profileRole === "alliance_admin";
+      if (!canManage && req.profile?.playerId !== playerId) {
+        ctx.fail(res, 403, "Cannot update another member.");
+        return;
+      }
 
       ctx.db
         .prepare(
