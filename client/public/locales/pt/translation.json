@@ -31,7 +31,7 @@
   "viking": {
     "eyebrow": "Kingshot • Vingança Viking",
     "title": "Planejador de reforço viking",
-    "subtitle": "Todos enviam tropas, todos ficam cobertos, as baleias lideram a guarnição.",
+    "subtitle": "Todos enviam tropas, todos ficam cobertos.",
     "signedUp": "Inscritos",
     "minimumIncoming": "Entradas mínimas",
     "resetEvent": "Redefinir evento",
@@ -57,7 +57,6 @@
     "troopsMeta": "{{value}} tropas",
     "powerMeta": "{{value}} poder",
     "marchesMeta": "{{value}} marchas",
-    "whale": "Baleia",
     "edit": "Editar",
     "remove": "Remover",
     "runAssignments": "Executar atribuições",

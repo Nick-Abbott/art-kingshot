@@ -31,7 +31,7 @@
   "viking": {
     "eyebrow": "Kingshot • 维京复仇",
     "title": "维京增援规划器",
-    "subtitle": "所有人派兵，所有人都能覆盖，鲸鱼带领驻军。",
+    "subtitle": "所有人派兵，所有人都能覆盖。",
     "signedUp": "已报名",
     "minimumIncoming": "最低来兵",
     "resetEvent": "重置活动",
@@ -57,7 +57,6 @@
     "troopsMeta": "{{value}} 兵",
     "powerMeta": "{{value}} 战力",
     "marchesMeta": "{{value}} 行军",
-    "whale": "鲸鱼",
     "edit": "编辑",
     "remove": "移除",
     "runAssignments": "运行分配",

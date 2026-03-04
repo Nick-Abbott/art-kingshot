@@ -31,7 +31,7 @@
   "viking": {
     "eyebrow": "Kingshot • Viking Vengeance",
     "title": "Viking Reinforcement Planner",
-    "subtitle": "Everyone sends troops out, everyone gets covered, whales lead the garrison.",
+    "subtitle": "Everyone sends troops out, everyone gets covered.",
     "signedUp": "Signed up",
     "minimumIncoming": "Minimum incoming",
     "resetEvent": "Reset event",
@@ -57,7 +57,6 @@
     "troopsMeta": "{{value}} troops",
     "powerMeta": "{{value}} power",
     "marchesMeta": "{{value}} marches",
-    "whale": "Whale",
     "edit": "Edit",
     "remove": "Remove",
     "runAssignments": "Run assignments",

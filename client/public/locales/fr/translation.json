@@ -31,7 +31,7 @@
   "viking": {
     "eyebrow": "Kingshot • Vengeance Viking",
     "title": "Planificateur de renforts vikings",
-    "subtitle": "Tout le monde envoie des troupes, tout le monde est couvert, les baleines mènent la garnison.",
+    "subtitle": "Tout le monde envoie des troupes, tout le monde est couvert.",
     "signedUp": "Inscrits",
     "minimumIncoming": "Entrées minimales",
     "resetEvent": "Réinitialiser l'événement",
@@ -57,7 +57,6 @@
     "troopsMeta": "{{value}} troupes",
     "powerMeta": "{{value}} puissance",
     "marchesMeta": "{{value}} marches au total",
-    "whale": "Baleine",
     "edit": "Modifier",
     "remove": "Supprimer",
     "runAssignments": "Exécuter les affectations",

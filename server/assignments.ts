@@ -4,6 +4,7 @@ const NEED_PER_CITY = 200000;
 const MAX_SEND = 100000;
 const MAX_SEND_WHALE = 150000;
 const WHALE_MULTIPLIER = 2.5;
+const WHALE_TROOP_WEIGHT = 1.5;
 
 function sum(values) {
   return values.reduce((total, value) => total + value, 0);
@@ -14,8 +15,8 @@ function buildEmptyIncoming(members) {
   for (const member of members) {
     incoming.set(member.playerId, {
       total: 0,
+      effectiveTotal: 0,
       from: [],
-      hasWhale: false,
     });
   }
   return incoming;
@@ -28,7 +29,6 @@ function pickMaxNeedTarget(needs, excludeId, excludeTargets, incomingMeta) {
   for (const [playerId, need] of needs.entries()) {
     if (playerId === excludeId) continue;
     if (excludeTargets?.has(playerId)) continue;
-    if (incomingMeta?.get(playerId)?.hasWhale) continue;
     const incomingCount = incomingMeta?.get(playerId)?.from.length ?? 0;
     if (need > bestNeed) {
       bestNeed = need;
@@ -48,7 +48,7 @@ function pickLowestIncomingTarget(targets, excludeTargets, incomingMeta) {
 
   for (const playerId of targets) {
     if (excludeTargets?.has(playerId)) continue;
-    const total = incomingMeta?.get(playerId)?.total ?? 0;
+    const total = incomingMeta?.get(playerId)?.effectiveTotal ?? 0;
 
     if (bestId === null) {
       bestId = playerId;
@@ -143,9 +143,6 @@ function generateAssignments(members: Member[]): AssignmentResult {
   const { warnings, validMembers } = validateMembers(members);
   if (validMembers.length < 2) {
     return {
-      needPerCity: NEED_PER_CITY,
-      medianPower: 0,
-      whaleThreshold: 0,
       members: [],
       warnings,
     };
@@ -193,64 +190,8 @@ function generateAssignments(members: Member[]): AssignmentResult {
     return base;
   }
 
-  // Whale garrisons for smallest cities first.
-  const whaleSenders = annotated
-    .filter((member) => member.whale)
-    .sort((a, b) => b.power - a.power);
-  const targetsByPower = annotated
-    .filter((member) => !member.whale)
-    .sort((a, b) => a.power - b.power);
-
-  for (const target of targetsByPower) {
-    const incomingTarget = incoming.get(target.playerId);
-    if (incomingTarget.hasWhale) continue;
-    let bestWhale = null;
-    let bestDiff = -1;
-    for (const whale of whaleSenders) {
-      if (marchesRemaining.get(whale.playerId) <= 0) continue;
-      const remaining = remainingBySender.get(whale.playerId) || 0;
-      const perMarch = perMarchBaseBySender.get(whale.playerId) || 0;
-      if (remaining < perMarch || perMarch <= 0) continue;
-      if (outgoing.get(whale.playerId).some((o) => o.toId === target.playerId)) {
-        continue;
-      }
-      const diff = whale.power - target.power;
-      if (diff > bestDiff) {
-        bestDiff = diff;
-        bestWhale = whale;
-      }
-    }
-
-    if (!bestWhale) continue;
-    const remaining = remainingBySender.get(bestWhale.playerId) || 0;
-    const sendAmount = nextMarchAmount(
-      bestWhale.playerId,
-      remaining
-    );
-    if (sendAmount <= 0) continue;
-
-    remainingBySender.set(bestWhale.playerId, remaining - sendAmount);
-    marchesRemaining.set(
-      bestWhale.playerId,
-      marchesRemaining.get(bestWhale.playerId) - 1
-    );
-
-    outgoing.get(bestWhale.playerId).push({
-      toId: target.playerId,
-      toName: target.playerName || "",
-      troops: sendAmount,
-      whaleLead: true,
-    });
-
-    incomingTarget.total += sendAmount;
-    incomingTarget.from.push({
-      fromId: bestWhale.playerId,
-      fromName: bestWhale.playerName || "",
-      troops: sendAmount,
-      whaleLead: true,
-    });
-    incomingTarget.hasWhale = true;
-    needs.set(target.playerId, 0);
+  function effectiveTroops(sender, troops) {
+    return sender.whale ? troops * WHALE_TROOP_WEIGHT : troops;
   }
 
   // Fill remaining needs and then dump remaining troops to get armies out.
@@ -263,7 +204,6 @@ function generateAssignments(members: Member[]): AssignmentResult {
 
     const targets = annotated
       .filter((member) => member.playerId !== sender.playerId)
-      .filter((member) => !incoming.get(member.playerId)?.hasWhale)
       .map((member) => member.playerId);
 
     // First pass: satisfy needs.
@@ -283,7 +223,7 @@ function generateAssignments(members: Member[]): AssignmentResult {
       if (sendAmount <= 0) break;
 
       remaining -= sendAmount;
-      needs.set(targetId, Math.max(0, need - sendAmount));
+      needs.set(targetId, Math.max(0, need - effectiveTroops(sender, sendAmount)));
       assignedTargets.add(targetId);
       marchesRemaining.set(
         sender.playerId,
@@ -297,16 +237,17 @@ function generateAssignments(members: Member[]): AssignmentResult {
         toId: targetId,
         toName: targetMember?.playerName || "",
         troops: sendAmount,
-        whaleLead: Boolean(sender.whale),
+        lead: Boolean(sender.whale),
       });
 
       const incomingTarget = incoming.get(targetId);
       incomingTarget.total += sendAmount;
+      incomingTarget.effectiveTotal += effectiveTroops(sender, sendAmount);
       incomingTarget.from.push({
         fromId: sender.playerId,
         fromName: sender.playerName || "",
         troops: sendAmount,
-        whaleLead: Boolean(sender.whale),
+        lead: Boolean(sender.whale),
       });
     }
 
@@ -337,15 +278,16 @@ function generateAssignments(members: Member[]): AssignmentResult {
         toId: targetId,
         toName: targetMember?.playerName || "",
         troops: sendAmount,
-        whaleLead: Boolean(sender.whale),
+        lead: Boolean(sender.whale),
       });
 
       incomingTarget.total += sendAmount;
+      incomingTarget.effectiveTotal += effectiveTroops(sender, sendAmount);
       incomingTarget.from.push({
         fromId: sender.playerId,
         fromName: sender.playerName || "",
         troops: sendAmount,
-        whaleLead: Boolean(sender.whale),
+        lead: Boolean(sender.whale),
       });
     }
 
@@ -357,7 +299,7 @@ function generateAssignments(members: Member[]): AssignmentResult {
   while (progress) {
     progress = false;
     const targets = Array.from(needs.entries())
-      .filter(([playerId, need]) => need > 0 && !incoming.get(playerId)?.hasWhale)
+      .filter(([playerId, need]) => need > 0)
       .map(([playerId]) => playerId)
       .sort((aId, bId) => {
         const aNeed = needs.get(aId) || 0;
@@ -401,17 +343,18 @@ function generateAssignments(members: Member[]): AssignmentResult {
         toId: targetId,
         toName: targetMember?.playerName || "",
         troops: sendAmount,
-        whaleLead: Boolean(sender.whale),
+        lead: Boolean(sender.whale),
       });
 
       incomingTarget.total += sendAmount;
+      incomingTarget.effectiveTotal += effectiveTroops(sender, sendAmount);
       incomingTarget.from.push({
         fromId: sender.playerId,
         fromName: sender.playerName || "",
         troops: sendAmount,
-        whaleLead: Boolean(sender.whale),
+        lead: Boolean(sender.whale),
       });
-      needs.set(targetId, Math.max(0, need - sendAmount));
+      needs.set(targetId, Math.max(0, need - effectiveTroops(sender, sendAmount)));
       progress = true;
     }
   }
@@ -439,10 +382,10 @@ function generateAssignments(members: Member[]): AssignmentResult {
     const outgoingTotal = sum(outgoingInfo.map((entry) => entry.troops));
     let garrisonLeadId = null;
     let garrisonLeadName = "";
-    let maxWhaleTroops = 0;
+    let maxLeadTroops = 0;
     for (const entry of incomingInfo.from) {
-      if (entry.whaleLead && entry.troops > maxWhaleTroops) {
-        maxWhaleTroops = entry.troops;
+      if (entry.lead && entry.troops > maxLeadTroops) {
+        maxLeadTroops = entry.troops;
         garrisonLeadId = entry.fromId;
         garrisonLeadName = entry.fromName || "";
       }
@@ -468,9 +411,6 @@ function generateAssignments(members: Member[]): AssignmentResult {
       playerName: member.playerName || "",
       troopCount: member.troopCount,
       troopsRemaining: Math.max(0, member.troopCount - outgoingTotal),
-      power: member.power,
-      marchCount: member.marchCount,
-      whale: Boolean(member.whale),
       outgoing: outgoingInfo,
       incoming: incomingInfo.from,
       incomingTotal: incomingInfo.total,
@@ -489,11 +429,11 @@ function generateAssignments(members: Member[]): AssignmentResult {
   const result = baseResult.map((member) => {
     const outgoingInfo = member.outgoing.map((entry) => ({
       ...entry,
-      whaleLead: leadByTarget.get(entry.toId) === member.playerId,
+      lead: leadByTarget.get(entry.toId) === member.playerId,
     }));
     const incomingInfo = member.incoming.map((entry) => ({
       ...entry,
-      whaleLead: leadByTarget.get(member.playerId) === entry.fromId,
+      lead: leadByTarget.get(member.playerId) === entry.fromId,
     }));
     return {
       ...member,
@@ -503,7 +443,9 @@ function generateAssignments(members: Member[]): AssignmentResult {
   });
 
   for (const member of result) {
-    if (member.incomingTotal < NEED_PER_CITY && !member.garrisonLeadId) {
+    const incomingInfo = incoming.get(member.playerId);
+    const effectiveIncoming = incomingInfo?.effectiveTotal ?? member.incomingTotal;
+    if (effectiveIncoming < NEED_PER_CITY && !member.garrisonLeadId) {
       warnings.push(
         `City ${member.playerId} did not reach ${NEED_PER_CITY} reinforcements.`
       );
@@ -511,9 +453,6 @@ function generateAssignments(members: Member[]): AssignmentResult {
   }
 
   return {
-    needPerCity: NEED_PER_CITY,
-    medianPower: median,
-    whaleThreshold,
     members: result,
     warnings,
   };

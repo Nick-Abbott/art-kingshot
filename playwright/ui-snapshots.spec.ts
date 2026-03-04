@@ -89,9 +89,12 @@ async function createAlliance(
   request: Parameters<typeof test>[0]["request"],
   profileId: string
 ) {
-  const baseName = "Arts of War";
-  for (let attempt = 0; attempt < 5; attempt += 1) {
-    const tag = Math.random().toString(36).slice(2, 5).toUpperCase();
+  for (let attempt = 0; attempt < 30; attempt += 1) {
+    const tag = Array.from(crypto.randomBytes(3))
+      .map((byte) => String.fromCharCode(65 + (byte % 26)))
+      .join("")
+      .slice(0, 3);
+    const baseName = `Arts of War ${tag}`;
     const { res, json } = await apiJson(request, `${SERVER_URL}/api/alliances`, {
       method: "POST",
       headers: {
@@ -104,9 +107,14 @@ async function createAlliance(
     if (res.ok()) {
       return json.data;
     }
-    if (res.status() !== 409) {
-      throw new Error(`Failed to create alliance: ${res.status()} ${JSON.stringify(json)}`);
+    if (res.status() === 409) {
+      continue;
     }
+    if (res.status() === 429 || res.status() >= 500) {
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      continue;
+    }
+    throw new Error(`Failed to create alliance: ${res.status()} ${JSON.stringify(json)}`);
   }
   throw new Error("Failed to create a unique alliance tag after retries.");
 }

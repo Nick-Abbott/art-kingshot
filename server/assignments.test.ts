@@ -5,6 +5,7 @@ const {
   NEED_PER_CITY,
   MAX_SEND,
   MAX_SEND_WHALE,
+  WHALE_MULTIPLIER,
 } = require("./assignments");
 
 function sum(values) {
@@ -19,15 +20,28 @@ test("assignments satisfy minimum incoming and respect per-target caps", () => {
   ];
 
   const result = generateAssignments(members);
+  const powers = members.map((member) => member.power).sort((a, b) => a - b);
+  const mid = Math.floor(powers.length / 2);
+  const median =
+    powers.length % 2 === 0 ? (powers[mid - 1] + powers[mid]) / 2 : powers[mid];
+  const whaleThreshold = median * WHALE_MULTIPLIER;
+  const whaleById = new Map(
+    members.map((member) => [member.playerId, member.power >= whaleThreshold])
+  );
 
   for (const member of result.members) {
     const outgoingTotal = sum(member.outgoing.map((item) => item.troops));
     assert.ok(outgoingTotal <= member.troopCount);
+    const effectiveIncoming = sum(
+      member.incoming.map((entry) =>
+        entry.troops * (whaleById.get(entry.fromId) ? 1.5 : 1)
+      )
+    );
     const unmetWarning = result.warnings.some((warning) =>
       warning.includes(`City ${member.playerId} did not reach`)
     );
     assert.ok(
-      member.incomingTotal >= NEED_PER_CITY ||
+      effectiveIncoming >= NEED_PER_CITY ||
         member.garrisonLeadId ||
         unmetWarning
     );
@@ -38,7 +52,7 @@ test("assignments satisfy minimum incoming and respect per-target caps", () => {
     for (const item of member.outgoing) {
       assert.ok(!seenTargets.has(item.toId));
       seenTargets.add(item.toId);
-      const maxCap = member.whale ? MAX_SEND_WHALE : MAX_SEND;
+      const maxCap = whaleById.get(member.playerId) ? MAX_SEND_WHALE : MAX_SEND;
       assert.ok(item.troops <= maxCap);
     }
   }
@@ -54,7 +68,7 @@ test("returns warnings instead of throwing on invalid inputs", () => {
   assert.ok(result.warnings.length > 0);
 });
 
-test("whale garrison lead is assigned when whale reinforces", () => {
+test("lead is assigned when the strongest sender reinforces", () => {
   const members = [
     { playerId: "Whale1", troopCount: 600000, power: 120000000, marchCount: 6 },
     { playerId: "D", troopCount: 400000, power: 15000000, marchCount: 5 },

@@ -707,7 +707,7 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
                         {member.outgoing.map((item, index) => (
                           <li key={`${member.playerId}-out-${index}`}>
                             {(item.toName || item.toId)} — {formatNumber(item.troops)}{" "}
-                            {item.whaleLead ? (
+                            {item.lead ? (
                               <span className="ml-2 inline-flex rounded-md bg-accent/15 px-2 py-0.5 text-[0.65rem] font-semibold text-accent-dark">
                                 {t("viking.lead")}
                               </span>
@@ -722,7 +722,7 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
                         {member.incoming.map((item, index) => (
                           <li key={`${member.playerId}-in-${index}`}>
                             {(item.fromName || item.fromId)} — {formatNumber(item.troops)}{" "}
-                            {item.whaleLead ? (
+                            {item.lead ? (
                               <span className="ml-2 inline-flex rounded-md bg-accent/15 px-2 py-0.5 text-[0.65rem] font-semibold text-accent-dark">
                                 {t("viking.lead")}
                               </span>

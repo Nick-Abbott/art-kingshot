@@ -126,14 +126,14 @@ export type AssignmentTransfer = {
   toId?: string;
   toName?: string;
   troops: number;
-  whaleLead?: boolean;
+  lead?: boolean;
 };
 
 export type AssignmentIncoming = {
   fromId?: string;
   fromName?: string;
   troops: number;
-  whaleLead?: boolean;
+  lead?: boolean;
 };
 
 export type AssignmentMember = {
@@ -141,9 +141,6 @@ export type AssignmentMember = {
   playerName: string;
   troopCount: number;
   troopsRemaining?: number;
-  power: number;
-  marchCount: number;
-  whale?: boolean;
   outgoing: AssignmentTransfer[];
   incoming: AssignmentIncoming[];
   incomingTotal: number;
@@ -152,9 +149,6 @@ export type AssignmentMember = {
 };
 
 export type AssignmentResult = {
-  needPerCity: number;
-  medianPower: number;
-  whaleThreshold: number;
   members: AssignmentMember[];
   warnings: string[];
 };
