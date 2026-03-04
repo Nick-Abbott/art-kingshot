@@ -415,7 +415,7 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
     setError("");
     setBusy(true);
 
-    if (!canManage) {
+    if (!canManage && profile?.playerId !== playerId) {
       setError(t("auth.notAuthorizedAction"));
       setBusy(false);
       return;

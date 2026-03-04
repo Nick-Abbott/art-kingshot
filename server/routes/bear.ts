@@ -104,7 +104,6 @@ module.exports = function bearRoutes(ctx) {
     "/api/bear/:group/:playerId",
     ctx.requireAuthMiddleware,
     ctx.requireAllianceMiddleware,
-    ctx.requireRoleMiddleware(["alliance_admin"]),
     (req, res) => {
       const allianceId = req.allianceId;
       const group = req.params.group as BearGroup;
@@ -116,6 +115,11 @@ module.exports = function bearRoutes(ctx) {
         typeof req.params.playerId === "string" ? req.params.playerId.trim() : "";
       if (!playerId) {
         ctx.fail(res, 400, "playerId is required.");
+        return;
+      }
+      const canManage = req.user?.isAppAdmin || req.profileRole === "alliance_admin";
+      if (!canManage && req.profile?.playerId !== playerId) {
+        ctx.fail(res, 403, "Cannot remove another member.");
         return;
       }
 

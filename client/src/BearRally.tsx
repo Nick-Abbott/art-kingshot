@@ -242,7 +242,7 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
     setError("");
     setBusy(true);
 
-    if (!canManage) {
+    if (!canManage && profile?.playerId !== playerId) {
       setError(t("auth.notAuthorizedAction"));
       setBusy(false);
       return;

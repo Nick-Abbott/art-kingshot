@@ -41,13 +41,17 @@ module.exports = function membersRoutes(ctx) {
     "/api/members/:playerId",
     ctx.requireAuthMiddleware,
     ctx.requireAllianceMiddleware,
-    ctx.requireRoleMiddleware(["alliance_admin"]),
     (req, res) => {
       const allianceId = req.allianceId;
       const playerId =
         typeof req.params.playerId === "string" ? req.params.playerId.trim() : "";
       if (!playerId) {
         ctx.fail(res, 400, "playerId is required.");
+        return;
+      }
+      const canManage = req.user?.isAppAdmin || req.profileRole === "alliance_admin";
+      if (!canManage && req.profile?.playerId !== playerId) {
+        ctx.fail(res, 403, "Cannot remove another member.");
         return;
       }
 

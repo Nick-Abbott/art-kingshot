@@ -303,6 +303,37 @@ test("alliance admin can edit other signups, members cannot", async () => {
     );
     assert.equal(memberAttempt.status, 403);
 
+    const memberOwn = await requestJson(
+      port,
+      "POST",
+      "/api/signup",
+      { ...memberHeaders, "Content-Type": "application/json" },
+      JSON.stringify({
+        playerId: "FIDMEM",
+        troopCount: 1000,
+        playerName: "Self",
+        marchCount: 4,
+        power: 2000000,
+      })
+    );
+    assert.equal(memberOwn.status, 200);
+
+    const memberDeleteOther = await requestJson(
+      port,
+      "DELETE",
+      "/api/members/FIDOTHER",
+      memberHeaders
+    );
+    assert.equal(memberDeleteOther.status, 403);
+
+    const memberDeleteSelf = await requestJson(
+      port,
+      "DELETE",
+      "/api/members/FIDMEM",
+      memberHeaders
+    );
+    assert.equal(memberDeleteSelf.status, 200);
+
     const adminHeaders = { ...headers, "x-profile-id": adminProfileId };
     const adminAttempt = await requestJson(
       port,
