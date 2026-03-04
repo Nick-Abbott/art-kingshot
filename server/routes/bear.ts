@@ -5,6 +5,31 @@ module.exports = function bearRoutes(ctx) {
   const router = express.Router();
 
   router.get(
+    "/api/bear/eligible",
+    ctx.requireAuthMiddleware,
+    ctx.requireAllianceMiddleware,
+    ctx.requireRoleMiddleware(["alliance_admin"]),
+    (req, res) => {
+      const allianceId = req.allianceId;
+      const members = ctx.db
+        .prepare(
+          `SELECT playerId,
+                  playerName,
+                  rallySize
+           FROM profiles
+           WHERE allianceId = ?
+             AND status = 'active'
+             AND playerId NOT IN (
+               SELECT playerId FROM bear WHERE allianceId = ?
+             )
+           ORDER BY COALESCE(playerName, playerId) ASC`
+        )
+        .all(allianceId, allianceId);
+      ctx.ok(res, { members });
+    }
+  );
+
+  router.get(
     "/api/bear/:group",
     ctx.requireAuthMiddleware,
     ctx.requireAllianceMiddleware,
@@ -65,6 +90,14 @@ module.exports = function bearRoutes(ctx) {
              bearGroup=excluded.bearGroup`
         )
         .run(allianceId, playerId, playerName, rallySize, group);
+      ctx.db
+        .prepare(
+          `UPDATE profiles
+           SET rallySize = ?,
+               playerName = ?
+           WHERE allianceId = ? AND playerId = ?`
+        )
+        .run(rallySize, playerName, allianceId, playerId);
 
       const members = ctx.db
         .prepare(

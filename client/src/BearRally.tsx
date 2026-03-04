@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ApiError } from "./apiClient";
 import { lookupPlayer } from "./api/playerLookup";
 import { useBear } from "./hooks/useBear";
-import type { Profile } from "@shared/types";
+import type { EligibleMember, Profile } from "@shared/types";
 import { updateProfile } from "./api/profile";
+import { fetchEligibleBearMembers } from "./api/bear";
 
 type Props = {
   profileId: string;
@@ -62,10 +63,30 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
     bearGroup: "bear1" | "bear2";
   } | null>(null);
   const [profileWarning, setProfileWarning] = useState("");
+  const [eligibleMembers, setEligibleMembers] = useState<EligibleMember[]>([]);
+  const [adminTargetId, setAdminTargetId] = useState("");
+  const adminOptions = useMemo(() => {
+    const options: { playerId: string; playerName: string }[] = [];
+    if (profile?.playerId) {
+      options.push({
+        playerId: profile.playerId,
+        playerName: profile.playerName || profile.playerId
+      });
+    }
+    for (const member of eligibleMembers) {
+      if (!member.playerId || member.playerId === profile?.playerId) continue;
+      options.push({
+        playerId: member.playerId,
+        playerName: member.playerName || member.playerId
+      });
+    }
+    return options;
+  }, [eligibleMembers, profile]);
 
   useEffect(() => {
     if (!profileId) return;
     setEditingMember(null);
+    setAdminTargetId("");
     setLookupStatus("");
   }, [profileId]);
 
@@ -76,6 +97,26 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
       playerName: ""
     }));
   }, [profile, editingMember]);
+
+  useEffect(() => {
+    let active = true;
+    if (!profileId || !canManage) {
+      setEligibleMembers([]);
+      return undefined;
+    }
+    fetchEligibleBearMembers(profileId)
+      .then((data) => {
+        if (!active) return;
+        setEligibleMembers(data);
+      })
+      .catch(() => {
+        if (!active) return;
+        setEligibleMembers([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, [profileId, canManage]);
 
   useEffect(() => {
     if (!profile || editingMember) return;
@@ -91,6 +132,16 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
       setProfileWarning("");
     }
   }, [profile]);
+
+  useEffect(() => {
+    if (!canManage) {
+      setAdminTargetId("");
+      return;
+    }
+    if (profile?.playerId && !editingMember) {
+      setAdminTargetId(profile.playerId);
+    }
+  }, [canManage, profile?.playerId, editingMember]);
 
   function extractPlayerName(payload: any) {
     const data = payload?.data ?? payload;
@@ -137,7 +188,12 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
       if (!profileId || !profile?.playerId) {
         throw new Error(t("auth.notAuthorizedAction"));
       }
-      const fid = (editingMember?.playerId || profile.playerId).trim();
+      const adminTarget = canManage ? adminTargetId : "";
+      const usingAdminTarget = Boolean(adminTarget && adminTarget !== profile.playerId);
+      const fid = (
+        editingMember?.playerId ||
+        (usingAdminTarget ? adminTarget : profile.playerId)
+      ).trim();
       const inferredSourceGroup =
         form.bearGroup === "bear1"
           ? bear2Members.some((member) => member.playerId === fid)
@@ -148,7 +204,7 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
           : null;
       let resolvedName = form.playerName;
 
-      if (!editingMember) {
+      if (!editingMember && !resolvedName) {
         resolvedName = await lookupPlayerName(fid);
       }
 
@@ -158,7 +214,7 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
         rallySize: parseNumber(form.rallySize)
       });
 
-      if (!editingMember) {
+      if (!editingMember && !usingAdminTarget) {
         const updatedProfile = await updateProfile(profileId, {
           playerId: fid,
           playerName: resolvedName,
@@ -168,6 +224,13 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
           onProfileUpdated(updatedProfile);
         } else {
           setProfileWarning(t("profiles.errors.updateFailed"));
+        }
+      }
+      if (usingAdminTarget) {
+        const nextEligible = await fetchEligibleBearMembers(profileId);
+        setEligibleMembers(nextEligible);
+        if (!nextEligible.some((member) => member.playerId === adminTarget)) {
+          setAdminTargetId("");
         }
       }
 
@@ -198,6 +261,7 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
     bearGroup: "bear1" | "bear2"
   ) {
     if (member.playerId !== profile?.playerId && !canManage) return;
+    setAdminTargetId("");
     setEditingMember({ playerId: member.playerId, bearGroup });
     setForm({
       rallySize: String(member.rallySize),
@@ -215,6 +279,30 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
     setError("");
   }
 
+  function handleAdminTargetChange(value: string) {
+    setAdminTargetId(value);
+    if (!value || value === profile?.playerId) {
+      setForm((prev) => ({
+        ...prev,
+        playerName: profile?.playerName || "",
+        rallySize: profile?.rallySize ? formatNumber(profile.rallySize) : prev.rallySize
+      }));
+      return;
+    }
+    const selected = eligibleMembers.find((member) => member.playerId === value);
+    if (!selected) return;
+    setForm((prev) => ({
+      ...prev,
+      rallySize:
+        selected.rallySize !== null && selected.rallySize !== undefined
+          ? formatNumber(selected.rallySize)
+          : "",
+      playerName: selected.playerName || prev.playerName
+    }));
+    setLookupStatus("");
+    setEditingMember(null);
+  }
+
   async function resetBearGroup(bearGroup: "bear1" | "bear2") {
     setError("");
     setBusy(true);
@@ -227,6 +315,10 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
 
     try {
       await resetGroup(bearGroup);
+      if (canManage && profileId) {
+        const nextEligible = await fetchEligibleBearMembers(profileId);
+        setEligibleMembers(nextEligible);
+      }
     } catch (err: any) {
       if (err instanceof ApiError && err.status === 403) {
         setError(t("auth.notAuthorizedAction"));
@@ -250,6 +342,10 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
 
     try {
       await removeMember(bearGroup, playerId);
+      if (canManage && profileId) {
+        const nextEligible = await fetchEligibleBearMembers(profileId);
+        setEligibleMembers(nextEligible);
+      }
     } catch (err: any) {
       if (err instanceof ApiError && err.status === 403) {
         setError(t("auth.notAuthorizedAction"));
@@ -343,6 +439,22 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
               className="mt-5 flex flex-col gap-4 nav:grid nav:grid-cols-[repeat(2,minmax(0,1fr))_auto] nav:items-end"
               onSubmit={submitSignup}
             >
+              {canManage && (
+                <label className="ui-field nav:col-span-3">
+                  {t("bear.adminMemberLabel")}
+                  <select
+                    className="ui-select"
+                    value={adminTargetId}
+                    onChange={(event) => handleAdminTargetChange(event.target.value)}
+                  >
+                    {adminOptions.map((member) => (
+                      <option key={member.playerId} value={member.playerId}>
+                        {member.playerName}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
               <label className="ui-field">
                 {t("bear.rallySize")}
                 <input

@@ -33,6 +33,50 @@ module.exports = function membersRoutes(ctx) {
       }
 
       const members = ctx.membersRepo.upsert(allianceId, normalized);
+      ctx.db
+        .prepare(
+          `UPDATE profiles
+           SET troopCount = ?,
+               marchCount = ?,
+               power = ?,
+               playerName = ?
+           WHERE allianceId = ? AND playerId = ?`
+        )
+        .run(
+          normalized.troopCount,
+          normalized.marchCount,
+          normalized.power,
+          normalized.playerName,
+          allianceId,
+          normalized.playerId
+        );
+      ctx.ok(res, { members });
+    }
+  );
+
+  router.get(
+    "/api/members/eligible",
+    ctx.requireAuthMiddleware,
+    ctx.requireAllianceMiddleware,
+    ctx.requireRoleMiddleware(["alliance_admin"]),
+    (req, res) => {
+      const allianceId = req.allianceId;
+      const members = ctx.db
+        .prepare(
+          `SELECT playerId,
+                  playerName,
+                  troopCount,
+                  marchCount,
+                  power
+           FROM profiles
+           WHERE allianceId = ?
+             AND status = 'active'
+             AND playerId NOT IN (
+               SELECT playerId FROM members WHERE allianceId = ?
+             )
+           ORDER BY COALESCE(playerName, playerId) ASC`
+        )
+        .all(allianceId, allianceId);
       ctx.ok(res, { members });
     }
   );

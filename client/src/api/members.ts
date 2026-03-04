@@ -1,7 +1,13 @@
 import { apiFetch } from "../apiClient";
-import type { ApiResponse, Member, MembersPayload } from "@shared/types";
+import type {
+  ApiResponse,
+  EligibleMember,
+  EligibleMembersPayload,
+  Member,
+  MembersPayload
+} from "@shared/types";
 
-export type { Member };
+export type { Member, EligibleMember };
 
 export async function fetchMembers(profileId: string): Promise<Member[]> {
   const res = await apiFetch("/api/members", { profileId });
@@ -32,4 +38,11 @@ export async function removeMember(profileId: string, playerId: string) {
   const data = res.data as ApiResponse<MembersPayload>;
   if (!data || data.ok === false) return [];
   return data.data?.members || [];
+}
+
+export async function fetchEligibleMembers(profileId: string): Promise<EligibleMember[]> {
+  const res = await apiFetch("/api/members/eligible", { profileId });
+  const payload = res.data as ApiResponse<EligibleMembersPayload>;
+  if (!payload || payload.ok === false) return [];
+  return payload.data?.members || [];
 }

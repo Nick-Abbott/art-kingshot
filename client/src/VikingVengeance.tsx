@@ -5,7 +5,8 @@ import { lookupPlayer } from "./api/playerLookup";
 import type { AssignmentResult } from "./api/assignments";
 import { useAssignments } from "./hooks/useAssignments";
 import { useMembers } from "./hooks/useMembers";
-import type { Member } from "./api/members";
+import { fetchEligibleMembers } from "./api/members";
+import type { EligibleMember, Member } from "./api/members";
 import type { Profile } from "@shared/types";
 import { updateProfile } from "./api/profile";
 
@@ -48,6 +49,25 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
   const [editingMember, setEditingMember] = useState<string | null>(null);
   const [lastLookupId, setLastLookupId] = useState("");
   const [profileWarning, setProfileWarning] = useState("");
+  const [eligibleMembers, setEligibleMembers] = useState<EligibleMember[]>([]);
+  const [adminTargetId, setAdminTargetId] = useState("");
+  const adminOptions = useMemo(() => {
+    const options: { playerId: string; playerName: string }[] = [];
+    if (profile?.playerId) {
+      options.push({
+        playerId: profile.playerId,
+        playerName: profile.playerName || profile.playerId
+      });
+    }
+    for (const member of eligibleMembers) {
+      if (!member.playerId || member.playerId === profile?.playerId) continue;
+      options.push({
+        playerId: member.playerId,
+        playerName: member.playerName || member.playerId
+      });
+    }
+    return options;
+  }, [eligibleMembers, profile]);
 
   const memberCount = members.length;
 
@@ -128,6 +148,7 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
   useEffect(() => {
     if (!profileId) return;
     setEditingMember(null);
+    setAdminTargetId("");
     setLookupStatus("");
   }, [profileId]);
 
@@ -151,6 +172,36 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
       setProfileWarning("");
     }
   }, [profile]);
+
+  useEffect(() => {
+    if (!canManage) {
+      setAdminTargetId("");
+      return;
+    }
+    if (profile?.playerId && !editingMember) {
+      setAdminTargetId(profile.playerId);
+    }
+  }, [canManage, profile?.playerId, editingMember]);
+
+  useEffect(() => {
+    let active = true;
+    if (!profileId || !canManage) {
+      setEligibleMembers([]);
+      return undefined;
+    }
+    fetchEligibleMembers(profileId)
+      .then((data) => {
+        if (!active) return;
+        setEligibleMembers(data);
+      })
+      .catch(() => {
+        if (!active) return;
+        setEligibleMembers([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, [profileId, canManage]);
 
   function updateForm(
     event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -275,12 +326,16 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
       if (!profileId || !profile?.playerId) {
         throw new Error(t("auth.notAuthorizedAction"));
       }
-      const fid = (editingMember || profile.playerId).trim();
+      const adminTarget = canManage ? adminTargetId : "";
+      const usingAdminTarget = Boolean(adminTarget && adminTarget !== profile.playerId);
+      const fid = (
+        editingMember || (usingAdminTarget ? adminTarget : profile.playerId)
+      ).trim();
       let resolvedName = form.playerName;
       let resolvedAvatar = profile?.playerAvatar || "";
       let resolvedKingdomId = profile?.kingdomId ?? null;
 
-      if (!editingMember && (!resolvedName || fid !== lastLookupId)) {
+      if (!editingMember && (!resolvedName || (!usingAdminTarget && fid !== lastLookupId))) {
         const lookup = await lookupPlayerProfile(fid);
         resolvedName = lookup.name;
         resolvedAvatar = lookup.avatar;
@@ -297,7 +352,7 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
       });
       setMembers(updatedMembers);
       setError("");
-      if (!editingMember) {
+      if (!editingMember && !usingAdminTarget) {
         const updatedProfile = await updateProfile(profileId, {
           playerId: fid,
           troopCount: parseNumber(form.troopCount),
@@ -313,6 +368,13 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
           setProfileWarning(t("profiles.errors.updateFailed"));
         }
       }
+      if (usingAdminTarget) {
+        const nextEligible = await fetchEligibleMembers(profileId);
+        setEligibleMembers(nextEligible);
+        if (!nextEligible.some((member) => member.playerId === adminTarget)) {
+          setAdminTargetId("");
+        }
+      }
       setForm(emptyForm);
       setLookupStatus("");
       setEditingMember(null);
@@ -325,6 +387,7 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
 
   function startEdit(member: Member) {
     if (member.playerId !== profile?.playerId && !canManage) return;
+    setAdminTargetId("");
     setEditingMember(member.playerId);
     setForm({
       troopCount: String(member.troopCount),
@@ -341,6 +404,40 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
     setForm(emptyForm);
     setLookupStatus("");
     setError("");
+  }
+
+  function handleAdminTargetChange(value: string) {
+    setAdminTargetId(value);
+    if (!value || value === profile?.playerId) {
+      setForm((prev) => ({
+        ...prev,
+        playerName: profile?.playerName || "",
+        troopCount: profile?.troopCount ? formatNumber(profile.troopCount) : "",
+        marchCount: profile?.marchCount ? String(profile.marchCount) : "4",
+        power: profile?.power ? formatNumber(profile.power) : ""
+      }));
+      return;
+    }
+    const selected = eligibleMembers.find((member) => member.playerId === value);
+    if (!selected) return;
+    setForm((prev) => ({
+      ...prev,
+      troopCount:
+        selected.troopCount !== null && selected.troopCount !== undefined
+          ? formatNumber(selected.troopCount)
+          : "",
+      marchCount:
+        selected.marchCount !== null && selected.marchCount !== undefined
+          ? String(selected.marchCount)
+          : prev.marchCount,
+      power:
+        selected.power !== null && selected.power !== undefined
+          ? formatNumber(selected.power)
+          : "",
+      playerName: selected.playerName || prev.playerName
+    }));
+    setLookupStatus("");
+    setEditingMember(null);
   }
 
   async function runAssignments() {
@@ -496,6 +593,22 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
                 className="mt-5 flex flex-col gap-4 nav:grid nav:grid-cols-[repeat(3,minmax(0,1fr))_auto] nav:items-end"
                 onSubmit={submitSignup}
               >
+                {canManage && (
+                  <label className="ui-field nav:col-span-4">
+                    {t("viking.adminMemberLabel")}
+                    <select
+                      className="ui-select"
+                      value={adminTargetId}
+                      onChange={(event) => handleAdminTargetChange(event.target.value)}
+                    >
+                      {adminOptions.map((member) => (
+                        <option key={member.playerId} value={member.playerId}>
+                          {member.playerName}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
                 <label className="ui-field">
                   {t("viking.marchCount")}
                   <input

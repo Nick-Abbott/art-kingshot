@@ -75,6 +75,19 @@ export type MembersPayload = {
   members: Member[];
 };
 
+export type EligibleMember = {
+  playerId: string;
+  playerName?: string;
+  troopCount?: number | null;
+  marchCount?: number | null;
+  power?: number | null;
+  rallySize?: number | null;
+};
+
+export type EligibleMembersPayload = {
+  members: EligibleMember[];
+};
+
 export type ProfileDefaults = {
   playerId?: string | null;
   playerName?: string | null;

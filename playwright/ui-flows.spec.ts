@@ -122,6 +122,53 @@ async function createAlliance(
   throw new Error("Failed to create a unique alliance tag after retries.");
 }
 
+async function joinAlliance(
+  request: Parameters<typeof test>[0]["request"],
+  profileId: string,
+  allianceId: string
+) {
+  const { res, json } = await apiJson(
+    request,
+    `${SERVER_URL}/api/profiles/${profileId}`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders(),
+      },
+      data: { allianceId },
+    }
+  );
+  if (!res.ok()) {
+    throw new Error(`Failed to join alliance: ${res.status()} ${JSON.stringify(json)}`);
+  }
+}
+
+async function activateAllianceProfile(
+  request: Parameters<typeof test>[0]["request"],
+  adminProfileId: string,
+  profileId: string
+) {
+  const { res, json } = await apiJson(
+    request,
+    `${SERVER_URL}/api/alliance/profiles/${profileId}`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders(),
+        "x-profile-id": adminProfileId,
+      },
+      data: { status: "active" },
+    }
+  );
+  if (!res.ok()) {
+    throw new Error(
+      `Failed to activate alliance profile: ${res.status()} ${JSON.stringify(json)}`
+    );
+  }
+}
+
 async function seedProfiles(request: Parameters<typeof test>[0]["request"]) {
   const kingdomId = 9000 + Math.floor(Math.random() * 1000);
   const runToken = `${Date.now()}${Math.floor(Math.random() * 1000)
@@ -138,8 +185,8 @@ async function seedProfiles(request: Parameters<typeof test>[0]["request"]) {
     playerName: "MuffinMan",
     kingdomId,
   });
-  await createAlliance(request, profileA.id);
-  return { profileA, profileB };
+  const alliance = await createAlliance(request, profileA.id);
+  return { profileA, profileB, allianceId: alliance.alliance.id };
 }
 
 async function mockPlayerLookup(
@@ -324,6 +371,48 @@ test("bear signup and reset", async ({ browser, request }) => {
   await expect(page.getByTestId("bear1-list")).toContainText("No signups yet.", {
     timeout: WAIT_TIMEOUT,
   });
+
+  await context.close();
+});
+
+test("admin signup controls are only visible to alliance admins", async ({
+  browser,
+  request,
+}) => {
+  test.setTimeout(30000);
+  requireEnv("PLAYWRIGHT_DB_PATH", DB_PATH);
+  sessionToken = createSessionToken();
+  await assertSession(request);
+  const { profileA, profileB, allianceId } = await seedProfiles(request);
+  await joinAlliance(request, profileB.id, allianceId);
+  await activateAllianceProfile(request, profileA.id, profileB.id);
+
+  const context = await browser.newContext({ baseURL: CLIENT_URL });
+  await context.addCookies([
+    { name: "ak_session", value: sessionToken, domain: CLIENT_HOST, path: "/" },
+  ]);
+  await context.addInitScript((token) => {
+    document.cookie = `ak_session=${token}; path=/`;
+  }, sessionToken);
+  const page = await context.newPage();
+
+  await openPage(page, { pageKey: "viking", selectedProfileId: profileA.id });
+  await expect(page.getByLabel("Alliance member (admin)")).toBeVisible({
+    timeout: WAIT_TIMEOUT,
+  });
+  await ensureProfileSwitcherReady(page);
+  await page.getByTestId("profile-switcher").click({ timeout: WAIT_TIMEOUT });
+  await page.getByRole("menuitem", { name: profileB.playerName }).click();
+  await expect(page.getByLabel("Alliance member (admin)")).toHaveCount(0);
+
+  await openPage(page, { pageKey: "bear", selectedProfileId: profileA.id });
+  await expect(page.getByLabel("Alliance member (admin)")).toBeVisible({
+    timeout: WAIT_TIMEOUT,
+  });
+  await ensureProfileSwitcherReady(page);
+  await page.getByTestId("profile-switcher").click({ timeout: WAIT_TIMEOUT });
+  await page.getByRole("menuitem", { name: profileB.playerName }).click();
+  await expect(page.getByLabel("Alliance member (admin)")).toHaveCount(0);
 
   await context.close();
 });

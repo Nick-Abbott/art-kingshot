@@ -1,5 +1,12 @@
 import { apiFetch } from "../apiClient";
-import type { ApiResponse, BearGroup, BearMember, BearPayload } from "@shared/types";
+import type {
+  ApiResponse,
+  BearGroup,
+  BearMember,
+  BearPayload,
+  EligibleMember,
+  EligibleMembersPayload
+} from "@shared/types";
 
 export type { BearMember, BearGroup };
 
@@ -53,4 +60,13 @@ export async function removeBearMember(
   const data = res.data as ApiResponse<BearPayload>;
   if (!data || data.ok === false) return [];
   return data.data?.members || [];
+}
+
+export async function fetchEligibleBearMembers(
+  profileId: string
+): Promise<EligibleMember[]> {
+  const res = await apiFetch("/api/bear/eligible", { profileId });
+  const payload = res.data as ApiResponse<EligibleMembersPayload>;
+  if (!payload || payload.ok === false) return [];
+  return payload.data?.members || [];
 }
