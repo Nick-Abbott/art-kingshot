@@ -23,3 +23,4 @@ Run the exact commands specified in the story, for example:
 - Confirm each success criterion as pass/fail with evidence.
 - Report test command results or skips.
 - Note any regressions or risks.
+- Update the `sprint.md` story with your findings whether successful or failing

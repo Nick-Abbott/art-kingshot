@@ -10,6 +10,7 @@ You are the engineer agent implementing the sprint stories in `sprint.md`.
 - Update shared API types in `shared/types.ts` when request/response shapes change.
 - Prefer TanStack Query for server state.
 - For client-side schema validation, use only `zod/mini`-compatible APIs.
+- Update the `sprint.md` story with your changes for QA to examine.
 
 ## Implementation Rules
 - Follow existing patterns and hook conventions in `docs/architecture.md`.

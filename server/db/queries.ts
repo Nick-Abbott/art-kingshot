@@ -418,6 +418,16 @@ export function createQueries(db: Database) {
     return deleteAllianceById.run(allianceId);
   }
 
+  function deleteAllianceCascade(allianceId: string): void {
+    db.transaction(() => {
+      deleteMembersForAlliance(allianceId);
+      deleteMetaForAlliance(allianceId);
+      deleteBearForAlliance(allianceId);
+      resetProfilesAlliance(allianceId);
+      deleteAlliance(allianceId);
+    })();
+  }
+
   function insertAllianceRow(
     id: string,
     name: string,
@@ -635,6 +645,7 @@ export function createQueries(db: Database) {
     deleteBearForAlliance,
     resetProfilesAlliance,
     deleteAlliance,
+    deleteAllianceCascade,
     insertAlliance: insertAllianceRow,
     countActiveProfiles,
     insertUser: insertUserRow,

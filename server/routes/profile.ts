@@ -130,18 +130,12 @@ export default function profileRoutes(ctx: RouteContext) {
         return;
       }
 
-    try {
-      ctx.db.transaction(() => {
-        ctx.queries.deleteMembersForAlliance(allianceId);
-        ctx.queries.deleteMetaForAlliance(allianceId);
-        ctx.queries.deleteBearForAlliance(allianceId);
-        ctx.queries.resetProfilesAlliance(allianceId);
-        ctx.queries.deleteAlliance(allianceId);
-      })();
-    } catch {
-      ctx.fail(res, 500, "Failed to delete alliance.");
-      return;
-    }
+      try {
+        ctx.queries.deleteAllianceCascade(allianceId);
+      } catch {
+        ctx.fail(res, 500, "Failed to delete alliance.");
+        return;
+      }
 
       ctx.ok(res, { ok: true });
     }

@@ -262,6 +262,105 @@ test("alliance create and delete updates profile", async () => {
   }
 });
 
+test("alliance delete cascades members, bear, meta, and profile reset", async () => {
+  const dbPath = tmpDbPath();
+  process.env.DB_PATH = dbPath;
+  process.env.PORT = "0";
+  const { httpServer, port } = await startServer();
+  try {
+    const headers = { Cookie: createSessionCookie(dbPath) };
+    const createProfile = await requestJson(
+      port,
+      "POST",
+      "/api/profiles",
+      { ...headers, "Content-Type": "application/json" },
+      JSON.stringify({ playerId: "FIDDEL", kingdomId: 1459 })
+    );
+    assert.equal(createProfile.status, 200);
+    const createProfilePayload = getPayload<{ profile: { id: string } }>(createProfile);
+    const profileId = createProfilePayload.profile.id;
+
+    const createAlliance = await requestJson(
+      port,
+      "POST",
+      "/api/alliances",
+      { ...headers, "Content-Type": "application/json", "x-profile-id": profileId },
+      JSON.stringify({ tag: "DEL", name: "Delete Alliance" })
+    );
+    assert.equal(createAlliance.status, 200);
+    const alliancePayload = getPayload<{ alliance: { id: string } }>(createAlliance);
+    const allianceId = alliancePayload.alliance.id;
+
+    const signup = await requestJson(
+      port,
+      "POST",
+      "/api/signup",
+      { ...headers, "Content-Type": "application/json", "x-profile-id": profileId },
+      JSON.stringify({
+        playerId: "MEMBER1",
+        playerName: "Member One",
+        troopCount: 1,
+        marchCount: 4,
+        power: 1000000
+      })
+    );
+    assert.equal(signup.status, 200);
+
+    const bear = await requestJson(
+      port,
+      "POST",
+      "/api/bear/bear1",
+      { ...headers, "Content-Type": "application/json", "x-profile-id": profileId },
+      JSON.stringify({ playerId: "MEMBER1", playerName: "Member One", rallySize: 1000 })
+    );
+    assert.equal(bear.status, 200);
+
+    const run = await requestJson(
+      port,
+      "POST",
+      "/api/run",
+      { ...headers, "x-profile-id": profileId }
+    );
+    assert.equal(run.status, 200);
+
+    const deleteAlliance = await requestJson(
+      port,
+      "DELETE",
+      `/api/alliances/${allianceId}`,
+      { ...headers, "x-profile-id": profileId }
+    );
+    assert.equal(deleteAlliance.status, 200);
+
+    const db = new Database(dbPath);
+    const memberCount = db.prepare(
+      "SELECT COUNT(1) AS count FROM members WHERE allianceId = ?"
+    ).get(allianceId) as { count: number };
+    const metaCount = db.prepare(
+      "SELECT COUNT(1) AS count FROM meta WHERE allianceId = ?"
+    ).get(allianceId) as { count: number };
+    const bearCount = db.prepare(
+      "SELECT COUNT(1) AS count FROM bear WHERE allianceId = ?"
+    ).get(allianceId) as { count: number };
+    const profileRow = db.prepare(
+      "SELECT allianceId, status, role FROM profiles WHERE id = ?"
+    ).get(profileId) as { allianceId: string | null; status: string; role: string };
+    const allianceRow = db.prepare(
+      "SELECT COUNT(1) AS count FROM alliances WHERE id = ?"
+    ).get(allianceId) as { count: number };
+    db.close();
+
+    assert.equal(memberCount.count, 0);
+    assert.equal(metaCount.count, 0);
+    assert.equal(bearCount.count, 0);
+    assert.equal(allianceRow.count, 0);
+    assert.equal(profileRow.allianceId, null);
+    assert.equal(profileRow.status, "pending");
+    assert.equal(profileRow.role, "member");
+  } finally {
+    httpServer.close();
+  }
+});
+
 test("alliance admin can edit other signups, members cannot", async () => {
   const dbPath = tmpDbPath();
   process.env.DB_PATH = dbPath;

@@ -97,6 +97,17 @@ Validate TD-02 by confirming:
 2) Deleting an alliance still clears members/meta/bear data and resets profiles.
 3) `npm run test:server` passes.
 
+**Update (2026-03-05)**
+- Added `deleteAllianceCascade` helper in `server/db/queries.ts` to run the full delete cascade in a single transaction.
+- Replaced duplicated delete-transaction blocks in `server/routes/profile.ts` and `server/routes/admin.ts` with the shared helper.
+- Added server test coverage to verify members/meta/bear cleanup, profile reset, and alliance removal on delete.
+- Tests not run: `npm run test:server`.
+
+**Validation (2026-03-05)**
+- Confirmed shared helper `deleteAllianceCascade` is defined in `server/db/queries.ts` and invoked from `server/routes/profile.ts` and `server/routes/admin.ts`.
+- Verified cascade coverage in `server/api.test.ts` ("alliance delete cascades members, bear, meta, and profile reset").
+- `npm run test:server`: pass.
+
 ---
 
 ### TD-03: Tighten API Client Typing (Remove `any`)
