@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Profile, User } from "@shared/types";
+import { useQueryClient } from "@tanstack/react-query";
 import { createAlliance, deleteAlliance } from "./api/alliances";
 import { lookupAndParsePlayer } from "./utils/playerLookup";
 import { ApiError } from "./apiClient";
@@ -9,11 +10,16 @@ import {
   useCreateProfileMutation,
   useUpdateProfileMutation
 } from "./hooks/useProfileMutations";
-import { useQueryClient } from "@tanstack/react-query";
 import { profilesQueryKey } from "./hooks/useProfilesQuery";
 import { useAllianceProfilesQuery } from "./hooks/useAllianceProfilesQuery";
-import { useAllianceProfileMutation } from "./hooks/useAllianceProfileMutations";
 import { useAlliancesQuery } from "./hooks/useAlliancesQuery";
+import { useAllianceAdminActions } from "./hooks/useAllianceAdminActions";
+import ProfilesAdminCard from "./components/profiles/ProfilesAdminCard";
+import ProfilesCreateAllianceCard from "./components/profiles/ProfilesCreateAllianceCard";
+import ProfilesCreateCard from "./components/profiles/ProfilesCreateCard";
+import ProfilesCurrentCard from "./components/profiles/ProfilesCurrentCard";
+import ProfilesHeader from "./components/profiles/ProfilesHeader";
+import ProfilesJoinCard from "./components/profiles/ProfilesJoinCard";
 
 type Props = {
   user: User | null;
@@ -45,10 +51,6 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
   const [deleteError, setDeleteError] = useState("");
   const canManage =
     Boolean(user?.isAppAdmin) || selectedProfile?.role === "alliance_admin";
-  const allianceProfileMutation = useAllianceProfileMutation(
-    selectedProfileId,
-    selectedProfile?.allianceId || null
-  );
   const allianceProfilesQuery = useAllianceProfilesQuery(
     selectedProfileId,
     canManage
@@ -56,6 +58,10 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
   const alliancesQuery = useAlliancesQuery(
     selectedProfile?.kingdomId ?? null,
     Boolean(selectedProfile && !selectedProfile.allianceId)
+  );
+  const { approveProfile, rejectProfile, setRole } = useAllianceAdminActions(
+    selectedProfileId,
+    selectedProfile?.allianceId || null
   );
   const [addPlayerId, setAddPlayerId] = useState("");
   const [addPlayerError, setAddPlayerError] = useState("");
@@ -239,33 +245,6 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
     }
   }
 
-  async function approveProfile(target: Profile, status: "pending" | "active") {
-    if (!selectedProfileId) return;
-    const updated = await allianceProfileMutation.mutateAsync({
-      targetProfileId: target.id,
-      payload: { status }
-    });
-    if (!updated) return;
-  }
-
-  async function rejectProfile(target: Profile) {
-    if (!selectedProfileId) return;
-    const updated = await allianceProfileMutation.mutateAsync({
-      targetProfileId: target.id,
-      payload: { action: "reject" }
-    });
-    if (!updated) return;
-  }
-
-  async function setRole(target: Profile, role: "member" | "alliance_admin") {
-    if (!selectedProfileId) return;
-    const updated = await allianceProfileMutation.mutateAsync({
-      targetProfileId: target.id,
-      payload: { role }
-    });
-    if (!updated) return;
-  }
-
   async function submitJoinRequest(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setJoinError("");
@@ -316,7 +295,7 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
     const result = await createAlliance({
       tag,
       name,
-      profileId: selectedProfile.id,
+      profileId: selectedProfile.id
     });
     const updatedProfile = result.profile;
     if (!result.alliance || !updatedProfile) {
@@ -333,7 +312,7 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
     if (!confirmed) return;
     const ok = await deleteAlliance({
       allianceId: selectedProfile.allianceId,
-      profileId: selectedProfile.id,
+      profileId: selectedProfile.id
     });
     if (!ok) {
       setDeleteError(t("profiles.errors.deleteAllianceFailed"));
@@ -344,391 +323,76 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
 
   return (
     <div className="app">
-      <header className="relative z-[1] mb-8 flex flex-col gap-4 nav:flex-row nav:items-start nav:justify-between">
-        <div>
-          <p className="text-xs uppercase tracking-[0.15em] text-accent-dark">
-            {t("profiles.eyebrow")}
-          </p>
-          <h1 className="mt-2 font-['DM Serif Display'] text-[clamp(2.4rem,3vw,3.5rem)]">
-            {t("profiles.title")}
-          </h1>
-          <p className="mt-3 max-w-xl text-[1.05rem] leading-relaxed text-muted">
-            {t("profiles.subtitle")}
-          </p>
-          {selectedProfile &&
-            selectedProfile.status !== "active" &&
-            selectedProfile.allianceId && (
-            <p className="mt-3 font-semibold text-[#9e2a2b]">
-              {t("profiles.pendingNotice")}
-            </p>
-          )}
-        </div>
-      </header>
+      <ProfilesHeader t={t} selectedProfile={selectedProfile} />
 
       <main className="relative z-[1] grid gap-6">
-        <section className="ui-card">
-          <div className="ui-section-header">
-            <h2 className="ui-section-title">{t("profiles.createTitle")}</h2>
-            <p className="ui-section-subtitle">{t("profiles.createSubtitle")}</p>
-          </div>
-          <form
-            className="mt-5 flex flex-col gap-4 nav:grid nav:grid-cols-[repeat(4,minmax(0,1fr))_160px] nav:items-end"
-            onSubmit={submitProfile}
-          >
-            <label className="ui-field">
-              {t("profiles.playerId")}
-              <input
-                name="playerId"
-                value={form.playerId}
-                onChange={(e) => setForm({ ...form, playerId: e.target.value })}
-                placeholder="243656992"
-                required
-                className="ui-input"
-              />
-            </label>
-            {lookupStatus && <span className="ui-field-hint">{lookupStatus}</span>}
-            <button className="ui-button nav:col-start-5" type="submit">
-              {t("profiles.create")}
-            </button>
-          </form>
-          {error && <p className="ui-error">{error}</p>}
-          {success && <p className="ui-success">{success}</p>}
-        </section>
+        <ProfilesCreateCard
+          t={t}
+          playerId={form.playerId}
+          lookupStatus={lookupStatus}
+          error={error}
+          success={success}
+          onPlayerIdChange={(value) => setForm({ ...form, playerId: value })}
+          onSubmit={submitProfile}
+        />
 
         {selectedProfile && (
-          <section className="ui-card">
-            <div className="flex flex-col gap-4 nav:flex-row nav:items-start nav:justify-between">
-              <div className="ui-section-header">
-                <h2 className="ui-section-title">{t("profiles.currentTitle")}</h2>
-                <p className="ui-section-subtitle">{t("profiles.currentSubtitle")}</p>
-              </div>
-              <button className="ui-button-ghost" type="button" onClick={refreshProfileData}>
-                {t("profiles.refreshProfile", { defaultValue: "Refresh profile" })}
-              </button>
-            </div>
-            <div className="mt-5 grid gap-3">
-              <div className="ui-card-muted flex flex-col gap-3 nav:flex-row nav:items-center nav:justify-between">
-                <div>
-                  <p className="font-semibold">
-                    {selectedProfile.playerName || selectedProfile.playerId}
-                  </p>
-                  <p className="text-sm text-muted">
-                    {selectedProfile.allianceName || t("profiles.noAlliance")}
-                  </p>
-                  {selectedProfile.kingdomId ? (
-                    <p className="text-sm text-muted">
-                      {t("profiles.kingdom", {
-                        id: selectedProfile.kingdomId,
-                        defaultValue: "Kingdom {{id}}"
-                      })}
-                    </p>
-                  ) : null}
-                  <p className="text-sm text-muted">
-                    {t("profiles.role", { role: selectedProfile.role })}
-                  </p>
-                </div>
-                <span className="ui-badge">
-                  {selectedProfile.status === "active"
-                    ? t("profiles.active")
-                    : t("profiles.pending")}
-                </span>
-              </div>
-              <div className="ui-card-muted">
-                <div>
-                  <p className="font-semibold">
-                    {t("profiles.statsTitle", { defaultValue: "Profile stats" })}
-                  </p>
-                  <p className="text-sm text-muted">
-                    {t("profiles.stats.troopCount", {
-                      value:
-                        selectedProfile.troopCount !== null &&
-                        selectedProfile.troopCount !== undefined
-                          ? new Intl.NumberFormat().format(selectedProfile.troopCount)
-                          : t("profiles.stats.none", { defaultValue: "Not set" }),
-                      defaultValue: "Troop count: {{value}}"
-                    })}
-                  </p>
-                  <p className="text-sm text-muted">
-                    {t("profiles.stats.marchCount", {
-                      value:
-                        selectedProfile.marchCount !== null &&
-                        selectedProfile.marchCount !== undefined
-                          ? new Intl.NumberFormat().format(selectedProfile.marchCount)
-                          : t("profiles.stats.none", { defaultValue: "Not set" }),
-                      defaultValue: "March count: {{value}}"
-                    })}
-                  </p>
-                  <p className="text-sm text-muted">
-                    {t("profiles.stats.power", {
-                      value:
-                        selectedProfile.power !== null &&
-                        selectedProfile.power !== undefined
-                          ? new Intl.NumberFormat().format(selectedProfile.power)
-                          : t("profiles.stats.none", { defaultValue: "Not set" }),
-                      defaultValue: "Power: {{value}}"
-                    })}
-                  </p>
-                  <p className="text-sm text-muted">
-                    {t("profiles.stats.rallySize", {
-                      value:
-                        selectedProfile.rallySize !== null &&
-                        selectedProfile.rallySize !== undefined
-                          ? new Intl.NumberFormat().format(selectedProfile.rallySize)
-                          : t("profiles.stats.none", { defaultValue: "Not set" }),
-                      defaultValue: "Rally capacity: {{value}}"
-                    })}
-                  </p>
-                </div>
-              </div>
-            </div>
-            {lookupStatus && <p className="ui-field-hint">{lookupStatus}</p>}
-            {error && <p className="ui-error">{error}</p>}
-            {success && <p className="ui-success">{success}</p>}
-          </section>
+          <ProfilesCurrentCard
+            t={t}
+            profile={selectedProfile}
+            lookupStatus={lookupStatus}
+            error={error}
+            success={success}
+            onRefresh={refreshProfileData}
+          />
         )}
 
         {selectedProfile && !selectedProfile.allianceId && (
-          <section className="ui-card">
-            <div className="ui-section-header">
-              <h2 className="ui-section-title">{t("profiles.joinTitle")}</h2>
-              <p className="ui-section-subtitle">{t("profiles.joinSubtitle")}</p>
-            </div>
-            {!selectedProfile.kingdomId ? (
-              <p className="ui-empty-state">{t("profiles.joinMissingKingdom")}</p>
-            ) : (
-              <form
-                className="mt-5 flex flex-col gap-4 nav:grid nav:grid-cols-[repeat(4,minmax(0,1fr))_160px] nav:items-end"
-                onSubmit={submitJoinRequest}
-              >
-                <label className="ui-field">
-                  {t("profiles.alliance")}
-                  <select
-                    name="allianceId"
-                    value={joinAllianceId}
-                    onChange={(e) => setJoinAllianceId(e.target.value)}
-                    className="ui-select"
-                  >
-                    <option value="">{t("profiles.allianceNone")}</option>
-                    {alliances.map((alliance) => (
-                      <option key={alliance.id} value={alliance.id}>
-                        {alliance.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <button className="ui-button nav:col-start-5" type="submit">
-                  {t("profiles.join")}
-                </button>
-              </form>
-            )}
-            {joinError && <p className="ui-error">{joinError}</p>}
-            {joinSuccess && <p className="ui-success">{joinSuccess}</p>}
-          </section>
+          <ProfilesJoinCard
+            t={t}
+            profile={selectedProfile}
+            alliances={alliances}
+            joinAllianceId={joinAllianceId}
+            joinError={joinError}
+            joinSuccess={joinSuccess}
+            onJoinAllianceChange={setJoinAllianceId}
+            onSubmit={submitJoinRequest}
+          />
         )}
 
         {selectedProfile && !selectedProfile.allianceId && (
-          <section className="ui-card">
-            <div className="ui-section-header">
-              <h2 className="ui-section-title">
-                {t("profiles.createAllianceTitle")}
-              </h2>
-              <p className="ui-section-subtitle">{t("profiles.createAllianceSubtitle")}</p>
-            </div>
-            {!selectedProfile.kingdomId ? (
-              <p className="ui-empty-state">{t("profiles.joinMissingKingdom")}</p>
-            ) : (
-              <form
-                className="mt-5 flex flex-col gap-4 nav:grid nav:grid-cols-[repeat(4,minmax(0,1fr))_160px] nav:items-end"
-                onSubmit={submitCreateAlliance}
-              >
-                <label className="ui-field">
-                  {t("profiles.allianceTag")}
-                  <input
-                    name="allianceTag"
-                    value={createTag}
-                    onChange={(e) => setCreateTag(e.target.value.toUpperCase())}
-                    placeholder="ART"
-                    maxLength={3}
-                    required
-                    className="ui-input"
-                  />
-                </label>
-                <label className="ui-field">
-                  {t("profiles.allianceName")}
-                  <input
-                    name="allianceName"
-                    value={createName}
-                    onChange={(e) => setCreateName(e.target.value)}
-                    placeholder="ArtsOFwar"
-                    required
-                    className="ui-input"
-                  />
-                </label>
-                <button className="ui-button nav:col-start-5" type="submit">
-                  {t("profiles.createAlliance")}
-                </button>
-              </form>
-            )}
-            {createError && <p className="ui-error">{createError}</p>}
-            {createSuccess && <p className="ui-success">{createSuccess}</p>}
-          </section>
+          <ProfilesCreateAllianceCard
+            t={t}
+            profile={selectedProfile}
+            createTag={createTag}
+            createName={createName}
+            createError={createError}
+            createSuccess={createSuccess}
+            onCreateTagChange={setCreateTag}
+            onCreateNameChange={setCreateName}
+            onSubmit={submitCreateAlliance}
+          />
         )}
 
-        {canManage && selectedProfile?.status === "active" && (
-          <section className="ui-card">
-            <div className="flex flex-col gap-4 nav:flex-row nav:items-start nav:justify-between">
-              <div className="ui-section-header">
-                <h2 className="ui-section-title">{t("profiles.adminTitle")}</h2>
-                <p className="ui-section-subtitle">{t("profiles.adminSubtitle")}</p>
-                {selectedProfile.allianceName && (
-                  <div className="mt-3 inline-flex items-center gap-3">
-                    <h3 className="text-lg font-semibold">
-                      {selectedProfile.allianceName}
-                    </h3>
-                    <span className="rounded-full bg-accent/20 px-3 py-1 text-xs font-bold uppercase tracking-[0.14rem] text-accent">
-                      {(selectedProfile.allianceId || "").toUpperCase()}
-                    </span>
-                  </div>
-                )}
-              </div>
-              {selectedProfile?.role === "alliance_admin" && (
-                <div className="flex flex-col gap-3 nav:items-end">
-                  <button className="ui-button-ghost" type="button" onClick={handleDeleteAlliance}>
-                    {t("profiles.deleteAlliance")}
-                  </button>
-                  {deleteError && <p className="ui-error">{deleteError}</p>}
-                </div>
-              )}
-            </div>
-            {selectedProfile?.role === "alliance_admin" && (
-              <form
-                className="mt-5 flex flex-col gap-3 nav:grid nav:grid-cols-[minmax(0,1fr)_160px] nav:items-end"
-                onSubmit={submitAdminAdd}
-              >
-                <label className="ui-field">
-                  {t("profiles.adminAddPlayerId")}
-                  <input
-                    className="ui-input"
-                    value={addPlayerId}
-                    onChange={(event) => setAddPlayerId(event.target.value)}
-                    placeholder="243656992"
-                    required
-                  />
-                </label>
-                {addLookupStatus && <span className="ui-field-hint">{addLookupStatus}</span>}
-                <button className="ui-button" type="submit" disabled={addPlayerBusy}>
-                  {t("profiles.adminAddAction")}
-                </button>
-                {addPlayerError && <p className="ui-error">{addPlayerError}</p>}
-                {addPlayerSuccess && <p className="ui-success">{addPlayerSuccess}</p>}
-              </form>
-            )}
-            {loadingAdmin ? (
-              <p className="ui-empty-state">{t("profiles.loading")}</p>
-            ) : adminProfiles.length === 0 ? (
-              <p className="ui-empty-state">{t("profiles.adminEmpty")}</p>
-            ) : (
-              <>
-                {adminProfiles.some((profile) => profile.status !== "active") ? (
-                  <>
-                    <h3 className="mt-5 text-base font-semibold">
-                      {t("profiles.applicantsTitle")}
-                    </h3>
-                    <div className="mt-3 grid gap-3">
-                      {adminProfiles
-                        .filter((profile) => profile.status !== "active")
-                        .map((profile) => (
-                          <div
-                            key={profile.id}
-                            className="ui-card-muted flex flex-col gap-3 nav:flex-row nav:items-center nav:justify-between"
-                          >
-                            <div>
-                              <p className="font-semibold">
-                                {profile.playerName || profile.playerId}
-                              </p>
-                              <p className="text-sm text-muted">
-                                {profile.userDisplayName || t("profiles.unclaimed")}
-                              </p>
-                            </div>
-                            {profile.id !== selectedProfile?.id && (
-                              <div className="flex items-center gap-3">
-                                <button
-                                  className="ui-button-ghost ui-button-sm"
-                                  type="button"
-                                  onClick={() => approveProfile(profile, "active")}
-                                >
-                                  {t("profiles.approve")}
-                                </button>
-                                <button
-                                  className="ui-button-ghost ui-button-sm"
-                                  type="button"
-                                  onClick={() => rejectProfile(profile)}
-                                >
-                                  {t("profiles.reject")}
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                    </div>
-                  </>
-                ) : null}
-
-                <h3 className="mt-5 border-t border-black/10 pt-4 text-base font-semibold">
-                  {t("profiles.membersTitle")}
-                </h3>
-                <div className="mt-3 grid gap-3">
-                  {adminProfiles
-                    .filter((profile) => profile.status === "active")
-                    .map((profile) => (
-                      <div
-                        key={profile.id}
-                        className="ui-card-muted flex flex-col gap-3 nav:flex-row nav:items-center nav:justify-between"
-                      >
-                        <div>
-                          <p className="font-semibold">
-                            {profile.playerName || profile.playerId}
-                          </p>
-                          <p className="text-sm text-muted">
-                            {profile.userDisplayName || t("profiles.unclaimed")}
-                          </p>
-                          <p className="text-sm text-muted">
-                            {t("profiles.role", { role: profile.role })}
-                          </p>
-                        </div>
-                        {profile.id !== selectedProfile?.id && (
-                          <div className="flex items-center gap-3">
-                            <button
-                              className="ui-button-ghost ui-button-sm"
-                              type="button"
-                              onClick={() => approveProfile(profile, "pending")}
-                            >
-                              {t("profiles.suspend")}
-                            </button>
-                            <button
-                              className="ui-button-ghost ui-button-sm"
-                              type="button"
-                              onClick={() =>
-                                setRole(
-                                  profile,
-                                  profile.role === "member"
-                                    ? "alliance_admin"
-                                    : "member"
-                                )
-                              }
-                            >
-                              {profile.role === "member"
-                                ? t("profiles.makeAdmin")
-                                : t("profiles.makeMember")}
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                </div>
-              </>
-            )}
-          </section>
+        {canManage && selectedProfile?.status === "active" && selectedProfile && (
+          <ProfilesAdminCard
+            t={t}
+            selectedProfile={selectedProfile}
+            adminProfiles={adminProfiles}
+            loadingAdmin={loadingAdmin}
+            addPlayerId={addPlayerId}
+            addLookupStatus={addLookupStatus}
+            addPlayerBusy={addPlayerBusy}
+            addPlayerError={addPlayerError}
+            addPlayerSuccess={addPlayerSuccess}
+            deleteError={deleteError}
+            onAddPlayerIdChange={setAddPlayerId}
+            onSubmitAdminAdd={submitAdminAdd}
+            onApproveProfile={approveProfile}
+            onRejectProfile={rejectProfile}
+            onSetRole={setRole}
+            onDeleteAlliance={handleDeleteAlliance}
+          />
         )}
       </main>
     </div>

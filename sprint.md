@@ -212,6 +212,16 @@ Validate TD-05 by confirming:
 2) No UI text or behavior changes are introduced.
 3) `npm run test:e2e` passes.
 
+**Notes (2026-03-05)**
+- Extracted Viking/Bear/Profiles sections into feature components under `client/src/components`.
+- Added hooks `useVikingAssignmentSearch`, `useBearRallyOrder`, and `useAllianceAdminActions`.
+- Updated `VikingVengeance.tsx`, `BearRally.tsx`, and `Profiles.tsx` to delegate to the new components/hooks.
+- Tests not run: `npm run test:e2e`.
+
+**Validation (2026-03-05)**
+- Confirmed `client/src/VikingVengeance.tsx`, `client/src/BearRally.tsx`, and `client/src/Profiles.tsx` import and delegate to extracted components/hooks under `client/src/components` and `client/src/hooks`.
+- `npm run test:e2e`: pass.
+
 ---
 
 ### TD-06: Convert JS Entrypoints to TypeScript

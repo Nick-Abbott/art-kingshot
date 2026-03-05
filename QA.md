@@ -10,6 +10,7 @@ You are the QA agent validating sprint stories defined in `sprint.md`.
 - Validate only the scope of the story; do not introduce new requirements.
 - Use the prescribed verification commands from the story and AGENTS instructions.
 - If a command cannot run, note the reason and assess risk.
+- Assess whether the success criteria have been met
 
 ## Required Verification (per story)
 Run the exact commands specified in the story, for example:

@@ -1,18 +1,23 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "./apiClient";
-import type { AssignmentResult } from "./api/assignments";
+import type { Profile } from "@shared/types";
+import type { Member } from "./api/members";
+import { lookupAndParsePlayer } from "./utils/playerLookup";
 import { useAssignments } from "./hooks/useAssignments";
 import { useMembers } from "./hooks/useMembers";
-import type { Member } from "./api/members";
-import type { Profile } from "@shared/types";
-import { lookupAndParsePlayer } from "./utils/playerLookup";
 import { useUpdateProfileMutation } from "./hooks/useProfileMutations";
 import {
   eligibleMembersQueryKey,
   useEligibleMembersQuery
 } from "./hooks/useEligibleMembersQuery";
-import { useQueryClient } from "@tanstack/react-query";
+import { useVikingAssignmentSearch } from "./hooks/useVikingAssignmentSearch";
+import VikingAssignmentsCard from "./components/viking/VikingAssignmentsCard";
+import VikingHeader from "./components/viking/VikingHeader";
+import VikingRosterCard from "./components/viking/VikingRosterCard";
+import VikingSearchCard from "./components/viking/VikingSearchCard";
+import VikingSignupCard from "./components/viking/VikingSignupCard";
 
 type VikingForm = {
   troopCount: string;
@@ -38,12 +43,6 @@ type Props = {
   canManage: boolean;
 };
 
-type AssignmentMember = AssignmentResult["members"][number];
-
-function normalize(value: string) {
-  return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-}
-
 function VikingVengeance({ profileId, profile, canManage }: Props) {
   const { t } = useTranslation();
   const [form, setForm] = useState<VikingForm>(emptyForm);
@@ -52,7 +51,6 @@ function VikingVengeance({ profileId, profile, canManage }: Props) {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [lookupStatus, setLookupStatus] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
   const [editingMember, setEditingMember] = useState<string | null>(null);
   const [lastLookupId, setLastLookupId] = useState("");
   const [profileWarning, setProfileWarning] = useState("");
@@ -82,77 +80,14 @@ function VikingVengeance({ profileId, profile, canManage }: Props) {
     return options;
   }, [eligibleMembers, profile]);
 
+  const { searchQuery, setSearchQuery, filteredResults, suggestionTail, topSuggestion } =
+    useVikingAssignmentSearch(results);
+
   const memberCount = members.length;
 
   const sortedMembers = useMemo(() => {
     return [...members].sort((a, b) => a.playerId.localeCompare(b.playerId));
   }, [members]);
-
-  const fuzzyScore = useCallback((query: string, text: string) => {
-    if (!query) return 0;
-    const q = normalize(query);
-    const tValue = normalize(text);
-    if (!q || !tValue) return null;
-    let qi = 0;
-    let score = 0;
-    let lastMatch = -1;
-    for (let ti = 0; ti < tValue.length && qi < q.length; ti += 1) {
-      if (tValue[ti] === q[qi]) {
-        score += lastMatch === -1 ? 1 : Math.max(1, 5 - (ti - lastMatch));
-        lastMatch = ti;
-        qi += 1;
-      }
-    }
-    if (qi < q.length) return null;
-    return score;
-  }, []);
-
-  const filteredResults = useMemo(() => {
-    if (!results?.members) return [];
-    const query = searchQuery.trim();
-    if (!query) return results.members;
-    const scored = results.members
-      .map((member) => {
-        const name = member.playerName || member.playerId || "";
-        const score = fuzzyScore(query, name);
-        return score === null ? null : { member, score };
-      })
-      .filter(
-        (item): item is { member: AssignmentMember; score: number } => item !== null
-      )
-      .sort((a, b) => b.score - a.score);
-    return scored.map((item) => item.member);
-  }, [fuzzyScore, results, searchQuery]);
-
-  const searchSuggestions = useMemo(() => {
-    if (!results?.members) return [];
-    const query = searchQuery.trim();
-    if (!query) return [];
-    const scored = results.members
-      .map((member) => {
-        const name = member.playerName || member.playerId || "";
-        const score = fuzzyScore(query, name);
-        return score === null ? null : { name, score };
-      })
-      .filter((item): item is { name: string; score: number } => item !== null)
-      .sort((a, b) => b.score - a.score);
-    const seen = new Set<string>();
-    const suggestions: string[] = [];
-    for (const item of scored) {
-      if (seen.has(item.name)) continue;
-      seen.add(item.name);
-      suggestions.push(item.name);
-      if (suggestions.length >= 5) break;
-    }
-    return suggestions;
-  }, [fuzzyScore, results, searchQuery]);
-
-  const topSuggestion = searchSuggestions[0] || "";
-  const suggestionTail =
-    topSuggestion &&
-    topSuggestion.toLowerCase().startsWith(searchQuery.trim().toLowerCase())
-      ? topSuggestion.slice(searchQuery.trim().length)
-      : "";
 
   useEffect(() => {
     if (!profileId) return;
@@ -488,325 +423,68 @@ function VikingVengeance({ profileId, profile, canManage }: Props) {
   }
 
   return (
-    <>
-      <div className="app">
-        <header className="relative z-[1] mb-8 flex flex-col gap-6 nav:flex-row nav:items-start nav:justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.15em] text-accent-dark">
-              {t("viking.eyebrow")}
-            </p>
-            <h1 className="mt-2 font-['DM Serif Display'] text-[clamp(2.4rem,3vw,3.5rem)]">
-              {t("viking.title")}
-            </h1>
-            <p className="mt-3 max-w-xl text-[1.05rem] leading-relaxed text-muted">
-              {t("viking.subtitle")}
-            </p>
-          </div>
-          <div className="ui-card-compact grid gap-4 nav:min-w-[240px] nav:grid-cols-2">
-            <div>
-              <p className="text-xs uppercase tracking-[0.08em] text-muted">
-                {t("viking.signedUp")}
-              </p>
-              <p className="text-2xl font-semibold" data-testid="viking-signed-count">
-                {memberCount}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs uppercase tracking-[0.08em] text-muted">
-                {t("viking.minimumIncoming")}
-              </p>
-              <p className="text-2xl font-semibold" data-testid="viking-minimum-incoming">
-                200k
-              </p>
-            </div>
-            <button
-              className="ui-button-ghost w-full text-xs uppercase tracking-[0.1em] nav:col-span-2"
-              type="button"
-              onClick={resetAll}
-              disabled={busy || !canManage}
-            >
-              {t("viking.resetEvent")}
-            </button>
-          </div>
-        </header>
+    <div className="app">
+      <VikingHeader
+        t={t}
+        memberCount={memberCount}
+        onReset={resetAll}
+        busy={busy}
+        canManage={canManage}
+      />
 
-        <main className="relative z-[1] grid gap-6">
-          {!results ? (
-            <section className="ui-card">
-              <div className="ui-section-header">
-                <h2 className="ui-section-title">
-                  {editingMember ? t("viking.editSignupTitle") : t("viking.signupTitle")}
-                </h2>
-                <p className="ui-section-subtitle">
-                  {editingMember
-                    ? t("viking.editSignupSubtitle")
-                    : t("viking.signupSubtitle")}
-                </p>
-              </div>
-              <form
-                className="mt-5 flex flex-col gap-4 nav:grid nav:grid-cols-[repeat(3,minmax(0,1fr))_auto] nav:items-end"
-                onSubmit={submitSignup}
-              >
-                {canManage && (
-                  <label className="ui-field nav:col-span-4">
-                    {t("viking.adminMemberLabel")}
-                    <select
-                      className="ui-select"
-                      value={adminTargetId}
-                      onChange={(event) => handleAdminTargetChange(event.target.value)}
-                    >
-                      {adminOptions.map((member) => (
-                        <option key={member.playerId} value={member.playerId}>
-                          {member.playerName}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                )}
-                <label className="ui-field">
-                  {t("viking.marchCount")}
-                  <input
-                    className="ui-input"
-                    name="marchCount"
-                    value={form.marchCount}
-                    onChange={updateForm}
-                    type="number"
-                    min="4"
-                    max="6"
-                    required
-                  />
-                </label>
-                <label className="ui-field">
-                  {t("viking.power")}
-                  <input
-                    className="ui-input"
-                    name="power"
-                    value={form.power}
-                    onChange={updatePower}
-                    inputMode="numeric"
-                    placeholder={formatNumber(33000000)}
-                    required
-                  />
-                </label>
-                <label className="ui-field">
-                  {t("viking.troopCount")}
-                  <input
-                    className="ui-input"
-                    name="troopCount"
-                    value={form.troopCount}
-                    onChange={updateTroopCount}
-                    inputMode="numeric"
-                    placeholder={formatNumber(450000)}
-                    required
-                  />
-                </label>
-                <button
-                  className="ui-button ui-button-wide mt-2 nav:mt-0 nav:justify-self-end"
-                  type="submit"
-                  disabled={busy}
-                >
-                  {editingMember ? t("viking.update") : t("viking.saveSignup")}
-                </button>
-              </form>
-              {lookupStatus && (
-                <span className="ui-field-hint mt-3">{lookupStatus}</span>
-              )}
-              {editingMember && (
-                <button
-                  className="ui-button-ghost mt-3"
-                  type="button"
-                  onClick={cancelEdit}
-                >
-                  {t("viking.cancelEdit")}
-                </button>
-              )}
-            </section>
-          ) : (
-            <section className="ui-card">
-              <div className="ui-section-header">
-                <h2 className="ui-section-title">{t("viking.findAssignmentsTitle")}</h2>
-                <p className="ui-section-subtitle">
-                  {t("viking.findAssignmentsSubtitle")}
-                </p>
-              </div>
-              <div className="mt-5">
-                <label className="ui-field">
-                  {t("viking.playerName")}
-                  <div className="ui-search">
-                    <input
-                      className="ui-input"
-                      name="search"
-                      value={searchQuery}
-                      onChange={(event) => setSearchQuery(event.target.value)}
-                      onKeyDown={(event) => {
-                        if (!suggestionTail) return;
-                        if (event.key === "Tab" || event.key === "Enter") {
-                          event.preventDefault();
-                          setSearchQuery(topSuggestion);
-                        }
-                      }}
-                      placeholder={t("viking.searchPlaceholder")}
-                      autoComplete="off"
-                    />
-                    {suggestionTail && (
-                      <div className="ui-search-hint" aria-hidden="true">
-                        <span className="ui-search-hint-typed">{searchQuery}</span>
-                        <span className="ui-search-hint-tail">{suggestionTail}</span>
-                      </div>
-                    )}
-                  </div>
-                </label>
-              </div>
-            </section>
-          )}
+      <main className="relative z-[1] grid gap-6">
+        {!results ? (
+          <VikingSignupCard
+            t={t}
+            canManage={canManage}
+            editingMember={editingMember}
+            adminOptions={adminOptions}
+            adminTargetId={adminTargetId}
+            form={form}
+            busy={busy}
+            lookupStatus={lookupStatus}
+            onSubmit={submitSignup}
+            onAdminTargetChange={handleAdminTargetChange}
+            onUpdateForm={updateForm}
+            onUpdatePower={updatePower}
+            onUpdateTroopCount={updateTroopCount}
+            onCancelEdit={cancelEdit}
+            formatNumber={formatNumber}
+          />
+        ) : (
+          <VikingSearchCard
+            t={t}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            suggestionTail={suggestionTail}
+            topSuggestion={topSuggestion}
+          />
+        )}
 
-          {!results && (
-            <section className="ui-card" data-testid="viking-roster">
-              <div className="ui-section-header">
-                <h2 className="ui-section-title">{t("viking.rosterTitle")}</h2>
-                <p className="ui-section-subtitle">{t("viking.rosterSubtitle")}</p>
-              </div>
-              <div className="mt-5 grid gap-3" data-testid="viking-roster-list">
-                {sortedMembers.length === 0 ? (
-                  <p className="ui-empty-state">{t("viking.noSignups")}</p>
-                ) : (
-                  sortedMembers.map((member) => (
-                    <div
-                      key={member.playerId}
-                      className="ui-card-muted flex flex-col gap-3 nav:flex-row nav:items-center nav:justify-between"
-                    >
-                      <div>
-                        <p className="font-semibold">
-                          {member.playerName ? member.playerName : member.playerId}
-                        </p>
-                        <p className="text-sm text-muted">
-                          {t("viking.troopsMeta", {
-                            value: formatNumber(member.troopCount)
-                          })}
-                        </p>
-                        <p className="text-sm text-muted">
-                          {t("viking.powerMeta", { value: formatNumber(member.power) })}
-                        </p>
-                        <p className="text-sm text-muted">
-                          {t("viking.marchesMeta", { value: member.marchCount })}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <button
-                          className="ui-button-ghost ui-button-sm"
-                          type="button"
-                          onClick={() => startEdit(member)}
-                          disabled={
-                            busy ||
-                            (!canManage && member.playerId !== profile?.playerId)
-                          }
-                        >
-                          {t("viking.edit")}
-                        </button>
-                        <button
-                          className="ui-button-ghost ui-button-sm"
-                          type="button"
-                          onClick={() => removeSignup(member.playerId)}
-                          disabled={
-                            busy || (!canManage && member.playerId !== profile?.playerId)
-                          }
-                        >
-                          {t("viking.remove")}
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-              {profileWarning && <p className="ui-error">{profileWarning}</p>}
-              {error && <p className="ui-error">{error}</p>}
-              <button
-                className="ui-button-run mt-4"
-                type="button"
-                onClick={runAssignments}
-                disabled={busy || !canManage}
-              >
-                {t("viking.runAssignments")}
-              </button>
-            </section>
-          )}
+        {!results && (
+          <VikingRosterCard
+            t={t}
+            members={sortedMembers}
+            profile={profile}
+            canManage={canManage}
+            busy={busy}
+            profileWarning={profileWarning}
+            error={error}
+            onEdit={startEdit}
+            onRemove={removeSignup}
+            onRunAssignments={runAssignments}
+            formatNumber={formatNumber}
+          />
+        )}
 
-          <section className="ui-card">
-            <div className="ui-section-header">
-              <h2 className="ui-section-title">{t("viking.assignmentsTitle")}</h2>
-              <p className="ui-section-subtitle">{t("viking.assignmentsSubtitle")}</p>
-            </div>
-            {!results ? (
-              <p className="ui-empty-state">{t("viking.noAssignments")}</p>
-            ) : (
-              <div className="mt-5 grid gap-4 nav:grid-cols-[repeat(auto-fit,minmax(260px,1fr))]">
-                {filteredResults.map((member) => (
-                  <article key={member.playerId} className="ui-card-muted">
-                    <header className="space-y-1">
-                      <h3 className="text-lg font-semibold">
-                        {member.playerName ? member.playerName : member.playerId}
-                      </h3>
-                      <p className="text-sm text-muted">
-                        {t("viking.troopsOutgoing", {
-                          value: formatNumber(member.troopCount)
-                        })}
-                      </p>
-                      <p className="font-semibold text-ink">
-                        {t("viking.incoming", {
-                          value: formatNumber(member.incomingTotal)
-                        })}
-                      </p>
-                      <p className="font-semibold text-ink">
-                        {t("viking.troopsRemaining", {
-                          value: formatNumber(member.troopsRemaining || 0)
-                        })}
-                      </p>
-                      {member.garrisonLeadId ? (
-                        <p className="font-semibold text-accent-dark">
-                          {t("viking.garrisonLead", { name: member.garrisonLeadName })}
-                        </p>
-                      ) : (
-                        <p className="text-sm text-muted">{t("viking.garrisonNone")}</p>
-                      )}
-                    </header>
-                    <div className="mt-3">
-                      <h4 className="text-sm font-semibold">{t("viking.sendTroopsTo")}</h4>
-                      <ul className="mt-2 grid gap-2 text-sm">
-                        {member.outgoing.map((item, index) => (
-                          <li key={`${member.playerId}-out-${index}`}>
-                            {(item.toName || item.toId)} — {formatNumber(item.troops)}{" "}
-                            {item.lead ? (
-                              <span className="ml-2 inline-flex rounded-md bg-accent/15 px-2 py-0.5 text-[0.65rem] font-semibold text-accent-dark">
-                                {t("viking.lead")}
-                              </span>
-                            ) : null}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div className="mt-3">
-                      <h4 className="text-sm font-semibold">{t("viking.receivingFrom")}</h4>
-                      <ul className="mt-2 grid gap-2 text-sm">
-                        {member.incoming.map((item, index) => (
-                          <li key={`${member.playerId}-in-${index}`}>
-                            {(item.fromName || item.fromId)} — {formatNumber(item.troops)}{" "}
-                            {item.lead ? (
-                              <span className="ml-2 inline-flex rounded-md bg-accent/15 px-2 py-0.5 text-[0.65rem] font-semibold text-accent-dark">
-                                {t("viking.lead")}
-                              </span>
-                            ) : null}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            )}
-          </section>
-        </main>
-      </div>
-    </>
+        <VikingAssignmentsCard
+          t={t}
+          results={results}
+          members={filteredResults}
+          formatNumber={formatNumber}
+        />
+      </main>
+    </div>
   );
 }
 
