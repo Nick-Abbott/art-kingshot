@@ -21,6 +21,7 @@ Non-exhaustive list based on a quick repo review. Items marked “In Scope” ar
 
 ### TD-01: Consolidate i18n Source of Truth + Key Parity
 **Problem**: The English translations live in two places with mismatched keys (`client/src/locales/en/translation.json` vs `client/public/locales/en/translation.json`). This increases drift and makes localization harder to maintain.
+**Status**: Complete
 
 **Scope / Requirements**
 - Make `client/public/locales/*/translation.json` the single source of truth for all languages, including English.
@@ -68,6 +69,7 @@ Validate TD-01 by confirming:
 
 ### TD-02: Deduplicate Alliance Delete Cascade
 **Problem**: Alliance deletion logic is duplicated in multiple routes, risking drift and making changes error-prone.
+**Status**: Complete
 
 **Scope / Requirements**
 - Create a single, reusable server helper that performs the full “delete alliance” cascade:
@@ -112,6 +114,7 @@ Validate TD-02 by confirming:
 
 ### TD-03: Tighten API Client Typing (Remove `any`)
 **Problem**: The API client and shared lookup payload expose `any`, which reduces type safety and makes downstream code harder to reason about.
+**Status**: Complete
 
 **Update (2026-03-05)**
 - Added a generic response type to `apiFetch` so API modules can type `data` without casts.
@@ -150,6 +153,7 @@ Validate TD-03 by confirming:
 
 ### TD-04: Centralize Player Lookup Parsing
 **Problem**: Player lookup parsing and error handling are duplicated across `Profiles.tsx`, `VikingVengeance.tsx`, and `BearRally.tsx`.
+**Status**: Complete
 
 **Scope / Requirements**
 - Create a shared helper or hook that encapsulates:
@@ -188,6 +192,7 @@ Validate TD-04 by confirming:
 
 ### TD-05: Decompose Monolithic Feature Screens
 **Problem**: The main feature screens are large and mix view logic with data/state handling, which makes them hard to change safely.
+**Status**: Complete
 
 **Scope / Requirements**
 - Extract cohesive sections from `VikingVengeance.tsx`, `BearRally.tsx`, and `Profiles.tsx` into smaller components.
