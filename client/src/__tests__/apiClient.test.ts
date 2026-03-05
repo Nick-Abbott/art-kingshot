@@ -30,12 +30,12 @@ describe("apiFetch", () => {
   });
 
   it("throws ApiError on non-ok response", async () => {
-    const fetchSpy = vi.fn().mockResolvedValue(
+    const errorResponse = () =>
       new Response(JSON.stringify({ error: { message: "Bad", code: "bad_request" } }), {
         status: 400,
         headers: { "content-type": "application/json" }
-      })
-    );
+      });
+    const fetchSpy = vi.fn().mockResolvedValueOnce(errorResponse()).mockResolvedValueOnce(errorResponse());
     vi.stubGlobal("fetch", fetchSpy);
 
     await expect(apiFetch("/api/test")).rejects.toBeInstanceOf(ApiError);
