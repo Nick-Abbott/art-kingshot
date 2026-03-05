@@ -42,6 +42,7 @@ function VikingHeader({ t, memberCount, onReset, busy, canManage }: Props) {
         </div>
         <button
           className="ui-button-ghost w-full text-xs uppercase tracking-[0.1em] nav:col-span-2"
+          data-testid="viking-reset-event"
           type="button"
           onClick={onReset}
           disabled={busy || !canManage}

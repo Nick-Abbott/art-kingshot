@@ -91,7 +91,12 @@ function App() {
             <p className="mt-3 text-muted">{t("auth.subtitle")}</p>
             {error && <p className="ui-error">{error}</p>}
             <div className="mt-6 flex justify-center">
-              <button className="ui-button" type="button" onClick={handleLogin}>
+              <button
+                className="ui-button"
+                type="button"
+                onClick={handleLogin}
+                data-testid="auth-login"
+              >
                 {t("auth.login")}
               </button>
             </div>
@@ -152,6 +157,7 @@ function App() {
               <button
                 onClick={() => switchPage("admin")}
                 className={`ui-tab ${page === "admin" ? "ui-tab-active" : ""}`}
+                data-testid="nav-admin"
               >
                 {t("app.tabs.admin")}
               </button>

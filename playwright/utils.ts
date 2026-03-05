@@ -403,6 +403,34 @@ export async function openPage(
   }
 }
 
+export async function waitForSnapshotReady(
+  page: Page,
+  options: { pageKey?: string; loggedOut?: boolean } = {}
+) {
+  const timeout = 10000;
+  if (options.loggedOut) {
+    await page.getByTestId("auth-login").waitFor({ state: "visible", timeout });
+    return;
+  }
+
+  if (options.pageKey === "profiles") {
+    await page.getByTestId("profiles-page").waitFor({ state: "visible", timeout });
+    return;
+  }
+
+  if (options.pageKey === "viking") {
+    await page.getByTestId("viking-roster").waitFor({ state: "visible", timeout });
+    return;
+  }
+
+  if (options.pageKey === "bear") {
+    await page.getByTestId("bear1-list").waitFor({ state: "visible", timeout });
+    return;
+  }
+
+  await page.getByTestId("profile-switcher").waitFor({ state: "visible", timeout });
+}
+
 export async function openNavMenu(
   page: Page,
   options: { timeout?: number; force?: boolean } = {}

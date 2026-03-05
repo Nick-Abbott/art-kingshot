@@ -69,6 +69,7 @@ function VikingSignupCard({
             {t("viking.adminMemberLabel")}
             <select
               className="ui-select"
+              data-testid="viking-admin-member-select"
               value={adminTargetId}
               onChange={(event) => onAdminTargetChange(event.target.value)}
             >
@@ -84,6 +85,7 @@ function VikingSignupCard({
           {t("viking.marchCount")}
           <input
             className="ui-input"
+            data-testid="viking-march-count"
             name="marchCount"
             value={form.marchCount}
             onChange={onUpdateForm}
@@ -97,6 +99,7 @@ function VikingSignupCard({
           {t("viking.power")}
           <input
             className="ui-input"
+            data-testid="viking-power"
             name="power"
             value={form.power}
             onChange={onUpdatePower}
@@ -109,6 +112,7 @@ function VikingSignupCard({
           {t("viking.troopCount")}
           <input
             className="ui-input"
+            data-testid="viking-troop-count"
             name="troopCount"
             value={form.troopCount}
             onChange={onUpdateTroopCount}
@@ -119,6 +123,7 @@ function VikingSignupCard({
         </label>
         <button
           className="ui-button ui-button-wide mt-2 nav:mt-0 nav:justify-self-end"
+          data-testid="viking-save-signup"
           type="submit"
           disabled={busy}
         >

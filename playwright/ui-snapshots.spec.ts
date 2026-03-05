@@ -14,6 +14,7 @@ import {
   openPage,
   resetPlaywrightDb,
   setPendingJoin,
+  waitForSnapshotReady,
 } from "./utils";
 
 let sessionToken = "";
@@ -31,6 +32,7 @@ async function snapshotPage(
     selectedProfileId?: string;
     openProfileMenu?: boolean;
     openNav?: boolean;
+    loggedOut?: boolean;
   }
 ) {
   const outputDir = path.join(process.cwd(), "snapshots", "playwright");
@@ -44,6 +46,11 @@ async function snapshotPage(
     waitForMeTimeout: 10000,
     readySelector: ".app-shell",
     readyTimeout: 10000,
+  });
+
+  await waitForSnapshotReady(page, {
+    pageKey: options.pageKey,
+    loggedOut: options.loggedOut,
   });
 
   if (options.openNav) {
@@ -137,7 +144,10 @@ test("ui snapshots", async ({ app, browser, request }, testInfo) => {
   try {
     const contextLoggedOut = await browser.newContext({ baseURL: app.clientUrl });
     const loggedOutPage = await contextLoggedOut.newPage();
-    await runSnapshot(loggedOutPage, "profiles-logged-out", { pageKey: "profiles" });
+    await runSnapshot(loggedOutPage, "profiles-logged-out", {
+      pageKey: "profiles",
+      loggedOut: true,
+    });
     await loggedOutPage.close();
     await contextLoggedOut.close();
 

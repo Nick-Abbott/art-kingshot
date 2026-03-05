@@ -80,6 +80,7 @@ Validate PW-01 by confirming:
 
 ### PW-02: Stabilize Page Load & Wait Strategy
 **Problem**: The snapshot suite relies on `waitForTimeout` and `networkidle`, leading to flaky timing and inconsistent captures.
+**Status**: Complete
 
 **Scope / Requirements**
 - Replace arbitrary `waitForTimeout` usage with deterministic waits (e.g., `expect(locator).toBeVisible()` or `waitForResponse`).
@@ -103,6 +104,25 @@ Validate PW-02 by confirming:
 1) Snapshot capture uses deterministic waits instead of arbitrary sleeps.
 2) Snapshot output remains stable across runs.
 3) `npm run test:e2e` and `npm run test:visual` pass.
+
+- **Engineer Update (2026-03-05)**: added snapshot readiness helper (`waitForSnapshotReady`) with page-specific deterministic waits, wired snapshots to use it, and introduced `data-testid` hooks for login + profiles page to avoid brittle selectors.
+- **Engineer Tests (2026-03-05)**: `npm run test:e2e` (not run; not requested), `npm run test:visual` (not run; not requested).
+- **Engineer Update (2026-03-05)**: adjusted profiles readiness to wait on `profiles-page` only so mobile snapshots don't block on hidden nav profile switcher.
+- **Engineer Tests (2026-03-05)**: `npm run test:e2e` (not run; not requested), `npm run test:visual` (not run; not requested).
+- **QA Validation (2026-03-05)**:
+  - [x] Snapshot workflow uses deterministic waits via `waitForSnapshotReady`; no `waitForTimeout`/`networkidle` usage found in Playwright specs/helpers.
+  - [ ] Snapshot output stability not fully confirmed because `npm run test:visual` failed on mobile profiles snapshots.
+  - [ ] Required Playwright snapshots run did not pass; flows run passed.
+- **QA Tests (2026-03-05)**:
+  - `npm run test:e2e` — pass
+  - `npm run test:visual` — fail (snapshots-mobile-light/dark timed out waiting for `profile-switcher` to be visible in `waitForSnapshotReady`).
+- **QA Validation (2026-03-05)**:
+  - [x] Snapshot workflow uses deterministic waits via `waitForSnapshotReady`; no `waitForTimeout`/`networkidle` usage found in Playwright specs/helpers.
+  - [x] Snapshot output stable across current run; mobile profiles readiness no longer blocks on hidden profile switcher.
+  - [x] Required Playwright flows and snapshot runs passed.
+- **QA Tests (2026-03-05)**:
+  - `npm run test:e2e` — pass
+  - `npm run test:visual` — pass
 
 ---
 
@@ -244,6 +264,7 @@ Validate PW-06 by confirming:
 
 ### PW-07: Harden Selectors with Stable Test IDs
 **Problem**: Some flows rely on text-based selectors that can break with localization or copy updates.
+**Status**: Complete
 
 **Scope / Requirements**
 - Add `data-testid` hooks for critical UI elements used by Playwright flows.
@@ -265,6 +286,15 @@ Validate PW-07 by confirming:
 1) Key selectors use `data-testid` instead of visible text.
 2) UI behavior is unchanged.
 3) `npm run test:e2e` passes.
+
+- **Engineer Update (2026-03-05)**: added stable `data-testid` hooks for viking/bear signup fields, reset actions, admin selectors, and profiles/admin applicant/member actions; updated Playwright flows to use test IDs instead of localized text.
+- **Engineer Tests (2026-03-05)**: `npm run test:e2e` (not run; not requested).
+- **QA Validation (2026-03-05)**:
+  - [x] Key flow selectors use `data-testid` (viking/bear signup/reset, admin selects, applicants/members actions, nav admin).
+  - [x] UI behavior unchanged in flows with updated selectors.
+  - [x] Required Playwright flows run passed.
+- **QA Tests (2026-03-05)**:
+  - `npm run test:e2e` — pass
 
 ---
 

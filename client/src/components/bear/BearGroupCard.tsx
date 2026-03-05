@@ -48,6 +48,7 @@ function BearGroupCard({
         </div>
         <button
           className="ui-button ui-button-wide"
+          data-testid={`bear-reset-${group}`}
           type="button"
           onClick={() => onReset(group)}
           disabled={busy || !canManage}

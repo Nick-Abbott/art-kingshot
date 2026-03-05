@@ -165,6 +165,7 @@ function Admin({ isAppAdmin }: Props) {
               {t("admin.kingdom")}
               <select
                 className="ui-select"
+                data-testid="admin-kingdom-select"
                 value={selectedKingdom ?? ""}
                 onChange={(event) => {
                   const value = event.target.value;
@@ -183,6 +184,7 @@ function Admin({ isAppAdmin }: Props) {
               {t("admin.alliance")}
               <select
                 className="ui-select"
+                data-testid="admin-alliance-select"
                 value={selectedAllianceId}
                 onChange={(event) => setSelectedAllianceId(event.target.value)}
                 disabled={!selectedKingdom}
@@ -264,13 +266,14 @@ function Admin({ isAppAdmin }: Props) {
                     <h3 className="mt-5 text-base font-semibold">
                       {t("admin.applicantsTitle")}
                     </h3>
-                    <div className="mt-3 grid gap-3">
+                    <div className="mt-3 grid gap-3" data-testid="admin-applicants-list">
                       {profiles
                         .filter((profile) => profile.status !== "active")
                         .map((profile) => (
                           <div
                             key={profile.id}
                             className="ui-card-muted flex flex-col gap-3 nav:flex-row nav:items-center nav:justify-between"
+                            data-testid={`admin-applicant-${profile.id}`}
                           >
                             <div>
                               <p className="font-semibold">
@@ -283,6 +286,7 @@ function Admin({ isAppAdmin }: Props) {
                             <div className="flex items-center gap-3">
                               <button
                                 className="ui-button-ghost ui-button-sm"
+                                data-testid={`admin-approve-${profile.id}`}
                                 type="button"
                                 onClick={() => handleApprove(profile)}
                               >
@@ -290,6 +294,7 @@ function Admin({ isAppAdmin }: Props) {
                               </button>
                               <button
                                 className="ui-button-ghost ui-button-sm"
+                                data-testid={`admin-reject-${profile.id}`}
                                 type="button"
                                 onClick={() => handleReject(profile)}
                               >
@@ -307,13 +312,14 @@ function Admin({ isAppAdmin }: Props) {
                 <h3 className="mt-5 border-t border-black/10 pt-4 text-base font-semibold">
                   {t("admin.membersTitle")}
                 </h3>
-                <div className="mt-3 grid gap-3">
+                <div className="mt-3 grid gap-3" data-testid="admin-members-list">
                   {profiles
                     .filter((profile) => profile.status === "active")
                     .map((profile) => (
                       <div
                         key={profile.id}
                         className="ui-card-muted flex flex-col gap-3 nav:flex-row nav:items-center nav:justify-between"
+                        data-testid={`admin-member-${profile.id}`}
                       >
                         <div>
                           <p className="font-semibold">
@@ -329,6 +335,7 @@ function Admin({ isAppAdmin }: Props) {
                         <div className="flex items-center gap-3">
                           <button
                             className="ui-button-ghost ui-button-sm"
+                            data-testid={`admin-suspend-${profile.id}`}
                             type="button"
                             onClick={() => handleSuspend(profile)}
                           >
@@ -336,6 +343,11 @@ function Admin({ isAppAdmin }: Props) {
                           </button>
                           <button
                             className="ui-button-ghost ui-button-sm"
+                            data-testid={
+                              profile.role === "member"
+                                ? `admin-make-admin-${profile.id}`
+                                : `admin-make-member-${profile.id}`
+                            }
                             type="button"
                             onClick={() => handleRoleToggle(profile)}
                           >

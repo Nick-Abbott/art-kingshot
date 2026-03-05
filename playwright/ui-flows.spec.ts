@@ -112,10 +112,10 @@ test("viking signup and reset", async ({ app, browser, request }) => {
     readyTimeout: WAIT_TIMEOUT,
   });
 
-  await page.getByLabel("March count").fill("4");
-  await page.getByLabel("Power").fill("33000000");
-  await page.getByLabel("Troop count").fill("450000");
-  await page.getByRole("button", { name: /save signup/i }).click({ timeout: WAIT_TIMEOUT });
+  await page.getByTestId("viking-march-count").fill("4");
+  await page.getByTestId("viking-power").fill("33000000");
+  await page.getByTestId("viking-troop-count").fill("450000");
+  await page.getByTestId("viking-save-signup").click({ timeout: WAIT_TIMEOUT });
 
   await expect(page.getByTestId("viking-signed-count")).toHaveText("1", {
     timeout: WAIT_TIMEOUT,
@@ -124,7 +124,7 @@ test("viking signup and reset", async ({ app, browser, request }) => {
     timeout: WAIT_TIMEOUT,
   });
 
-  await page.getByRole("button", { name: /reset event/i }).click({
+  await page.getByTestId("viking-reset-event").click({
     timeout: WAIT_TIMEOUT,
   });
   await expect(page.getByTestId("viking-signed-count")).toHaveText("0", {
@@ -156,17 +156,16 @@ test("bear signup and reset", async ({ app, browser, request }) => {
     readyTimeout: WAIT_TIMEOUT,
   });
 
-  const signupForm = page.locator("form").first();
-  await signupForm.getByLabel("Rally size").fill("800000");
-  await signupForm.getByLabel("Bear group").selectOption("bear1");
-  await page.getByRole("button", { name: /register/i }).click({ timeout: WAIT_TIMEOUT });
+  await page.getByTestId("bear-rally-size").fill("800000");
+  await page.getByTestId("bear-group").selectOption("bear1");
+  await page.getByTestId("bear-register").click({ timeout: WAIT_TIMEOUT });
 
   await expect(page.getByTestId("bear1-count")).toHaveText("1", { timeout: WAIT_TIMEOUT });
   await expect(page.getByTestId("bear1-list")).toContainText(profileA.playerName, {
     timeout: WAIT_TIMEOUT,
   });
 
-  await page.getByRole("button", { name: /reset bear 1/i }).click({
+  await page.getByTestId("bear-reset-bear1").click({
     timeout: WAIT_TIMEOUT,
   });
   await expect(page.getByTestId("bear1-count")).toHaveText("0", { timeout: WAIT_TIMEOUT });
@@ -207,13 +206,13 @@ test("admin signup controls are only visible to alliance admins", async ({
     readyState: "attached",
     readyTimeout: WAIT_TIMEOUT,
   });
-  await expect(page.getByLabel("Alliance member (admin)")).toBeVisible({
+  await expect(page.getByTestId("viking-admin-member-select")).toBeVisible({
     timeout: WAIT_TIMEOUT,
   });
   await ensureProfileSwitcherReady(page);
   await page.getByTestId("profile-switcher").click({ timeout: WAIT_TIMEOUT });
   await page.getByRole("menuitem", { name: profileB.playerName }).click();
-  await expect(page.getByLabel("Alliance member (admin)")).toHaveCount(0);
+  await expect(page.getByTestId("viking-admin-member-select")).toHaveCount(0);
 
   await openPage(page, {
     pageKey: "bear",
@@ -224,13 +223,13 @@ test("admin signup controls are only visible to alliance admins", async ({
     readyState: "attached",
     readyTimeout: WAIT_TIMEOUT,
   });
-  await expect(page.getByLabel("Alliance member (admin)")).toBeVisible({
+  await expect(page.getByTestId("bear-admin-member-select")).toBeVisible({
     timeout: WAIT_TIMEOUT,
   });
   await ensureProfileSwitcherReady(page);
   await page.getByTestId("profile-switcher").click({ timeout: WAIT_TIMEOUT });
   await page.getByRole("menuitem", { name: profileB.playerName }).click();
-  await expect(page.getByLabel("Alliance member (admin)")).toHaveCount(0);
+  await expect(page.getByTestId("bear-admin-member-select")).toHaveCount(0);
 
   await context.close();
 });
@@ -259,52 +258,47 @@ test("alliance admin updates applicants list immediately", async ({
     readyTimeout: WAIT_TIMEOUT,
   });
 
-  const applicantsHeading = () => page.getByRole("heading", { name: "Applicants" });
-  const applicantsList = () =>
-    applicantsHeading().locator("xpath=following-sibling::div[1]");
-  const membersList = () =>
-    page.getByRole("heading", { name: "Members" }).locator("xpath=following-sibling::div[1]");
-  const memberCard = () =>
-    membersList().locator(".ui-card-muted", { hasText: profileB.playerName });
+  const applicantsList = () => page.getByTestId("profiles-applicants-list");
+  const membersList = () => page.getByTestId("profiles-members-list");
 
   await expect(applicantsList()).toContainText(profileB.playerName, {
     timeout: WAIT_TIMEOUT,
   });
 
-  await applicantsList().getByRole("button", { name: "Approve" }).click({
+  await page.getByTestId(`profiles-approve-${profileB.id}`).click({
     timeout: WAIT_TIMEOUT,
   });
   await expect(membersList()).toContainText(profileB.playerName, {
     timeout: WAIT_TIMEOUT,
   });
-  await expect(applicantsHeading()).toHaveCount(0, {
+  await expect(applicantsList()).toHaveCount(0, {
     timeout: WAIT_TIMEOUT,
   });
 
-  await memberCard().getByRole("button", { name: "Suspend" }).click({
+  await page.getByTestId(`profiles-suspend-${profileB.id}`).click({
     timeout: WAIT_TIMEOUT,
   });
   await expect(applicantsList()).toContainText(profileB.playerName, {
     timeout: WAIT_TIMEOUT,
   });
 
-  await applicantsList().getByRole("button", { name: "Approve" }).click({
+  await page.getByTestId(`profiles-approve-${profileB.id}`).click({
     timeout: WAIT_TIMEOUT,
   });
-  await memberCard().getByRole("button", { name: "Make admin" }).click({
+  await page.getByTestId(`profiles-make-admin-${profileB.id}`).click({
     timeout: WAIT_TIMEOUT,
   });
-  await expect(
-    memberCard().getByRole("button", { name: "Make member" })
-  ).toBeVisible({ timeout: WAIT_TIMEOUT });
+  await expect(page.getByTestId(`profiles-make-member-${profileB.id}`)).toBeVisible({
+    timeout: WAIT_TIMEOUT,
+  });
 
-  await memberCard().getByRole("button", { name: "Suspend" }).click({
+  await page.getByTestId(`profiles-suspend-${profileB.id}`).click({
     timeout: WAIT_TIMEOUT,
   });
-  await applicantsList().getByRole("button", { name: "Reject" }).click({
+  await page.getByTestId(`profiles-reject-${profileB.id}`).click({
     timeout: WAIT_TIMEOUT,
   });
-  await expect(applicantsHeading()).toHaveCount(0, {
+  await expect(applicantsList()).toHaveCount(0, {
     timeout: WAIT_TIMEOUT,
   });
   await expect(membersList()).not.toContainText(profileB.playerName, {
@@ -391,53 +385,46 @@ test("admin panel updates alliances and profiles without reload", async ({
     readyTimeout: WAIT_TIMEOUT,
   });
   await openNavMenu(page);
-  await page
-    .getByRole("button", { name: "Admin", exact: true })
-    .click({ timeout: WAIT_TIMEOUT });
-  await page.getByLabel("Kingdom").waitFor({ timeout: WAIT_TIMEOUT });
+  await page.getByTestId("nav-admin").click({ timeout: WAIT_TIMEOUT });
+  await page.getByTestId("admin-kingdom-select").waitFor({ timeout: WAIT_TIMEOUT });
 
-  await page.getByLabel("Kingdom").selectOption(String(kingdomA));
-  await page.getByLabel("Alliance").selectOption(allianceA.alliance.id);
+  await page.getByTestId("admin-kingdom-select").selectOption(String(kingdomA));
+  await page.getByTestId("admin-alliance-select").selectOption(allianceA.alliance.id);
 
-  const applicantsHeading = () => page.getByRole("heading", { name: "Applicants" });
-  const applicantsList = () =>
-    applicantsHeading().locator("xpath=following-sibling::div[1]");
-  const membersList = () =>
-    page.getByRole("heading", { name: "Members" }).locator("xpath=following-sibling::div[1]");
-  const adminMemberCard = () =>
-    membersList().locator(".ui-card-muted", { hasText: profileMemberA.playerName });
+  const applicantsList = () => page.getByTestId("admin-applicants-list");
+  const membersList = () => page.getByTestId("admin-members-list");
 
   await expect(applicantsList()).toContainText(profileMemberA.playerName, {
     timeout: WAIT_TIMEOUT,
   });
-  await applicantsList().getByRole("button", { name: "Approve" }).click({
+  await page.getByTestId(`admin-approve-${profileMemberA.id}`).click({
     timeout: WAIT_TIMEOUT,
   });
   await expect(membersList()).toContainText(profileMemberA.playerName, {
     timeout: WAIT_TIMEOUT,
   });
-  await expect(applicantsHeading()).toHaveCount(0, { timeout: WAIT_TIMEOUT });
+  await expect(applicantsList()).toHaveCount(0, { timeout: WAIT_TIMEOUT });
 
-  await adminMemberCard().getByRole("button", { name: "Suspend" }).click({
+  await page.getByTestId(`admin-suspend-${profileMemberA.id}`).click({
     timeout: WAIT_TIMEOUT,
   });
   await expect(applicantsList()).toContainText(profileMemberA.playerName, {
     timeout: WAIT_TIMEOUT,
   });
 
-  await applicantsList().getByRole("button", { name: "Approve" }).click({
+  await page.getByTestId(`admin-approve-${profileMemberA.id}`).click({
     timeout: WAIT_TIMEOUT,
   });
-  await adminMemberCard().getByRole("button", { name: "Make admin" }).click({
+  await page.getByTestId(`admin-make-admin-${profileMemberA.id}`).click({
     timeout: WAIT_TIMEOUT,
   });
-  await expect(
-    adminMemberCard().getByRole("button", { name: "Make member" })
-  ).toBeVisible({ timeout: WAIT_TIMEOUT });
+  await expect(page.getByTestId(`admin-make-member-${profileMemberA.id}`)).toBeVisible({
+    timeout: WAIT_TIMEOUT,
+  });
 
-  await page.getByLabel("Kingdom").selectOption(String(kingdomB));
-  await expect(page.getByLabel("Alliance")).toHaveValue("");
-  await page.getByLabel("Alliance").selectOption(allianceB.alliance.id);
+  await page.getByTestId("admin-kingdom-select").selectOption(String(kingdomB));
+  await expect(page.getByTestId("admin-alliance-select")).toHaveValue("");
+  await page.getByTestId("admin-alliance-select").selectOption(allianceB.alliance.id);
   await expect(membersList()).toContainText(profileAdminB.playerName, {
     timeout: WAIT_TIMEOUT,
   });

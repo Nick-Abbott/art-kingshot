@@ -97,13 +97,14 @@ function ProfilesAdminCard({
               <h3 className="mt-5 text-base font-semibold">
                 {t("profiles.applicantsTitle")}
               </h3>
-              <div className="mt-3 grid gap-3">
+              <div className="mt-3 grid gap-3" data-testid="profiles-applicants-list">
                 {adminProfiles
                   .filter((profile) => profile.status !== "active")
                   .map((profile) => (
                     <div
                       key={profile.id}
                       className="ui-card-muted flex flex-col gap-3 nav:flex-row nav:items-center nav:justify-between"
+                      data-testid={`profiles-applicant-${profile.id}`}
                     >
                       <div>
                         <p className="font-semibold">
@@ -117,6 +118,7 @@ function ProfilesAdminCard({
                         <div className="flex items-center gap-3">
                           <button
                             className="ui-button-ghost ui-button-sm"
+                            data-testid={`profiles-approve-${profile.id}`}
                             type="button"
                             onClick={() => onApproveProfile(profile, "active")}
                           >
@@ -124,6 +126,7 @@ function ProfilesAdminCard({
                           </button>
                           <button
                             className="ui-button-ghost ui-button-sm"
+                            data-testid={`profiles-reject-${profile.id}`}
                             type="button"
                             onClick={() => onRejectProfile(profile)}
                           >
@@ -140,13 +143,14 @@ function ProfilesAdminCard({
           <h3 className="mt-5 border-t border-black/10 pt-4 text-base font-semibold">
             {t("profiles.membersTitle")}
           </h3>
-          <div className="mt-3 grid gap-3">
+          <div className="mt-3 grid gap-3" data-testid="profiles-members-list">
             {adminProfiles
               .filter((profile) => profile.status === "active")
               .map((profile) => (
                 <div
                   key={profile.id}
                   className="ui-card-muted flex flex-col gap-3 nav:flex-row nav:items-center nav:justify-between"
+                  data-testid={`profiles-member-${profile.id}`}
                 >
                   <div>
                     <p className="font-semibold">{profile.playerName || profile.playerId}</p>
@@ -161,6 +165,7 @@ function ProfilesAdminCard({
                     <div className="flex items-center gap-3">
                       <button
                         className="ui-button-ghost ui-button-sm"
+                        data-testid={`profiles-suspend-${profile.id}`}
                         type="button"
                         onClick={() => onApproveProfile(profile, "pending")}
                       >
@@ -168,6 +173,11 @@ function ProfilesAdminCard({
                       </button>
                       <button
                         className="ui-button-ghost ui-button-sm"
+                        data-testid={
+                          profile.role === "member"
+                            ? `profiles-make-admin-${profile.id}`
+                            : `profiles-make-member-${profile.id}`
+                        }
                         type="button"
                         onClick={() =>
                           onSetRole(

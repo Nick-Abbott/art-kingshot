@@ -68,6 +68,7 @@ function BearSignupCard({
             {t("bear.adminMemberLabel")}
             <select
               className="ui-select"
+              data-testid="bear-admin-member-select"
               value={adminTargetId}
               onChange={(event) => onAdminTargetChange(event.target.value)}
             >
@@ -83,6 +84,7 @@ function BearSignupCard({
           {t("bear.rallySize")}
           <input
             className="ui-input"
+            data-testid="bear-rally-size"
             name="rallySize"
             value={form.rallySize}
             onChange={(e) => onSetForm({ ...form, rallySize: formatNumberInput(e.target.value) })}
@@ -95,6 +97,7 @@ function BearSignupCard({
           {t("bear.bearGroup")}
           <select
             className="ui-select"
+            data-testid="bear-group"
             name="bearGroup"
             value={form.bearGroup}
             onChange={(e) =>
@@ -108,6 +111,7 @@ function BearSignupCard({
         </label>
         <button
           className="ui-button ui-button-wide mt-2 nav:mt-0 nav:justify-self-end"
+          data-testid="bear-register"
           type="submit"
           disabled={busy}
         >

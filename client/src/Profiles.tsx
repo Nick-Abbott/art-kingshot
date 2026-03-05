@@ -321,7 +321,7 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
   }
 
   return (
-    <div className="app">
+    <div className="app" data-testid="profiles-page">
       <ProfilesHeader t={t} selectedProfile={selectedProfile} />
 
       <main className="relative z-[1] grid gap-6">
