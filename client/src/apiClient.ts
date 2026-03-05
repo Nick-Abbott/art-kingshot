@@ -17,7 +17,13 @@ type ApiFetchOptions = {
   allowNonOk?: boolean;
 };
 
-export async function apiFetch(
+export type ApiFetchResponse<TData = unknown> = {
+  ok: boolean;
+  status: number;
+  data: TData;
+};
+
+export async function apiFetch<TData = unknown>(
   path: string,
   {
     method = "GET",
@@ -27,7 +33,7 @@ export async function apiFetch(
     signal,
     allowNonOk = false
   }: ApiFetchOptions = {}
-): Promise<{ ok: boolean; status: number; data: unknown }> {
+): Promise<ApiFetchResponse<TData>> {
   const finalHeaders: Record<string, string> = { ...headers };
   let payload: BodyInit | undefined;
 
@@ -75,5 +81,5 @@ export async function apiFetch(
     throw new ApiError(message, res.status);
   }
 
-  return { ok: res.ok, status: res.status, data };
+  return { ok: res.ok, status: res.status, data: data as TData };
 }

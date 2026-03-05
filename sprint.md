@@ -113,6 +113,15 @@ Validate TD-02 by confirming:
 ### TD-03: Tighten API Client Typing (Remove `any`)
 **Problem**: The API client and shared lookup payload expose `any`, which reduces type safety and makes downstream code harder to reason about.
 
+**Update (2026-03-05)**
+- Added a generic response type to `apiFetch` so API modules can type `data` without casts.
+- Updated API modules to pass `ApiResponse<...>` generics to `apiFetch` and removed `as ApiResponse` casts.
+- Kept runtime behavior unchanged while tightening type narrowing in `fetchSession`.
+
+**Validation (2026-03-05)**
+- Passed: `npm run typecheck --workspace client`.
+- Passed: `npm run test:e2e`.
+
 **Scope / Requirements**
 - Update `client/src/apiClient.ts` to use `unknown` instead of `any` for `data` and expose a generic signature for typed responses.
 - Update API modules to use the generic typing instead of `as any` casting.

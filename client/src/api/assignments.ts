@@ -4,15 +4,18 @@ import type { ApiResponse, AssignmentResult, ResultsPayload } from "@shared/type
 export type { AssignmentResult };
 
 export async function runAssignments(profileId: string): Promise<AssignmentResult | null> {
-  const res = await apiFetch("/api/run", { method: "POST", profileId });
-  const payload = res.data as ApiResponse<AssignmentResult>;
+  const res = await apiFetch<ApiResponse<AssignmentResult>>("/api/run", {
+    method: "POST",
+    profileId
+  });
+  const payload = res.data;
   if (!payload || payload.ok === false) return null;
   return payload.data || null;
 }
 
 export async function fetchResults(profileId: string): Promise<AssignmentResult | null> {
-  const res = await apiFetch("/api/results", { profileId });
-  const payload = res.data as ApiResponse<ResultsPayload>;
+  const res = await apiFetch<ApiResponse<ResultsPayload>>("/api/results", { profileId });
+  const payload = res.data;
   if (!payload || payload.ok === false) return null;
   return payload.data?.results || null;
 }

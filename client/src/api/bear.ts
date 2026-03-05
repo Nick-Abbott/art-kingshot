@@ -14,8 +14,8 @@ export async function fetchBearGroup(
   profileId: string,
   group: BearGroup
 ): Promise<BearMember[]> {
-  const res = await apiFetch(`/api/bear/${group}`, { profileId });
-  const payload = res.data as ApiResponse<BearPayload>;
+  const res = await apiFetch<ApiResponse<BearPayload>>(`/api/bear/${group}`, { profileId });
+  const payload = res.data;
   if (!payload || payload.ok === false) return [];
   return payload.data?.members || [];
 }
@@ -25,12 +25,12 @@ export async function upsertBearMember(
   group: BearGroup,
   payload: { playerId: string; playerName: string; rallySize: number }
 ): Promise<BearMember[]> {
-  const res = await apiFetch(`/api/bear/${group}`, {
+  const res = await apiFetch<ApiResponse<BearPayload>>(`/api/bear/${group}`, {
     method: "POST",
     profileId,
     body: payload
   });
-  const data = res.data as ApiResponse<BearPayload>;
+  const data = res.data;
   if (!data || data.ok === false) return [];
   return data.data?.members || [];
 }
@@ -39,11 +39,11 @@ export async function resetBearGroup(
   profileId: string,
   group: BearGroup
 ): Promise<BearMember[]> {
-  const res = await apiFetch(`/api/bear/${group}`, {
+  const res = await apiFetch<ApiResponse<BearPayload>>(`/api/bear/${group}`, {
     method: "DELETE",
     profileId
   });
-  const data = res.data as ApiResponse<BearPayload>;
+  const data = res.data;
   if (!data || data.ok === false) return [];
   return data.data?.members || [];
 }
@@ -53,11 +53,11 @@ export async function removeBearMember(
   group: BearGroup,
   playerId: string
 ): Promise<BearMember[]> {
-  const res = await apiFetch(`/api/bear/${group}/${playerId}`, {
+  const res = await apiFetch<ApiResponse<BearPayload>>(`/api/bear/${group}/${playerId}`, {
     method: "DELETE",
     profileId
   });
-  const data = res.data as ApiResponse<BearPayload>;
+  const data = res.data;
   if (!data || data.ok === false) return [];
   return data.data?.members || [];
 }
@@ -65,8 +65,10 @@ export async function removeBearMember(
 export async function fetchEligibleBearMembers(
   profileId: string
 ): Promise<EligibleMember[]> {
-  const res = await apiFetch("/api/bear/eligible", { profileId });
-  const payload = res.data as ApiResponse<EligibleMembersPayload>;
+  const res = await apiFetch<ApiResponse<EligibleMembersPayload>>("/api/bear/eligible", {
+    profileId
+  });
+  const payload = res.data;
   if (!payload || payload.ok === false) return [];
   return payload.data?.members || [];
 }

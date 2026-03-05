@@ -12,8 +12,8 @@ export async function fetchAlliances(
 ): Promise<Alliance[]> {
   const query =
     Number.isFinite(Number(kingdomId)) ? `?kingdomId=${Number(kingdomId)}` : "";
-  const res = await apiFetch(`/api/alliances/list${query}`);
-  const payload = res.data as ApiResponse<AlliancesPayload>;
+  const res = await apiFetch<ApiResponse<AlliancesPayload>>(`/api/alliances/list${query}`);
+  const payload = res.data;
   if (!payload || payload.ok === false) return [];
   return payload.data?.alliances || [];
 }
@@ -23,12 +23,12 @@ export async function createAlliance(payload: {
   name: string;
   profileId: string;
 }): Promise<{ alliance: Alliance | null; profile: Profile | null }> {
-  const res = await apiFetch("/api/alliances", {
+  const res = await apiFetch<ApiResponse<AllianceCreatePayload>>("/api/alliances", {
     method: "POST",
     profileId: payload.profileId,
     body: { tag: payload.tag, name: payload.name },
   });
-  const data = res.data as ApiResponse<AllianceCreatePayload>;
+  const data = res.data;
   if (!data || data.ok === false) return { alliance: null, profile: null };
   return {
     alliance: data.data?.alliance || null,
