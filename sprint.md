@@ -255,6 +255,19 @@ Validate TD-06 by confirming:
 2) The app boots and behaves the same.
 3) `npm run typecheck` and `npm run test:e2e` pass.
 
+**Validation (2026-03-05)**
+- Confirmed `client/src/i18n.ts` and `client/src/main.tsx` exist and `client/src/main.tsx` imports `./i18n`.
+- `npm run typecheck`: pass.
+- `npm run test:e2e`: pass.
+
+**Notes (2026-03-05)**
+- Converted `client/src/i18n.js` to `client/src/i18n.ts` and `client/src/main.jsx` to `client/src/main.tsx`.
+- Updated `client/index.html` to load `/src/main.tsx`.
+- Preserved existing i18n setup and query client bootstrapping behavior.
+
+**Validation (2026-03-05)**
+- Not run (not requested in this session): `npm run typecheck`, `npm run test:e2e`.
+
 ---
 
 ### TD-07: Standardize Client/Server Error Handling
