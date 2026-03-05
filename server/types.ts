@@ -31,7 +31,13 @@ export type RoleRequirement = AllianceRole | "app_admin";
 export type RouteContext = {
   db: Database;
   ok: (res: Response, data: unknown, status?: number) => void;
-  fail: (res: Response, status: number, message: string) => void;
+  fail: (
+    res: Response,
+    status: number,
+    message: string,
+    code?: string,
+    details?: Record<string, unknown> | null
+  ) => void;
   crypto: typeof import("node:crypto");
   APP_BASE_URL: string;
   DISCORD_CLIENT_ID: string;
@@ -39,25 +45,63 @@ export type RouteContext = {
   DISCORD_REDIRECT_URI: string;
   SESSION_TTL_MS: number;
   isProduction: boolean;
-  parseMemberPayload: (body: unknown) => { ok: true; data: Member } | { ok: false; error: string };
+  parseMemberPayload: (
+    body: unknown
+  ) => { ok: true; data: Member } | { ok: false; error: string; code?: string };
   parseBearPayload: (
     body: unknown
-  ) => { ok: true; data: { playerId: string; playerName: string; rallySize: number } } | { ok: false; error: string };
+  ) =>
+    | { ok: true; data: { playerId: string; playerName: string; rallySize: number } }
+    | { ok: false; error: string; code?: string };
   parseAllianceCreatePayload: (
     body: unknown
-  ) => { ok: true; data: { tag: string; name: string } } | { ok: false; error: string };
+  ) =>
+    | { ok: true; data: { tag: string; name: string } }
+    | { ok: false; error: string; code?: string };
   parsePlayerLookupPayload: (
     body: unknown
-  ) => { ok: true; data: { fid: string } } | { ok: false; error: string };
+  ) => { ok: true; data: { fid: string } } | { ok: false; error: string; code?: string };
   parseProfileCreatePayload: (
     body: unknown
-  ) => { ok: true; data: { playerId: string; playerName?: string; playerAvatar?: string; kingdomId?: number; allianceId?: string; troopCount?: number; marchCount?: number; power?: number; rallySize?: number } } | { ok: false; error: string };
+  ) =>
+    | {
+        ok: true;
+        data: {
+          playerId: string;
+          playerName?: string;
+          playerAvatar?: string;
+          kingdomId?: number;
+          allianceId?: string;
+          troopCount?: number;
+          marchCount?: number;
+          power?: number;
+          rallySize?: number;
+        };
+      }
+    | { ok: false; error: string; code?: string };
   parseProfileUpdatePayload: (
     body: unknown
-  ) => { ok: true; data: { playerId?: string; playerName?: string; playerAvatar?: string; kingdomId?: number | null; allianceId?: string | null; troopCount?: number | null; marchCount?: number | null; power?: number | null; rallySize?: number | null } } | { ok: false; error: string };
+  ) =>
+    | {
+        ok: true;
+        data: {
+          playerId?: string;
+          playerName?: string;
+          playerAvatar?: string;
+          kingdomId?: number | null;
+          allianceId?: string | null;
+          troopCount?: number | null;
+          marchCount?: number | null;
+          power?: number | null;
+          rallySize?: number | null;
+        };
+      }
+    | { ok: false; error: string; code?: string };
   parseAllianceProfileUpdatePayload: (
     body: unknown
-  ) => { ok: true; data: { action?: string; status?: string; role?: string } } | { ok: false; error: string };
+  ) =>
+    | { ok: true; data: { action?: string; status?: string; role?: string } }
+    | { ok: false; error: string; code?: string };
   generateAssignments: (members: Member[]) => AssignmentResult;
   buildPlayerLookupPayload: (fid: string | number, now?: number) => {
     fid: string;

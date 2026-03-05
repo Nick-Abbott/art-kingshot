@@ -31,7 +31,7 @@ export default function membersRoutes(ctx: RouteContext) {
       }
       const parsed = ctx.parseMemberPayload(req.body);
       if (!parsed.ok) {
-        ctx.fail(res, 400, parsed.error);
+        ctx.fail(res, 400, parsed.error, parsed.code);
         return;
       }
       const normalized = parsed.data;

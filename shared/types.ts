@@ -3,9 +3,15 @@ export type ApiSuccess<T> = {
   data: T;
 };
 
+export type ApiErrorPayload = {
+  message: string;
+  code?: string;
+  details?: Record<string, unknown> | null;
+};
+
 export type ApiFailure = {
   ok: false;
-  error: string;
+  error: ApiErrorPayload;
 };
 
 export type ApiResponse<T> = ApiSuccess<T> | ApiFailure;
@@ -164,6 +170,7 @@ export type AssignmentMember = {
 export type AssignmentResult = {
   members: AssignmentMember[];
   warnings: string[];
+  warningCodes?: string[];
 };
 
 export type ResultsPayload = {

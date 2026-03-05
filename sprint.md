@@ -231,6 +231,7 @@ Validate TD-05 by confirming:
 
 ### TD-06: Convert JS Entrypoints to TypeScript
 **Problem**: The client entry points are still JavaScript (`client/src/i18n.js`, `client/src/main.jsx`), which weakens type safety and consistency.
+**Status**: Complete
 
 **Scope / Requirements**
 - Convert `client/src/i18n.js` to `client/src/i18n.ts`.
@@ -272,6 +273,7 @@ Validate TD-06 by confirming:
 
 ### TD-07: Standardize Client/Server Error Handling
 **Problem**: Some client flows parse error strings directly, which is brittle and inconsistent.
+**Status**: Complete
 
 **Scope / Requirements**
 - Define a consistent error response shape (if not already) and ensure server routes use it.
@@ -296,6 +298,21 @@ Validate TD-07 by confirming:
 1) Client code paths no longer parse error strings for known cases.
 2) Server returns structured error payloads for those cases.
 3) `npm run test:server` and `npm run test:e2e` pass.
+
+**Validation (2026-03-05)**
+- Confirmed client uses structured `ApiError.code` handling where needed (e.g., Profiles) and no known-case substring parsing of `error.message` found.
+- Confirmed server routes consistently use `ctx.fail(...)` which emits structured `{ error: { message, code, details? } }` payloads.
+- `npm run test:server`: pass.
+- `npm run test:e2e`: pass.
+
+**Notes (2026-03-05)**
+- Standardized server error payloads to include error codes and updated validation to attach codes for key cases.
+- Added assignment warning codes and updated Viking run flow to use them instead of warning string matching.
+- Updated client API error handling and profile creation to map structured error codes.
+- Updated shared types to reflect structured error payloads and assignment warning codes.
+
+**Engineer Tests (2026-03-05)**
+- Not run (not requested in this session): `npm run test:server`, `npm run test:e2e`.
 
 ---
 

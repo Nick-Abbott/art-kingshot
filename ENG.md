@@ -32,3 +32,15 @@ If you cannot run a command, state what was skipped and why, and list risks.
 - Implement the story’s scope and success criteria.
 - Report changes with file references.
 - Provide test results (or note skips).
+
+## Sprint Notes Format
+To avoid confusion between engineer updates and QA validation, use this exact structure when updating `sprint.md`:
+
+- **Engineer Update (YYYY-MM-DD)**: concise bullet list of code changes.
+- **Engineer Tests (YYYY-MM-DD)**: list each command with `pass` / `fail` / `not run` and a short reason for skips.
+
+Do not add a “Validation” section as the engineer. QA owns the Validation section.
+
+## Cross-Check Requirement
+Before you start work on a story (even if it’s already in context), check `sprint.md` for the latest **QA Validation** entries for that story.
+If QA has open issues or regressions listed, address them explicitly in your update and tests section.

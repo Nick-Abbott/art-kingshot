@@ -116,7 +116,7 @@ export default function adminRoutes(ctx: RouteContext) {
 
       const parsed = ctx.parseAllianceProfileUpdatePayload(req.body);
       if (!parsed.ok) {
-        ctx.fail(res, 400, parsed.error);
+        ctx.fail(res, 400, parsed.error, parsed.code);
         return;
       }
       const body = parsed.data;

@@ -59,7 +59,7 @@ export default function bearRoutes(ctx: RouteContext) {
       }
       const parsed = ctx.parseBearPayload(req.body);
       if (!parsed.ok) {
-        ctx.fail(res, 400, parsed.error);
+        ctx.fail(res, 400, parsed.error, parsed.code);
         return;
       }
       const { playerId, playerName, rallySize } = parsed.data;

@@ -1,10 +1,16 @@
+type ApiErrorDetails = Record<string, unknown> | null | undefined;
+
 export class ApiError extends Error {
   status: number;
+  code?: string;
+  details?: ApiErrorDetails;
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, code?: string, details?: ApiErrorDetails) {
     super(message);
     this.name = "ApiError";
     this.status = status;
+    this.code = code;
+    this.details = details;
   }
 }
 
@@ -70,15 +76,27 @@ export async function apiFetch<TData = unknown>(
 
   if (!res.ok && !allowNonOk) {
     let message = "Request failed.";
+    let code: string | undefined;
+    let details: ApiErrorDetails;
     if (data && typeof data === "object" && "error" in data) {
       const maybeError = (data as { error?: unknown }).error;
       if (typeof maybeError === "string" && maybeError) {
         message = maybeError;
+      } else if (maybeError && typeof maybeError === "object") {
+        if ("message" in maybeError && typeof maybeError.message === "string") {
+          message = maybeError.message;
+        }
+        if ("code" in maybeError && typeof maybeError.code === "string") {
+          code = maybeError.code;
+        }
+        if ("details" in maybeError) {
+          details = (maybeError as { details?: ApiErrorDetails }).details;
+        }
       }
     } else if (typeof data === "string" && data) {
       message = data;
     }
-    throw new ApiError(message, res.status);
+    throw new ApiError(message, res.status, code, details);
   }
 
   return { ok: res.ok, status: res.status, data: data as TData };

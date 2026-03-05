@@ -140,12 +140,11 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
           return;
         }
         if (createError.status === 400) {
-          const message = createError.message.toLowerCase();
-          if (message.includes("alliance")) {
+          if (createError.code === "profile_invalid_alliance") {
             setError(t("profiles.errors.invalidAlliance"));
             return;
           }
-          if (message.includes("playerid")) {
+          if (createError.code === "profile_player_id_required") {
             setError(t("profiles.errors.playerIdRequired"));
             return;
           }

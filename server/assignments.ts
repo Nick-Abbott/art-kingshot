@@ -120,35 +120,59 @@ function pickLowestIncomingTarget(
 
 function validateMembers(members: Member[]) {
   const warnings: string[] = [];
+  const warningCodes: string[] = [];
+
+  const pushWarning = (message: string, code: string) => {
+    warnings.push(message);
+    warningCodes.push(code);
+  };
 
   if (!Array.isArray(members) || members.length < 2) {
-    warnings.push("Need at least 2 members to generate assignments.");
-    return { warnings, validMembers: [] };
+    pushWarning(
+      "Need at least 2 members to generate assignments.",
+      "assignments_need_members"
+    );
+    return { warnings, warningCodes, validMembers: [] };
   }
 
   const validMembers = members.filter((member) => {
     if (!member.playerId || typeof member.playerId !== "string") {
-      warnings.push("Skipped a member with invalid playerId.");
+      pushWarning(
+        "Skipped a member with invalid playerId.",
+        "assignments_invalid_player_id"
+      );
       return false;
     }
     if (!Number.isFinite(member.troopCount) || member.troopCount <= 0) {
-      warnings.push(`Skipped ${member.playerId} with invalid troop count.`);
+      pushWarning(
+        `Skipped ${member.playerId} with invalid troop count.`,
+        "assignments_invalid_troop_count"
+      );
       return false;
     }
     if (!Number.isFinite(member.marchCount) || member.marchCount <= 0) {
-      warnings.push(`Skipped ${member.playerId} with invalid march count.`);
+      pushWarning(
+        `Skipped ${member.playerId} with invalid march count.`,
+        "assignments_invalid_march_count"
+      );
       return false;
     }
     if (!Number.isFinite(member.power) || member.power <= 0) {
-      warnings.push(`Skipped ${member.playerId} with invalid power.`);
+      pushWarning(
+        `Skipped ${member.playerId} with invalid power.`,
+        "assignments_invalid_power"
+      );
       return false;
     }
     return true;
   });
 
   if (validMembers.length < 2) {
-    warnings.push("Not enough valid members to build assignments.");
-    return { warnings, validMembers };
+    pushWarning(
+      "Not enough valid members to build assignments.",
+      "assignments_not_enough_valid"
+    );
+    return { warnings, warningCodes, validMembers };
   }
 
   for (const member of validMembers) {
@@ -162,13 +186,14 @@ function validateMembers(members: Member[]) {
         })
     );
     if (maxFromOthers < NEED_PER_CITY) {
-      warnings.push(
-        `City ${member.playerId} may not reach 200k with current troops.`
+      pushWarning(
+        `City ${member.playerId} may not reach 200k with current troops.`,
+        "assignments_city_under_200k"
       );
     }
   }
 
-  return { warnings, validMembers };
+  return { warnings, warningCodes, validMembers };
 }
 
 function medianPower(members: Member[]): number {
@@ -190,11 +215,12 @@ function annotateWhales(members: Member[]): AnnotatedMember[] {
 }
 
 function generateAssignments(members: Member[]): AssignmentResult {
-  const { warnings, validMembers } = validateMembers(members);
+  const { warnings, warningCodes, validMembers } = validateMembers(members);
   if (validMembers.length < 2) {
     return {
       members: [],
       warnings,
+      warningCodes,
     };
   }
 
@@ -505,12 +531,14 @@ function generateAssignments(members: Member[]): AssignmentResult {
       warnings.push(
         `City ${member.playerId} did not reach ${NEED_PER_CITY} reinforcements.`
       );
+      warningCodes.push("assignments_city_below_requirement");
     }
   }
 
   return {
     members: result,
     warnings,
+    warningCodes,
   };
 }
 

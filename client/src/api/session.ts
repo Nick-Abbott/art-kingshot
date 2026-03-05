@@ -6,6 +6,16 @@ type SessionResponse = ApiResponse<SessionPayload> | { error?: unknown } | strin
 const hasErrorField = (value: unknown): value is { error?: unknown } =>
   Boolean(value && typeof value === "object" && "error" in value);
 
+const resolveErrorMessage = (value: unknown): string => {
+  if (typeof value === "string" && value) return value;
+  if (value && typeof value === "object") {
+    if ("message" in value && typeof value.message === "string") {
+      return value.message;
+    }
+  }
+  return "Failed to load session.";
+};
+
 export async function fetchSession() {
   const res = await apiFetch<SessionResponse>("/api/me", { allowNonOk: true });
   if (res.status === 401) {
@@ -14,7 +24,7 @@ export async function fetchSession() {
   if (!res.ok) {
     const errorMessage =
       hasErrorField(res.data)
-        ? String(res.data.error || "Failed to load session.")
+        ? resolveErrorMessage(res.data.error)
         : "Failed to load session.";
     return { status: res.status, error: errorMessage };
   }
@@ -24,7 +34,7 @@ export async function fetchSession() {
       status: res.status,
       error:
         payload && typeof payload === "object" && "ok" in payload && payload.ok === false
-          ? payload.error
+          ? resolveErrorMessage(payload.error)
           : "Failed to load session."
     };
   }

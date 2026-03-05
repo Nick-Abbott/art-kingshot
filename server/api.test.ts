@@ -6,6 +6,7 @@ import * as fs from "node:fs";
 import * as crypto from "node:crypto";
 import Database from "better-sqlite3";
 import { createApp } from "./index";
+import type { ApiErrorPayload } from "../shared/types";
 
 type ServerHandle = {
   httpServer: import("node:http").Server;
@@ -15,7 +16,7 @@ type ServerHandle = {
 type ApiPayload = {
   ok: boolean;
   data: unknown;
-  error?: string;
+  error?: ApiErrorPayload;
 };
 
 function startServer(): Promise<ServerHandle> {

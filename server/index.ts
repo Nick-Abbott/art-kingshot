@@ -73,7 +73,10 @@ export function createApp({ dbPath: dbPathOverride }: { dbPath?: string } = {}) 
       return true;
     }
     if (entry.count >= max) {
-      res.status(429).json({ ok: false, error: "Too many requests." });
+      res.status(429).json({
+        ok: false,
+        error: { message: "Too many requests.", code: "rate_limited" },
+      });
       return false;
     }
     entry.count += 1;
@@ -105,8 +108,36 @@ export function createApp({ dbPath: dbPathOverride }: { dbPath?: string } = {}) 
     res.status(status).json({ ok: true, data });
   }
 
-  function fail(res: Response, status: number, message: string): void {
-    res.status(status).json({ ok: false, error: message });
+  function fail(
+    res: Response,
+    status: number,
+    message: string,
+    code?: string,
+    details?: Record<string, unknown> | null
+  ): void {
+    const normalizedCode =
+      code ||
+      (status >= 500
+        ? "server_error"
+        : status === 429
+          ? "rate_limited"
+          : status === 401
+            ? "unauthorized"
+            : status === 403
+              ? "forbidden"
+              : status === 404
+                ? "not_found"
+                : status === 409
+                  ? "conflict"
+                  : "bad_request");
+    res.status(status).json({
+      ok: false,
+      error: {
+        message,
+        code: normalizedCode,
+        ...(details ? { details } : {}),
+      },
+    });
   }
 
   function serializeCookie(

@@ -31,7 +31,7 @@ describe("apiFetch", () => {
 
   it("throws ApiError on non-ok response", async () => {
     const fetchSpy = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ error: "Bad" }), {
+      new Response(JSON.stringify({ error: { message: "Bad", code: "bad_request" } }), {
         status: 400,
         headers: { "content-type": "application/json" }
       })
@@ -40,13 +40,14 @@ describe("apiFetch", () => {
 
     await expect(apiFetch("/api/test")).rejects.toBeInstanceOf(ApiError);
     await expect(apiFetch("/api/test")).rejects.toMatchObject({
-      status: 400
+      status: 400,
+      code: "bad_request"
     });
   });
 
   it("returns non-ok payload when allowNonOk is true", async () => {
     const fetchSpy = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ error: "Bad" }), {
+      new Response(JSON.stringify({ error: { message: "Bad", code: "bad_request" } }), {
         status: 400,
         headers: { "content-type": "application/json" }
       })
@@ -56,6 +57,6 @@ describe("apiFetch", () => {
     const res = await apiFetch("/api/test", { allowNonOk: true });
     expect(res.ok).toBe(false);
     expect(res.status).toBe(400);
-    expect(res.data).toMatchObject({ error: "Bad" });
+    expect(res.data).toMatchObject({ error: { message: "Bad", code: "bad_request" } });
   });
 });

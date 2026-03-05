@@ -336,11 +336,11 @@ function VikingVengeance({ profileId, profile, canManage }: Props) {
     try {
       const result = await run();
 
-      if (result?.warnings && result.warnings.length > 0) {
-        const notEnoughMembers = result.warnings.some(
-          (w) =>
-            w.includes("Need at least 2 members") ||
-            w.includes("Not enough valid members")
+      if (result?.warningCodes && result.warningCodes.length > 0) {
+        const notEnoughMembers = result.warningCodes.some(
+          (code) =>
+            code === "assignments_need_members" ||
+            code === "assignments_not_enough_valid"
         );
         if (notEnoughMembers) {
           throw new Error(t("viking.errors.needMembers"));

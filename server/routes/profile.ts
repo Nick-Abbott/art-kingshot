@@ -66,7 +66,7 @@ export default function profileRoutes(ctx: RouteContext) {
 
     const parsed = ctx.parseAllianceCreatePayload(req.body);
     if (!parsed.ok) {
-      ctx.fail(res, 400, parsed.error);
+      ctx.fail(res, 400, parsed.error, parsed.code);
       return;
     }
     const { tag, name } = parsed.data;
@@ -157,7 +157,7 @@ export default function profileRoutes(ctx: RouteContext) {
     }
     const parsed = ctx.parseProfileCreatePayload(req.body);
     if (!parsed.ok) {
-      ctx.fail(res, 400, parsed.error);
+      ctx.fail(res, 400, parsed.error, parsed.code);
       return;
     }
     const {
@@ -222,7 +222,7 @@ export default function profileRoutes(ctx: RouteContext) {
     if (allianceId) {
       const alliance = ctx.getAllianceById(allianceId);
       if (!alliance) {
-        ctx.fail(res, 400, "Alliance not found.");
+        ctx.fail(res, 400, "Alliance not found.", "profile_invalid_alliance");
         return;
       }
     }
@@ -280,7 +280,7 @@ export default function profileRoutes(ctx: RouteContext) {
       }
       const parsed = ctx.parseProfileCreatePayload(req.body);
       if (!parsed.ok) {
-        ctx.fail(res, 400, parsed.error);
+        ctx.fail(res, 400, parsed.error, parsed.code);
         return;
       }
       const { playerId, playerName, kingdomId } = parsed.data;
@@ -292,7 +292,7 @@ export default function profileRoutes(ctx: RouteContext) {
 
       const alliance = ctx.getAllianceById(allianceId);
       if (alliance && Number.isFinite(kingdomId) && alliance.kingdomId !== kingdomId) {
-        ctx.fail(res, 400, "Kingdom does not match alliance.");
+        ctx.fail(res, 400, "Kingdom does not match alliance.", "profile_kingdom_mismatch");
         return;
       }
 
@@ -353,7 +353,7 @@ export default function profileRoutes(ctx: RouteContext) {
 
       const parsed = ctx.parseProfileUpdatePayload(req.body);
       if (!parsed.ok) {
-        ctx.fail(res, 400, parsed.error);
+        ctx.fail(res, 400, parsed.error, parsed.code);
         return;
       }
       const payload = parsed.data;
@@ -410,7 +410,7 @@ export default function profileRoutes(ctx: RouteContext) {
         if (allianceId) {
           const alliance = ctx.getAllianceById(allianceId);
           if (!alliance) {
-            ctx.fail(res, 400, "Alliance not found.");
+            ctx.fail(res, 400, "Alliance not found.", "profile_invalid_alliance");
             return;
           }
         }
@@ -481,7 +481,7 @@ export default function profileRoutes(ctx: RouteContext) {
 
       const parsed = ctx.parseAllianceProfileUpdatePayload(req.body);
       if (!parsed.ok) {
-        ctx.fail(res, 400, parsed.error);
+        ctx.fail(res, 400, parsed.error, parsed.code);
         return;
       }
       const body = parsed.data;
@@ -539,7 +539,7 @@ export default function profileRoutes(ctx: RouteContext) {
       }
       const parsed = ctx.parsePlayerLookupPayload(req.body);
       if (!parsed.ok) {
-        ctx.fail(res, 400, parsed.error);
+        ctx.fail(res, 400, parsed.error, parsed.code);
         return;
       }
       const { fid } = parsed.data;

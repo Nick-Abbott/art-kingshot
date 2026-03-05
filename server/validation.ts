@@ -3,7 +3,7 @@ import type { Member } from "../shared/types";
 
 type ParseResult<T> =
   | { ok: true; data: T }
-  | { ok: false; error: string };
+  | { ok: false; error: string; code?: string };
 
 const MemberPayloadSchema = z.object({
   playerId: z.string(),
@@ -26,7 +26,7 @@ export function parseMemberPayload(payload: unknown): ParseResult<Member> {
   const power = parsed.data.power;
 
   if (!playerId) {
-    return { ok: false, error: "playerId is required." };
+    return { ok: false, error: "playerId is required.", code: "player_id_required" };
   }
   if (!Number.isFinite(troopCount) || troopCount <= 0) {
     return { ok: false, error: "troopCount must be a positive number." };
@@ -63,7 +63,7 @@ export function parseBearPayload(
   const rallySize = parsed.data.rallySize;
 
   if (!playerId) {
-    return { ok: false, error: "playerId is required." };
+    return { ok: false, error: "playerId is required.", code: "player_id_required" };
   }
   if (!Number.isFinite(rallySize) || rallySize <= 0) {
     return { ok: false, error: "rallySize must be a positive number." };
@@ -112,7 +112,7 @@ export function parsePlayerLookupPayload(
 
   const fid = parsed.data.fid.trim();
   if (!fid) {
-    return { ok: false, error: "fid is required." };
+    return { ok: false, error: "fid is required.", code: "fid_required" };
   }
 
   return { ok: true, data: { fid } };
@@ -148,7 +148,11 @@ export function parseProfileCreatePayload(payload: unknown): ParseResult<{
 
   const playerId = parsed.data.playerId.trim();
   if (!playerId) {
-    return { ok: false, error: "playerId is required." };
+    return {
+      ok: false,
+      error: "playerId is required.",
+      code: "profile_player_id_required"
+    };
   }
 
   return {
