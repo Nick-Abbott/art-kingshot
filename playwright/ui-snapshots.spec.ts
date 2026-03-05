@@ -221,25 +221,22 @@ async function snapshotPage(
     { pageKey: options.pageKey, selectedProfileId: options.selectedProfileId }
   );
 
-  await page.goto(CLIENT_URL, { waitUntil: "networkidle" });
-  await page.waitForTimeout(400);
+  await page.goto(CLIENT_URL, { waitUntil: "domcontentloaded" });
+  await page.locator(".app-shell").waitFor({ state: "visible", timeout: 10000 });
 
   if (options.openNav) {
     const navToggle = page.getByTestId("nav-toggle");
     if (await navToggle.isVisible()) {
       await navToggle.click({ force: true });
-      await page.waitForTimeout(150);
-      await page
-        .getByTestId("profile-switcher")
-        .waitFor({ state: "visible", timeout: 2000 });
+      await page.getByTestId("profile-switcher").waitFor({ state: "visible" });
     }
   }
 
   if (options.openProfileMenu) {
     const trigger = page.getByTestId("profile-switcher");
-    await trigger.waitFor({ state: "visible", timeout: 2000 });
+    await trigger.waitFor({ state: "visible" });
     await trigger.click();
-    await page.waitForTimeout(150);
+    await page.getByRole("menu").waitFor({ state: "visible" });
   }
 
   const fileName = `${name}-${test.info().project.name}.png`;
