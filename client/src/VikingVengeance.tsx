@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ApiError } from "./apiClient";
 import { lookupPlayer } from "./api/playerLookup";
@@ -41,6 +41,10 @@ type Props = {
 
 type AssignmentMember = AssignmentResult["members"][number];
 
+function normalize(value: string) {
+  return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
 function VikingVengeance({ profileId, profile, canManage }: Props) {
   const { t } = useTranslation();
   const [form, setForm] = useState<VikingForm>(emptyForm);
@@ -57,7 +61,10 @@ function VikingVengeance({ profileId, profile, canManage }: Props) {
   const updateProfileMutation = useUpdateProfileMutation();
   const queryClient = useQueryClient();
   const eligibleMembersQuery = useEligibleMembersQuery(profileId, canManage);
-  const eligibleMembers = eligibleMembersQuery.data || [];
+  const eligibleMembers = useMemo(
+    () => eligibleMembersQuery.data ?? [],
+    [eligibleMembersQuery.data]
+  );
   const adminOptions = useMemo(() => {
     const options: { playerId: string; playerName: string }[] = [];
     if (profile?.playerId) {
@@ -82,11 +89,7 @@ function VikingVengeance({ profileId, profile, canManage }: Props) {
     return [...members].sort((a, b) => a.playerId.localeCompare(b.playerId));
   }, [members]);
 
-  function normalize(value: string) {
-    return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-  }
-
-  function fuzzyScore(query: string, text: string) {
+  const fuzzyScore = useCallback((query: string, text: string) => {
     if (!query) return 0;
     const q = normalize(query);
     const tValue = normalize(text);
@@ -103,7 +106,7 @@ function VikingVengeance({ profileId, profile, canManage }: Props) {
     }
     if (qi < q.length) return null;
     return score;
-  }
+  }, []);
 
   const filteredResults = useMemo(() => {
     if (!results?.members) return [];
@@ -120,7 +123,7 @@ function VikingVengeance({ profileId, profile, canManage }: Props) {
       )
       .sort((a, b) => b.score - a.score);
     return scored.map((item) => item.member);
-  }, [results, searchQuery]);
+  }, [fuzzyScore, results, searchQuery]);
 
   const searchSuggestions = useMemo(() => {
     if (!results?.members) return [];
@@ -143,7 +146,7 @@ function VikingVengeance({ profileId, profile, canManage }: Props) {
       if (suggestions.length >= 5) break;
     }
     return suggestions;
-  }, [results, searchQuery]);
+  }, [fuzzyScore, results, searchQuery]);
 
   const topSuggestion = searchSuggestions[0] || "";
   const suggestionTail =
@@ -313,8 +316,14 @@ function VikingVengeance({ profileId, profile, canManage }: Props) {
       setForm(emptyForm);
       setLookupStatus("");
       setEditingMember(null);
-    } catch (submitError: any) {
-      setError(submitError.message);
+    } catch (submitError) {
+      if (submitError instanceof ApiError && submitError.status === 403) {
+        setError(t("auth.notAuthorizedAction"));
+      } else if (submitError instanceof Error) {
+        setError(submitError.message);
+      } else {
+        setError(String(submitError));
+      }
     } finally {
       setBusy(false);
     }
@@ -404,11 +413,13 @@ function VikingVengeance({ profileId, profile, canManage }: Props) {
       }
 
       setError("");
-    } catch (err: any) {
+    } catch (err) {
       if (err instanceof ApiError && err.status === 403) {
         setError(t("auth.notAuthorizedAction"));
-      } else {
+      } else if (err instanceof Error) {
         setError(err.message);
+      } else {
+        setError(String(err));
       }
     } finally {
       setBusy(false);
@@ -434,11 +445,13 @@ function VikingVengeance({ profileId, profile, canManage }: Props) {
       setLookupStatus("");
       setSearchQuery("");
       setError("");
-    } catch (err: any) {
+    } catch (err) {
       if (err instanceof ApiError && err.status === 403) {
         setError(t("auth.notAuthorizedAction"));
-      } else {
+      } else if (err instanceof Error) {
         setError(err.message);
+      } else {
+        setError(String(err));
       }
     } finally {
       setBusy(false);
@@ -461,11 +474,13 @@ function VikingVengeance({ profileId, profile, canManage }: Props) {
         queryKey: eligibleMembersQueryKey(profileId)
       });
       setError("");
-    } catch (err: any) {
+    } catch (err) {
       if (err instanceof ApiError && err.status === 403) {
         setError(t("auth.notAuthorizedAction"));
-      } else {
+      } else if (err instanceof Error) {
         setError(err.message);
+      } else {
+        setError(String(err));
       }
     } finally {
       setBusy(false);

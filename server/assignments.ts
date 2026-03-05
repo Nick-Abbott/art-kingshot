@@ -180,19 +180,13 @@ function medianPower(members: Member[]): number {
   return sorted[mid];
 }
 
-function annotateWhales(
-  members: Member[]
-): { median: number; whaleThreshold: number; members: AnnotatedMember[] } {
+function annotateWhales(members: Member[]): AnnotatedMember[] {
   const median = medianPower(members);
   const whaleThreshold = median * WHALE_MULTIPLIER;
-  return {
-    median,
-    whaleThreshold,
-    members: members.map((member) => ({
-      ...member,
-      whale: member.power >= whaleThreshold,
-    })),
-  };
+  return members.map((member) => ({
+    ...member,
+    whale: member.power >= whaleThreshold,
+  }));
 }
 
 function generateAssignments(members: Member[]): AssignmentResult {
@@ -204,8 +198,7 @@ function generateAssignments(members: Member[]): AssignmentResult {
     };
   }
 
-  const { members: annotated, median, whaleThreshold } =
-    annotateWhales(validMembers);
+  const annotated = annotateWhales(validMembers);
   const needs = new Map<string, number>();
   const outgoing = new Map<string, AssignmentOutgoingEntry[]>();
   const incoming = buildEmptyIncoming(annotated);
@@ -359,7 +352,7 @@ function generateAssignments(members: Member[]): AssignmentResult {
   while (progress) {
     progress = false;
     const targets = Array.from(needs.entries())
-      .filter(([playerId, need]) => need > 0)
+      .filter(([_playerId, need]) => need > 0)
       .map(([playerId]) => playerId)
       .sort((aId, bId) => {
         const aNeed = needs.get(aId) || 0;

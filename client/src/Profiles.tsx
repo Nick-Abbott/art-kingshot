@@ -109,7 +109,7 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
       playerAvatar = parsed.avatar || "";
       kingdomId = parsed.kingdomId;
       setLookupStatus(t("profiles.lookupFound", { name: playerName }));
-    } catch (lookupError) {
+    } catch {
       setLookupStatus("");
       setError(t("profiles.errors.lookupFailed"));
       return;
@@ -176,7 +176,7 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
       playerName = parsed.playerName;
       kingdomId = parsed.kingdomId;
       setAddLookupStatus(t("profiles.lookupFound", { name: playerName }));
-    } catch (lookupError) {
+    } catch {
       setAddLookupStatus("");
       setAddPlayerError(t("profiles.errors.lookupFailed"));
       return;

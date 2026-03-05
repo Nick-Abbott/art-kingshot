@@ -30,9 +30,9 @@ function Admin({ isAppAdmin }: Props) {
   const profilesQuery = useAdminAllianceProfilesQuery(selectedAllianceId, isAppAdmin);
   const allianceProfileMutation = useAdminAllianceProfileMutation(selectedAllianceId);
   const deleteAllianceMutation = useAdminDeleteAllianceMutation(selectedKingdom);
-  const kingdoms = kingdomsQuery.data || [];
-  const alliances = alliancesQuery.data || [];
-  const profiles = profilesQuery.data || [];
+  const kingdoms = useMemo(() => kingdomsQuery.data ?? [], [kingdomsQuery.data]);
+  const alliances = useMemo(() => alliancesQuery.data ?? [], [alliancesQuery.data]);
+  const profiles = useMemo(() => profilesQuery.data ?? [], [profilesQuery.data]);
   const loading = profilesQuery.isLoading;
   const profilesError =
     profilesQuery.isError && selectedAllianceId ? t("admin.loadFailed") : "";
@@ -104,7 +104,7 @@ function Admin({ isAppAdmin }: Props) {
       if (!profile) {
         setProfileLookupError(t("admin.profileLookup.notFound"));
       }
-    } catch (err) {
+    } catch {
       setProfileLookupError(t("admin.profileLookup.error"));
       setProfileLookupResult(null);
     }
@@ -122,7 +122,7 @@ function Admin({ isAppAdmin }: Props) {
       } else {
         setProfileLookupError(t("admin.profileLookup.error"));
       }
-    } catch (err) {
+    } catch {
       setProfileLookupError(t("admin.profileLookup.error"));
     }
   }

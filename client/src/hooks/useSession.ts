@@ -27,7 +27,7 @@ export function useSession() {
       setUser(res.data?.user || null);
       setProfiles(res.data?.profiles || []);
       setStatus("authenticated");
-    } catch (err) {
+    } catch {
       setError("Failed to load session.");
       setStatus("unauthenticated");
     }

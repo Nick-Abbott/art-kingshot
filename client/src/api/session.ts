@@ -7,7 +7,11 @@ export async function fetchSession() {
     return { status: 401 };
   }
   if (!res.ok) {
-    return { status: res.status, error: res.data?.error || "Failed to load session." };
+    const errorMessage =
+      res.data && typeof res.data === "object" && "error" in res.data
+        ? String((res.data as { error?: unknown }).error || "Failed to load session.")
+        : "Failed to load session.";
+    return { status: res.status, error: errorMessage };
   }
   const payload = res.data as ApiResponse<SessionPayload>;
   if (!payload || payload.ok === false) {

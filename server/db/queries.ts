@@ -3,7 +3,6 @@ import type {
   Alliance,
   BearMember,
   EligibleMember,
-  Member,
   Profile,
   User,
 } from "../../shared/types";

@@ -12,6 +12,12 @@ type ServerHandle = {
   port: number;
 };
 
+type ApiPayload = {
+  ok: boolean;
+  data: unknown;
+  error?: string;
+};
+
 function startServer(): Promise<ServerHandle> {
   return new Promise((resolve, reject) => {
     const app = createApp({ dbPath: process.env.DB_PATH });
@@ -29,7 +35,7 @@ function startServer(): Promise<ServerHandle> {
 
 type JsonResponse = {
   status: number | undefined;
-  data: any;
+  data: ApiPayload;
   headers: import("node:http").IncomingHttpHeaders;
 };
 
@@ -59,7 +65,11 @@ function requestJson(
           } catch {
             parsed = data;
           }
-          resolve({ status: res.statusCode, data: parsed, headers: res.headers });
+          resolve({
+            status: res.statusCode,
+            data: parsed as ApiPayload,
+            headers: res.headers
+          });
         });
       }
     );
@@ -76,6 +86,10 @@ function tmpDbPath() {
   fs.mkdirSync(baseDir, { recursive: true });
   const dir = fs.mkdtempSync(path.join(baseDir, "test-"));
   return path.join(dir, "test.sqlite");
+}
+
+function getPayload<T>(response: JsonResponse): T {
+  return response.data.data as T;
 }
 
 function createSessionCookie(
@@ -116,9 +130,10 @@ test("session auth allows access and enforces profile requirement", async () => 
   try {
     const headers = { Cookie: createSessionCookie(dbPath) };
     const me = await requestJson(port, "GET", "/api/me", headers);
+    const mePayload = getPayload<{ profiles: unknown[] }>(me);
     assert.equal(me.status, 200);
     assert.equal(me.data.ok, true);
-    assert.ok(Array.isArray(me.data.data.profiles));
+    assert.ok(Array.isArray(mePayload.profiles));
 
     const missingProfile = await requestJson(
       port,
@@ -148,7 +163,8 @@ test("alliance admin required for destructive endpoints", async () => {
       JSON.stringify({ playerId: "FIDTEST", kingdomId: 1459 })
     );
     assert.equal(createProfile.status, 200);
-    const profileId = createProfile.data.data.profile.id;
+    const createProfilePayload = getPayload<{ profile: { id: string } }>(createProfile);
+    const profileId = createProfilePayload.profile.id;
     const createAlliance = await requestJson(
       port,
       "POST",
@@ -157,9 +173,10 @@ test("alliance admin required for destructive endpoints", async () => {
       JSON.stringify({ tag: "ART", name: "ArtsOFwar" })
     );
     assert.equal(createAlliance.status, 200);
+    const createAlliancePayload = getPayload<{ profile: { id: string } }>(createAlliance);
     const profileHeaders = {
       ...headers,
-      "x-profile-id": createAlliance.data.data.profile.id,
+      "x-profile-id": createAlliancePayload.profile.id,
     };
 
     const signupBody = JSON.stringify({
@@ -205,7 +222,8 @@ test("alliance create and delete updates profile", async () => {
       JSON.stringify({ playerId: "FIDCREATE", kingdomId: 1459 })
     );
     assert.equal(createProfile.status, 200);
-    const profileId = createProfile.data.data.profile.id;
+    const createProfilePayload = getPayload<{ profile: { id: string } }>(createProfile);
+    const profileId = createProfilePayload.profile.id;
 
     const createAlliance = await requestJson(
       port,
@@ -215,8 +233,12 @@ test("alliance create and delete updates profile", async () => {
       JSON.stringify({ tag: "XYZ", name: "Test Alliance" })
     );
     assert.equal(createAlliance.status, 200);
-    assert.equal(createAlliance.data.data.alliance.id, "xyz");
-    assert.equal(createAlliance.data.data.profile.role, "alliance_admin");
+    const alliancePayload = getPayload<{
+      alliance: { id: string };
+      profile: { role: string };
+    }>(createAlliance);
+    assert.equal(alliancePayload.alliance.id, "xyz");
+    assert.equal(alliancePayload.profile.role, "alliance_admin");
 
     const deleteAlliance = await requestJson(
       port,
@@ -227,7 +249,10 @@ test("alliance create and delete updates profile", async () => {
     assert.equal(deleteAlliance.status, 200);
 
     const me = await requestJson(port, "GET", "/api/me", headers);
-    const updated = me.data.data.profiles.find(
+    const mePayload = getPayload<{ profiles: Array<{ id: string; allianceId: string | null }> }>(
+      me
+    );
+    const updated = mePayload.profiles.find(
       (p: { id: string }) => p.id === profileId
     );
     assert.ok(updated);
@@ -251,7 +276,10 @@ test("alliance admin can edit other signups, members cannot", async () => {
       { ...headers, "Content-Type": "application/json" },
       JSON.stringify({ playerId: "FIDADMIN", kingdomId: 1459 })
     );
-    const adminProfileId = createAdminProfile.data.data.profile.id;
+    const createAdminPayload = getPayload<{ profile: { id: string } }>(
+      createAdminProfile
+    );
+    const adminProfileId = createAdminPayload.profile.id;
 
     const createAlliance = await requestJson(
       port,
@@ -260,7 +288,8 @@ test("alliance admin can edit other signups, members cannot", async () => {
       { ...headers, "Content-Type": "application/json", "x-profile-id": adminProfileId },
       JSON.stringify({ tag: "ADM", name: "Admin Alliance" })
     );
-    const allianceId = createAlliance.data.data.alliance.id;
+    const createAlliancePayload = getPayload<{ alliance: { id: string } }>(createAlliance);
+    const allianceId = createAlliancePayload.alliance.id;
 
     const createMemberProfile = await requestJson(
       port,
@@ -269,7 +298,10 @@ test("alliance admin can edit other signups, members cannot", async () => {
       { ...headers, "Content-Type": "application/json" },
       JSON.stringify({ playerId: "FIDMEM", kingdomId: 1459 })
     );
-    const memberProfileId = createMemberProfile.data.data.profile.id;
+    const createMemberPayload = getPayload<{ profile: { id: string } }>(
+      createMemberProfile
+    );
+    const memberProfileId = createMemberPayload.profile.id;
 
     await requestJson(
       port,
@@ -369,7 +401,10 @@ test("eligible signup lists return active alliance members not yet signed up", a
       JSON.stringify({ playerId: "FIDADMIN", kingdomId: 1459 })
     );
     assert.equal(createAdminProfile.status, 200);
-    const adminProfileId = createAdminProfile.data.data.profile.id;
+    const adminProfilePayload = getPayload<{ profile: { id: string } }>(
+      createAdminProfile
+    );
+    const adminProfileId = adminProfilePayload.profile.id;
 
     const createAlliance = await requestJson(
       port,
@@ -379,7 +414,8 @@ test("eligible signup lists return active alliance members not yet signed up", a
       JSON.stringify({ tag: "ADM", name: "Admin Alliance" })
     );
     assert.equal(createAlliance.status, 200);
-    const allianceId = createAlliance.data.data.alliance.id;
+    const alliancePayload = getPayload<{ alliance: { id: string } }>(createAlliance);
+    const allianceId = alliancePayload.alliance.id;
 
     const createMemberOne = await requestJson(
       port,
@@ -392,7 +428,8 @@ test("eligible signup lists return active alliance members not yet signed up", a
       })
     );
     assert.equal(createMemberOne.status, 200);
-    const memberOneId = createMemberOne.data.data.profile.id;
+    const memberOnePayload = getPayload<{ profile: { id: string } }>(createMemberOne);
+    const memberOneId = memberOnePayload.profile.id;
 
     const createMemberTwo = await requestJson(
       port,
@@ -405,7 +442,8 @@ test("eligible signup lists return active alliance members not yet signed up", a
       })
     );
     assert.equal(createMemberTwo.status, 200);
-    const memberTwoId = createMemberTwo.data.data.profile.id;
+    const memberTwoPayload = getPayload<{ profile: { id: string } }>(createMemberTwo);
+    const memberTwoId = memberTwoPayload.profile.id;
 
     await requestJson(
       port,
@@ -468,7 +506,10 @@ test("eligible signup lists return active alliance members not yet signed up", a
       "/api/profiles",
       adminHeaders
     );
-    const memberOneProfile = profilesAfterSignup.data.data.profiles.find(
+    const profilesAfterSignupPayload = getPayload<{
+      profiles: Array<{ playerId: string; troopCount: number; marchCount: number; power: number }>;
+    }>(profilesAfterSignup);
+    const memberOneProfile = profilesAfterSignupPayload.profiles.find(
       (profile: { playerId: string }) => profile.playerId === "FIDMEM1"
     );
     assert.ok(memberOneProfile);
@@ -483,9 +524,10 @@ test("eligible signup lists return active alliance members not yet signed up", a
       adminHeaders
     );
     assert.equal(eligibleMembers.status, 200);
-    const eligibleIds = eligibleMembers.data.data.members.map(
-      (m: { playerId: string }) => m.playerId
+    const eligiblePayload = getPayload<{ members: Array<{ playerId: string }> }>(
+      eligibleMembers
     );
+    const eligibleIds = eligiblePayload.members.map((m) => m.playerId);
     assert.ok(eligibleIds.includes("FIDMEM2"));
     assert.ok(!eligibleIds.includes("FIDMEM1"));
 
@@ -507,8 +549,11 @@ test("eligible signup lists return active alliance members not yet signed up", a
       "/api/profiles",
       adminHeaders
     );
-    const memberOneAfterBear = profilesAfterBear.data.data.profiles.find(
-      (profile: { playerId: string }) => profile.playerId === "FIDMEM1"
+    const profilesAfterBearPayload = getPayload<{
+      profiles: Array<{ playerId: string; rallySize?: number }>;
+    }>(profilesAfterBear);
+    const memberOneAfterBear = profilesAfterBearPayload.profiles.find(
+      (profile) => profile.playerId === "FIDMEM1"
     );
     assert.ok(memberOneAfterBear);
     assert.equal(memberOneAfterBear.rallySize, 500000);
@@ -520,9 +565,10 @@ test("eligible signup lists return active alliance members not yet signed up", a
       adminHeaders
     );
     assert.equal(eligibleBear.status, 200);
-    const bearIds = eligibleBear.data.data.members.map(
-      (m: { playerId: string }) => m.playerId
+    const eligibleBearPayload = getPayload<{ members: Array<{ playerId: string }> }>(
+      eligibleBear
     );
+    const bearIds = eligibleBearPayload.members.map((m) => m.playerId);
     assert.ok(bearIds.includes("FIDMEM2"));
     assert.ok(!bearIds.includes("FIDMEM1"));
   } finally {
@@ -545,7 +591,10 @@ test("unclaimed profiles can be added by admins and claimed on login", async () 
       JSON.stringify({ playerId: "FIDADMIN", kingdomId: 1459 })
     );
     assert.equal(createAdminProfile.status, 200);
-    const adminProfileId = createAdminProfile.data.data.profile.id;
+    const createAdminPayload = getPayload<{ profile: { id: string } }>(
+      createAdminProfile
+    );
+    const adminProfileId = createAdminPayload.profile.id;
 
     const createAlliance = await requestJson(
       port,
@@ -555,7 +604,8 @@ test("unclaimed profiles can be added by admins and claimed on login", async () 
       JSON.stringify({ tag: "ADM", name: "Admin Alliance" })
     );
     assert.equal(createAlliance.status, 200);
-    const allianceId = createAlliance.data.data.alliance.id;
+    const createAlliancePayload = getPayload<{ alliance: { id: string } }>(createAlliance);
+    const allianceId = createAlliancePayload.alliance.id;
 
     const addUnclaimed = await requestJson(
       port,
@@ -565,13 +615,17 @@ test("unclaimed profiles can be added by admins and claimed on login", async () 
       JSON.stringify({ playerId: "FIDCLAIM", kingdomId: 1459 })
     );
     assert.equal(addUnclaimed.status, 200);
-    assert.equal(addUnclaimed.data.data.profile.userId, null);
-    assert.equal(addUnclaimed.data.data.profile.status, "active");
+    const addUnclaimedPayload = getPayload<{ profile: { userId: string | null; status: string } }>(
+      addUnclaimed
+    );
+    assert.equal(addUnclaimedPayload.profile.userId, null);
+    assert.equal(addUnclaimedPayload.profile.status, "active");
 
     const memberHeaders = { Cookie: createSessionCookie(dbPath) };
     const me = await requestJson(port, "GET", "/api/me", memberHeaders);
     assert.equal(me.status, 200);
-    const userId = me.data.data.user.id;
+    const mePayload = getPayload<{ user: { id: string } }>(me);
+    const userId = mePayload.user.id;
 
     const claim = await requestJson(
       port,
@@ -581,10 +635,13 @@ test("unclaimed profiles can be added by admins and claimed on login", async () 
       JSON.stringify({ playerId: "FIDCLAIM", kingdomId: 1459 })
     );
     assert.equal(claim.status, 200);
-    assert.equal(claim.data.data.profile.userId, userId);
-    assert.equal(claim.data.data.profile.allianceId, allianceId);
-    assert.equal(claim.data.data.profile.status, "pending");
-    assert.equal(claim.data.data.profile.role, "member");
+    const claimPayload = getPayload<{ profile: { userId: string | null; allianceId: string | null; status: string; role: string } }>(
+      claim
+    );
+    assert.equal(claimPayload.profile.userId, userId);
+    assert.equal(claimPayload.profile.allianceId, allianceId);
+    assert.equal(claimPayload.profile.status, "pending");
+    assert.equal(claimPayload.profile.role, "member");
   } finally {
     httpServer.close();
   }
@@ -605,7 +662,10 @@ test("app admin can manage alliances across kingdoms", async () => {
       JSON.stringify({ playerId: "FIDADMIN", kingdomId: 1459 })
     );
     assert.equal(createAdminProfile.status, 200);
-    const adminProfileId = createAdminProfile.data.data.profile.id;
+    const adminProfilePayload = getPayload<{ profile: { id: string } }>(
+      createAdminProfile
+    );
+    const adminProfileId = adminProfilePayload.profile.id;
 
     const createAlliance = await requestJson(
       port,
@@ -615,7 +675,8 @@ test("app admin can manage alliances across kingdoms", async () => {
       JSON.stringify({ tag: "ADM", name: "Admin Alliance" })
     );
     assert.equal(createAlliance.status, 200);
-    const allianceId = createAlliance.data.data.alliance.id;
+    const alliancePayload = getPayload<{ alliance: { id: string } }>(createAlliance);
+    const allianceId = alliancePayload.alliance.id;
 
     const createMemberProfile = await requestJson(
       port,
@@ -625,7 +686,10 @@ test("app admin can manage alliances across kingdoms", async () => {
       JSON.stringify({ playerId: "FIDMEM", kingdomId: 1459 })
     );
     assert.equal(createMemberProfile.status, 200);
-    const memberProfileId = createMemberProfile.data.data.profile.id;
+    const memberProfilePayload = getPayload<{ profile: { id: string } }>(
+      createMemberProfile
+    );
+    const memberProfileId = memberProfilePayload.profile.id;
 
     const joinAlliance = await requestJson(
       port,
@@ -644,7 +708,10 @@ test("app admin can manage alliances across kingdoms", async () => {
       JSON.stringify({ playerId: "FIDREJECT", kingdomId: 1459 })
     );
     assert.equal(createRejectProfile.status, 200);
-    const rejectProfileId = createRejectProfile.data.data.profile.id;
+    const rejectProfilePayload = getPayload<{ profile: { id: string } }>(
+      createRejectProfile
+    );
+    const rejectProfileId = rejectProfilePayload.profile.id;
 
     const joinToReject = await requestJson(
       port,
@@ -657,7 +724,8 @@ test("app admin can manage alliances across kingdoms", async () => {
 
     const kingdoms = await requestJson(port, "GET", "/api/admin/kingdoms", headers);
     assert.equal(kingdoms.status, 200);
-    assert.ok(kingdoms.data.data.kingdoms.includes(1459));
+    const kingdomsPayload = getPayload<{ kingdoms: number[] }>(kingdoms);
+    assert.ok(kingdomsPayload.kingdoms.includes(1459));
 
     const alliances = await requestJson(
       port,
@@ -666,7 +734,8 @@ test("app admin can manage alliances across kingdoms", async () => {
       headers
     );
     assert.equal(alliances.status, 200);
-    assert.equal(alliances.data.data.alliances[0].id, allianceId);
+    const alliancesPayload = getPayload<{ alliances: Array<{ id: string }> }>(alliances);
+    assert.equal(alliancesPayload.alliances[0].id, allianceId);
 
     const profiles = await requestJson(
       port,
@@ -675,9 +744,8 @@ test("app admin can manage alliances across kingdoms", async () => {
       headers
     );
     assert.equal(profiles.status, 200);
-    const pending = profiles.data.data.profiles.find(
-      (p: { id: string }) => p.id === memberProfileId
-    );
+    const profilesPayload = getPayload<{ profiles: Array<{ id: string }> }>(profiles);
+    const pending = profilesPayload.profiles.find((p) => p.id === memberProfileId);
     assert.ok(pending);
 
     const approve = await requestJson(
@@ -688,7 +756,8 @@ test("app admin can manage alliances across kingdoms", async () => {
       JSON.stringify({ status: "active" })
     );
     assert.equal(approve.status, 200);
-    assert.equal(approve.data.data.profile.status, "active");
+    const approvePayload = getPayload<{ profile: { status: string } }>(approve);
+    assert.equal(approvePayload.profile.status, "active");
 
     const reject = await requestJson(
       port,
@@ -698,7 +767,8 @@ test("app admin can manage alliances across kingdoms", async () => {
       JSON.stringify({ action: "reject" })
     );
     assert.equal(reject.status, 200);
-    assert.equal(reject.data.data.profile.allianceId, null);
+    const rejectPayload = getPayload<{ profile: { allianceId: string | null } }>(reject);
+    assert.equal(rejectPayload.profile.allianceId, null);
 
     const deleteAlliance = await requestJson(
       port,

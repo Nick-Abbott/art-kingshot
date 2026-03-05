@@ -185,7 +185,7 @@ export default function adminRoutes(ctx: RouteContext) {
           ctx.queries.resetProfilesAlliance(allianceId);
           ctx.queries.deleteAlliance(allianceId);
         })();
-      } catch (error) {
+      } catch {
         ctx.fail(res, 500, "Failed to delete alliance.");
         return;
       }

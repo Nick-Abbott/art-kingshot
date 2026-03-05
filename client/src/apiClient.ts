@@ -27,7 +27,7 @@ export async function apiFetch(
     signal,
     allowNonOk = false
   }: ApiFetchOptions = {}
-): Promise<{ ok: boolean; status: number; data: any }> {
+): Promise<{ ok: boolean; status: number; data: unknown }> {
   const finalHeaders: Record<string, string> = { ...headers };
   let payload: BodyInit | undefined;
 
@@ -54,7 +54,7 @@ export async function apiFetch(
     signal
   });
 
-  let data: any = null;
+  let data: unknown = null;
   const contentType = res.headers.get("content-type") || "";
   if (contentType.includes("application/json")) {
     data = await res.json().catch(() => null);
@@ -63,8 +63,15 @@ export async function apiFetch(
   }
 
   if (!res.ok && !allowNonOk) {
-    const message =
-      (data && data.error) || (typeof data === "string" && data) || "Request failed.";
+    let message = "Request failed.";
+    if (data && typeof data === "object" && "error" in data) {
+      const maybeError = (data as { error?: unknown }).error;
+      if (typeof maybeError === "string" && maybeError) {
+        message = maybeError;
+      }
+    } else if (typeof data === "string" && data) {
+      message = data;
+    }
     throw new ApiError(message, res.status);
   }
 

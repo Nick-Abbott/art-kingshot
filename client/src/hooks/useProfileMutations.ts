@@ -12,7 +12,7 @@ export function useCreateProfileMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createProfile,
-    onMutate: async (payload) => {
+    onMutate: async (_payload) => {
       await queryClient.cancelQueries({ queryKey: profilesQueryKey });
       const previous = queryClient.getQueryData<Profile[]>(profilesQueryKey) || [];
       return { previous };

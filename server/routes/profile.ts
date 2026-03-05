@@ -98,7 +98,7 @@ export default function profileRoutes(ctx: RouteContext) {
           profile.id
         );
       })();
-    } catch (error) {
+    } catch {
       ctx.fail(res, 500, "Failed to create alliance.");
       return;
     }
@@ -138,7 +138,7 @@ export default function profileRoutes(ctx: RouteContext) {
         ctx.queries.resetProfilesAlliance(allianceId);
         ctx.queries.deleteAlliance(allianceId);
       })();
-    } catch (error) {
+    } catch {
       ctx.fail(res, 500, "Failed to delete alliance.");
       return;
     }
@@ -411,7 +411,7 @@ export default function profileRoutes(ctx: RouteContext) {
 
       let status = profile.status;
       let role = profile.role;
-      let allianceId = nextAllianceId;
+      const allianceId = nextAllianceId;
       if (typeof payload.allianceId === "string") {
         if (allianceId) {
           const alliance = ctx.getAllianceById(allianceId);
@@ -571,7 +571,7 @@ export default function profileRoutes(ctx: RouteContext) {
         let data = null;
         try {
           data = JSON.parse(text);
-        } catch (parseError) {
+        } catch {
           data = { raw: text };
         }
 
@@ -580,7 +580,7 @@ export default function profileRoutes(ctx: RouteContext) {
         } else {
           ctx.fail(res, 502, "Lookup request failed.");
         }
-      } catch (error) {
+      } catch {
         ctx.fail(res, 502, "Lookup request failed.");
       }
     }

@@ -27,25 +27,22 @@ vi.mock("../hooks/useBear", () => ({
   })
 }));
 
-const updateProfile = vi.fn().mockResolvedValue({
-  id: "p1",
-  userId: "u1",
-  playerId: "FID9",
-  playerName: "Bear",
-  allianceId: "art",
-  status: "active",
-  role: "member"
-});
-
 vi.mock("../api/profile", () => ({
-  updateProfile: (...args: any[]) => updateProfile(...args)
+  updateProfile: vi.fn().mockResolvedValue({
+    id: "p1",
+    userId: "u1",
+    playerId: "FID9",
+    playerName: "Bear",
+    allianceId: "art",
+    status: "active",
+    role: "member"
+  })
 }));
 
-const lookupPlayer = vi.fn().mockResolvedValue({
-  data: { data: { nickname: "Lookup" } }
-});
 vi.mock("../api/playerLookup", () => ({
-  lookupPlayer: (...args: any[]) => lookupPlayer(...args)
+  lookupPlayer: vi.fn().mockResolvedValue({
+    data: { data: { nickname: "Lookup" } }
+  })
 }));
 
 describe("BearRally", () => {
@@ -61,7 +58,7 @@ describe("BearRally", () => {
   };
 
   beforeEach(() => {
-    updateProfile.mockClear();
+    vi.clearAllMocks();
   });
 
   function renderWithClient(ui: React.ReactElement) {

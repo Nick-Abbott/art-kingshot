@@ -105,7 +105,7 @@ export default function authRoutes(ctx: RouteContext) {
           maxAge: Math.floor(ctx.SESSION_TTL_MS / 1000),
         });
         res.redirect(ctx.APP_BASE_URL);
-      } catch (error) {
+      } catch {
         ctx.fail(res, 500, "Discord authentication failed.");
       }
     }

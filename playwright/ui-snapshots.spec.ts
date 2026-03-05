@@ -56,7 +56,7 @@ async function assertSession(request: Parameters<typeof test>[0]["request"]) {
 async function apiJson(
   request: Parameters<typeof test>[0]["request"],
   url: string,
-  options: { method?: string; headers?: Record<string, string>; data?: any } = {}
+  options: { method?: string; headers?: Record<string, string>; data?: unknown } = {}
 ) {
   const res = await request.fetch(url, {
     method: options.method || "GET",

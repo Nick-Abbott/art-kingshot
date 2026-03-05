@@ -70,7 +70,10 @@ function BearRally({ profileId, profile, canManage }: Props) {
   const updateProfileMutation = useUpdateProfileMutation();
   const queryClient = useQueryClient();
   const eligibleMembersQuery = useEligibleBearMembersQuery(profileId, canManage);
-  const eligibleMembers = eligibleMembersQuery.data || [];
+  const eligibleMembers = useMemo(
+    () => eligibleMembersQuery.data ?? [],
+    [eligibleMembersQuery.data]
+  );
   const adminOptions = useMemo(() => {
     const options: { playerId: string; playerName: string }[] = [];
     if (profile?.playerId) {
@@ -199,11 +202,13 @@ function BearRally({ profileId, profile, canManage }: Props) {
       setForm({ rallySize: "", bearGroup: form.bearGroup, playerName: "" });
       setLookupStatus("");
       setEditingMember(null);
-    } catch (submitError: any) {
+    } catch (submitError) {
       if (submitError instanceof ApiError && submitError.status === 403) {
         setError(t("auth.notAuthorizedAction"));
-      } else {
+      } else if (submitError instanceof Error) {
         setError(submitError.message);
+      } else {
+        setError(String(submitError));
       }
     } finally {
       setBusy(false);
@@ -274,11 +279,13 @@ function BearRally({ profileId, profile, canManage }: Props) {
           queryKey: eligibleBearMembersQueryKey(profileId)
         });
       }
-    } catch (err: any) {
+    } catch (err) {
       if (err instanceof ApiError && err.status === 403) {
         setError(t("auth.notAuthorizedAction"));
-      } else {
+      } else if (err instanceof Error) {
         setError(err.message);
+      } else {
+        setError(String(err));
       }
     } finally {
       setBusy(false);
@@ -302,11 +309,13 @@ function BearRally({ profileId, profile, canManage }: Props) {
           queryKey: eligibleBearMembersQueryKey(profileId)
         });
       }
-    } catch (err: any) {
+    } catch (err) {
       if (err instanceof ApiError && err.status === 403) {
         setError(t("auth.notAuthorizedAction"));
-      } else {
+      } else if (err instanceof Error) {
         setError(err.message);
+      } else {
+        setError(String(err));
       }
     } finally {
       setBusy(false);

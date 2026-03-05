@@ -1,4 +1,3 @@
-import type { Member } from "../api/members";
 import { useVikingMembersMutations } from "./useVikingMembersMutations";
 import { useVikingMembersQuery } from "./useVikingMembersQuery";
 

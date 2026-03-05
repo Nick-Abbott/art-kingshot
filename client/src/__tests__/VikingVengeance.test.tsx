@@ -15,15 +15,6 @@ const member = {
 const saveMember = vi.fn().mockResolvedValue([member]);
 const deleteMember = vi.fn().mockResolvedValue([]);
 
-const updateProfile = vi.fn().mockResolvedValue({
-  id: "p1",
-  userId: "u1",
-  playerId: "FID1",
-  playerName: "Alpha",
-  allianceId: "art",
-  status: "active",
-  role: "member"
-});
 
 vi.mock("../hooks/useMembers", () => ({
   useMembers: () => ({
@@ -45,15 +36,27 @@ vi.mock("../hooks/useAssignments", () => ({
   })
 }));
 
-vi.mock("../api/profile", () => ({
-  updateProfile: (...args: any[]) => updateProfile(...args)
+const { updateProfileMock, lookupPlayerMock } = vi.hoisted(() => ({
+  updateProfileMock: vi.fn().mockResolvedValue({
+    id: "p1",
+    userId: "u1",
+    playerId: "FID1",
+    playerName: "Alpha",
+    allianceId: "art",
+    status: "active",
+    role: "member"
+  }),
+  lookupPlayerMock: vi.fn().mockResolvedValue({
+    data: { data: { nickname: "Lookup" } }
+  })
 }));
 
-const lookupPlayer = vi.fn().mockResolvedValue({
-  data: { data: { nickname: "Lookup" } }
-});
+vi.mock("../api/profile", () => ({
+  updateProfile: updateProfileMock
+}));
+
 vi.mock("../api/playerLookup", () => ({
-  lookupPlayer: (...args: any[]) => lookupPlayer(...args)
+  lookupPlayer: lookupPlayerMock
 }));
 
 describe("VikingVengeance", () => {
@@ -71,9 +74,7 @@ describe("VikingVengeance", () => {
   };
 
   beforeEach(() => {
-    saveMember.mockClear();
-    lookupPlayer.mockClear();
-    updateProfile.mockClear();
+    vi.clearAllMocks();
   });
 
   function renderWithClient(ui: React.ReactElement) {
@@ -119,7 +120,7 @@ describe("VikingVengeance", () => {
     await waitFor(() => {
       expect(saveMember).toHaveBeenCalledTimes(1);
     });
-    expect(lookupPlayer).not.toHaveBeenCalled();
+    expect(lookupPlayerMock).not.toHaveBeenCalled();
   });
 
   it("runs player lookup when profile name is missing", async () => {
@@ -135,7 +136,7 @@ describe("VikingVengeance", () => {
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(lookupPlayer).toHaveBeenCalled();
+      expect(lookupPlayerMock).toHaveBeenCalled();
     });
   });
 

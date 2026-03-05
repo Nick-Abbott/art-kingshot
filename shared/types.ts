@@ -173,5 +173,5 @@ export type ResultsPayload = {
 export type LookupPayload = {
   ok?: boolean;
   status?: number;
-  data?: any;
+  data?: unknown;
 };
