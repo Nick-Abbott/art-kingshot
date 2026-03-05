@@ -98,11 +98,12 @@ Playwright diagnostics on failure:
 - Artifacts (screenshots, traces, videos) are stored under `test-results/`.
 - Each failed test gets its own folder with the captured files.
 
-This script is one-shot and runs without manual setup:
-- Starts server on `http://localhost:3002` with `DB_PATH=server/data/viking.playwright.sqlite`
-- Starts client on `http://localhost:5174`
-- Playwright tests seed session tokens directly in the Playwright DB
-- Playwright `webServer` manages startup/shutdown (see `playwright.config.ts`)
+Playwright runs with per-worker servers and per-worker SQLite DBs (see `playwright/fixtures.ts`).
+Local runs boot dedicated server/client instances on available ports and reset the worker DB before each test.
+
+CI coverage:
+- PRs run `npm run test:e2e` (flows only) with artifacts uploaded on failure.
+- Nightly runs `npm run test:visual` (snapshots) with artifacts uploaded on failure.
 
 ## Notes
 

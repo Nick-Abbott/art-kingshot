@@ -34,7 +34,7 @@ This guide is a quick reference for agents working in this repo. It summarizes h
 ### UI Conventions
 - Prefer `ui-*` classes and primitives under `client/src/components/ui`.
 - Add a new `ui-*` class when a pattern appears in 2+ places.
-- Localize all new text via `client/src/locales/*/translation.json`.
+- Localize all new text via `client/public/locales/*/translation.json` (single source of truth).
 
 ## Server Architecture
 
@@ -64,9 +64,14 @@ This guide is a quick reference for agents working in this repo. It summarizes h
 - `npm run test:visual` — snapshots only.
 - `npm run test:playwright` — full Playwright suite.
 
-Playwright uses `webServer` in `playwright.config.ts` to boot:
-- Server on `http://127.0.0.1:3002` (DB: `server/data/viking.playwright.sqlite`)
-- Client on `http://localhost:5174`
+Playwright uses per-worker fixtures in `playwright/fixtures.ts`:
+- Each worker boots its own server/client on available ports.
+- Each worker uses its own SQLite DB (`server/data/viking.playwright.worker-*.sqlite`).
+- DB is reset before each test via `resetPlaywrightDb` in `playwright/utils.ts`.
+
+Artifacts:
+- Test artifacts are written to `test-results/`.
+- Snapshot baselines are stored under `snapshots/playwright/`.
 
 ## Patterns to Follow
 

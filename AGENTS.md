@@ -7,7 +7,7 @@ These instructions are for agents working in this repository.
 - Read existing docs and code before making changes.
 - Keep changes focused and avoid unrelated refactors.
 - Update or add tests when server logic changes.
-- Localize new or changed UI text across all locale files.
+- Localize new or changed UI text across all locale files (`client/public/locales/*/translation.json`).
 - Shared API types live in `shared/types.ts`; update these when changing request/response shapes.
 - Use the shared UI layer for new UI. Prefer `ui-*` utility classes and UI primitives under `client/src/components/ui`.
 - When refactoring shared client logic, run `npm run typecheck --workspace client` before broad adoption; migrate one call site at a time to keep the app booting.
@@ -24,7 +24,7 @@ These instructions are for agents working in this repository.
 - Visual/UI styling changes:
   - Run Playwright snapshots and review outputs in `snapshots/playwright/`.
     - Command: `npm run test:visual`
-    - One-shot local runner (starts server + client, uses a separate DB and seeded session token) on alternate ports.
+    - Playwright uses per-worker fixtures (see `playwright/fixtures.ts`), and resets the worker DB before each test.
 - Server changes:
   - Run server tests before marking the task complete.
   - Command: `npm run test:server`
@@ -45,6 +45,7 @@ If you cannot run these checks, state what was skipped and why, and list any ris
 - Playwright (flows): `npm run test:e2e`
 - Playwright (snapshots): `npm run test:visual`
 - i18n key check: `npm run test:i18n`
+- Lint: `npm run lint`
 - Smoke checks:
   - `node scripts/check-auth-flow.js`
   - `SESSION_TOKEN=your_token node scripts/check-alliance-switch.js`
@@ -59,4 +60,10 @@ If you cannot run these checks, state what was skipped and why, and list any ris
 - Use `ui-empty-state`, `ui-error`, `ui-success` for status messaging.
 - Use `ui-search` and `ui-search-hint*` for typeahead inputs.
 - Use `ui-tab`, `ui-pill`, `ui-codeblock`, `ui-badge` for recurring UI patterns.
- - For comprehensive UI screenshots, use the Playwright suite in `playwright/ui-snapshots.spec.ts`.
+- For comprehensive UI screenshots, use the Playwright suite in `playwright/ui-snapshots.spec.ts`.
+
+## Playwright Notes
+
+- Use `data-testid` selectors for critical flows and snapshots; avoid visible text when possible.
+- Snapshot assertions are done with `expect(page).toHaveScreenshot()` and stored under `snapshots/playwright/`.
+- Diagnostics (screenshots/traces/videos) are written to `test-results/` on failure.
