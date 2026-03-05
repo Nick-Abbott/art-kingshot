@@ -18,8 +18,19 @@ Non-exhaustive list based on current Playwright setup.
 
 ## Stories
 
+## Recommended Execution Order
+1) PW-01 — Shared fixtures/utilities
+2) PW-04 — DB reset/isolation
+3) PW-03 — Deterministic data + clock control
+4) PW-02 — Stabilize wait strategy
+5) PW-07 — Harden selectors with test IDs
+6) PW-05 — Snapshot assertions
+7) PW-06 — CI reliability config
+8) PW-08 — Diagnostics on failure
+
 ### PW-01: Create Shared Playwright Fixtures + Test Utilities
 **Problem**: Flows and snapshots duplicate auth, API, and seeding logic, which causes drift and inconsistent fixes.
+**Status**: Complete
 
 **Scope / Requirements**
 - Create a shared Playwright utility module (e.g., `playwright/utils.ts`) that includes:
@@ -46,6 +57,16 @@ Validate PW-01 by confirming:
 1) Shared helpers exist and are used by both specs.
 2) No duplicate helper logic remains in spec files.
 3) `npm run test:e2e` and `npm run test:visual` pass.
+
+- **Engineer Update (2026-03-05)**: added `playwright/utils.ts` shared helpers (session, auth context, API calls, openPage/openNav/mockPlayerLookup) and refactored `ui-flows.spec.ts` + `ui-snapshots.spec.ts` to use them.
+- **Engineer Tests (2026-03-05)**: `npm run test:e2e` (not run; not requested), `npm run test:visual` (not run; not requested).
+- **QA Validation (2026-03-05)**:
+  - [x] Shared helpers exist in `playwright/utils.ts` and are imported by both `playwright/ui-flows.spec.ts` and `playwright/ui-snapshots.spec.ts`.
+  - [x] No duplicated session/auth/api/openPage/openNav/mockPlayerLookup helpers remain in spec files.
+  - [x] Playwright flows and snapshot behavior exercised via required test runs.
+- **QA Tests (2026-03-05)**:
+  - `npm run test:e2e` — pass
+  - `npm run test:visual` — pass
 
 ---
 
@@ -230,4 +251,3 @@ You are implementing PW-08. Update Playwright config to capture screenshots/trac
 Validate PW-08 by confirming:
 1) Playwright is configured to save artifacts on failures.
 2) Documentation references artifact paths.
-

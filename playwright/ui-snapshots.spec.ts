@@ -1,198 +1,25 @@
 import { test } from "@playwright/test";
-import * as crypto from "node:crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
-import Database from "better-sqlite3";
-
-type ProfileSeed = {
-  id: string;
-  playerId: string;
-  playerName: string;
-};
-
-const CLIENT_URL = process.env.SNAPSHOT_URL || "http://localhost:5173";
-const SERVER_URL = process.env.SERVER_URL || "http://localhost:3001";
-const DB_PATH = process.env.PLAYWRIGHT_DB_PATH || "";
-const CLIENT_HOST = new URL(CLIENT_URL).hostname;
+import {
+  CLIENT_URL,
+  DB_PATH,
+  SERVER_URL,
+  approveProfile,
+  assertSession,
+  createAlliance,
+  createAuthContext,
+  createBearSignup,
+  createProfile,
+  createSessionToken,
+  createVikingSignup,
+  openNavMenu,
+  openPage,
+  requireEnv,
+  setPendingJoin,
+} from "./utils";
 
 let sessionToken = "";
-
-function requireEnv(name: string, value: string) {
-  if (!value) {
-    throw new Error(`${name} is required for Playwright UI snapshots.`);
-  }
-}
-
-function createSessionToken() {
-  const db = new Database(DB_PATH);
-  const now = Date.now();
-  const userId = crypto.randomUUID();
-  const token = crypto.randomBytes(32).toString("hex");
-  db.prepare(
-    "INSERT INTO users (id, discordId, displayName, avatar, isAppAdmin, createdAt) VALUES (?, ?, ?, ?, ?, ?)"
-  ).run(userId, `playwright-${userId}`, "Playwright", null, 0, now);
-  db.prepare(
-    "INSERT INTO sessions (token, userId, expiresAt, createdAt) VALUES (?, ?, ?, ?)"
-  ).run(token, userId, now + 14 * 24 * 60 * 60 * 1000, now);
-  db.close();
-  return token;
-}
-
-function authHeaders() {
-  return { Cookie: `ak_session=${sessionToken}` };
-}
-
-async function assertSession(request: Parameters<typeof test>[0]["request"]) {
-  const { res, json } = await apiJson(request, `${SERVER_URL}/api/me`, {
-    headers: authHeaders(),
-  });
-  if (!res.ok()) {
-    throw new Error(
-      `Session token invalid: ${res.status()} ${JSON.stringify(json)}`
-    );
-  }
-}
-
-async function apiJson(
-  request: Parameters<typeof test>[0]["request"],
-  url: string,
-  options: { method?: string; headers?: Record<string, string>; data?: unknown } = {}
-) {
-  const res = await request.fetch(url, {
-    method: options.method || "GET",
-    headers: options.headers,
-    data: options.data,
-  });
-  const json = await res.json().catch(() => null);
-  return { res, json };
-}
-
-async function createProfile(
-  request: Parameters<typeof test>[0]["request"],
-  payload: { playerId: string; playerName: string; kingdomId: number }
-) {
-  const { res, json } = await apiJson(request, `${SERVER_URL}/api/profiles`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeaders(),
-    },
-    data: payload,
-  });
-  if (!res.ok()) {
-    throw new Error(`Failed to create profile: ${res.status()} ${JSON.stringify(json)}`);
-  }
-  return json.data.profile as ProfileSeed;
-}
-
-async function createAlliance(
-  request: Parameters<typeof test>[0]["request"],
-  profileId: string
-) {
-  for (let attempt = 0; attempt < 30; attempt += 1) {
-    const tag = Array.from(crypto.randomBytes(3))
-      .map((byte) => String.fromCharCode(65 + (byte % 26)))
-      .join("")
-      .slice(0, 3);
-    const baseName = `Arts of War ${tag}`;
-    const { res, json } = await apiJson(request, `${SERVER_URL}/api/alliances`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...authHeaders(),
-        "x-profile-id": profileId,
-      },
-      data: { tag, name: baseName },
-    });
-    if (res.ok()) {
-      return json.data;
-    }
-    if (res.status() === 409) {
-      continue;
-    }
-    if (res.status() === 429 || res.status() >= 500) {
-      await new Promise((resolve) => setTimeout(resolve, 250));
-      continue;
-    }
-    throw new Error(`Failed to create alliance: ${res.status()} ${JSON.stringify(json)}`);
-  }
-  throw new Error("Failed to create a unique alliance tag after retries.");
-}
-
-async function setPendingJoin(
-  request: Parameters<typeof test>[0]["request"],
-  profileId: string,
-  allianceId: string
-) {
-  await apiJson(request, `${SERVER_URL}/api/profiles/${profileId}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeaders(),
-    },
-    data: { allianceId },
-  });
-}
-
-async function approveProfile(
-  request: Parameters<typeof test>[0]["request"],
-  adminProfileId: string,
-  profileId: string
-) {
-  await apiJson(request, `${SERVER_URL}/api/alliance/profiles/${profileId}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeaders(),
-      "x-profile-id": adminProfileId,
-    },
-    data: { status: "active" },
-  });
-}
-
-async function createVikingSignup(
-  request: Parameters<typeof test>[0]["request"],
-  profileId: string,
-  playerId: string,
-  playerName: string
-) {
-  await apiJson(request, `${SERVER_URL}/api/signup`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeaders(),
-      "x-profile-id": profileId,
-    },
-    data: {
-      playerId,
-      playerName,
-      troopCount: 450000,
-      marchCount: 5,
-      power: 33000000,
-    },
-  });
-}
-
-async function createBearSignup(
-  request: Parameters<typeof test>[0]["request"],
-  profileId: string,
-  playerId: string,
-  playerName: string
-) {
-  await apiJson(request, `${SERVER_URL}/api/bear/bear1`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeaders(),
-      "x-profile-id": profileId,
-    },
-    data: {
-      playerId,
-      playerName,
-      rallySize: 800000,
-    },
-  });
-}
 
 async function snapshotPage(
   page: Parameters<typeof test>[0]["page"],
@@ -207,29 +34,18 @@ async function snapshotPage(
   const outputDir = path.join(process.cwd(), "snapshots", "playwright");
   fs.mkdirSync(outputDir, { recursive: true });
 
-  await page.addInitScript(
-    ({ pageKey, selectedProfileId }) => {
-      if (pageKey) {
-        window.localStorage.setItem("currentPage", pageKey);
-      }
-      if (selectedProfileId) {
-        window.localStorage.setItem("selectedProfile", selectedProfileId);
-      } else {
-        window.localStorage.removeItem("selectedProfile");
-      }
-    },
-    { pageKey: options.pageKey, selectedProfileId: options.selectedProfileId }
-  );
-
-  await page.goto(CLIENT_URL, { waitUntil: "domcontentloaded" });
-  await page.locator(".app-shell").waitFor({ state: "visible", timeout: 10000 });
+  await openPage(page, {
+    pageKey: options.pageKey,
+    selectedProfileId: options.selectedProfileId,
+    clientUrl: CLIENT_URL,
+    waitForMe: true,
+    waitForMeTimeout: 10000,
+    readySelector: ".app-shell",
+    readyTimeout: 10000,
+  });
 
   if (options.openNav) {
-    const navToggle = page.getByTestId("nav-toggle");
-    if (await navToggle.isVisible()) {
-      await navToggle.click({ force: true });
-      await page.getByTestId("profile-switcher").waitFor({ state: "visible" });
-    }
+    await openNavMenu(page, { force: true });
   }
 
   if (options.openProfileMenu) {
@@ -247,9 +63,9 @@ async function snapshotPage(
 }
 
 test("ui snapshots", async ({ browser, request }, testInfo) => {
-  requireEnv("PLAYWRIGHT_DB_PATH", DB_PATH);
-  sessionToken = createSessionToken();
-  await assertSession(request);
+  requireEnv("PLAYWRIGHT_DB_PATH", DB_PATH, "Playwright UI snapshots");
+  sessionToken = createSessionToken({ dbPath: DB_PATH });
+  await assertSession(request, sessionToken, SERVER_URL);
 
   const kingdomId = 9000 + Math.floor(Math.random() * 1000);
   const runToken = `${Date.now()}${Math.floor(Math.random() * 1000)
@@ -257,32 +73,26 @@ test("ui snapshots", async ({ browser, request }, testInfo) => {
     .padStart(3, "0")}`;
   const buildPlayerId = (suffix: number) => `FID${runToken}${suffix}`;
 
-  const profileA = await createProfile(request, {
+  const profileA = await createProfile(request, sessionToken, {
     playerId: buildPlayerId(1),
     playerName: "Professor Muffin",
     kingdomId,
   });
-  const profileB = await createProfile(request, {
+  const profileB = await createProfile(request, sessionToken, {
     playerId: buildPlayerId(2),
     playerName: "MuffinMan",
     kingdomId,
   });
-  const profileC = await createProfile(request, {
+  const profileC = await createProfile(request, sessionToken, {
     playerId: buildPlayerId(3),
     playerName: "StaleMuffin",
     kingdomId,
   });
 
-  const alliance = await createAlliance(request, profileA.id);
-  await setPendingJoin(request, profileB.id, alliance.alliance.id);
+  const alliance = await createAlliance(request, sessionToken, profileA.id);
+  await setPendingJoin(request, sessionToken, profileB.id, alliance.alliance.id);
 
-  const contextWithAuth = await browser.newContext({ baseURL: CLIENT_URL });
-  await contextWithAuth.addCookies([
-    { name: "ak_session", value: sessionToken, domain: CLIENT_HOST, path: "/" },
-  ]);
-  await contextWithAuth.addInitScript((token) => {
-    document.cookie = `ak_session=${token}; path=/`;
-  }, sessionToken);
+  const contextWithAuth = await createAuthContext(browser, sessionToken, CLIENT_URL);
 
   const runSnapshot = async (
     page: Parameters<typeof snapshotPage>[0],
@@ -315,7 +125,7 @@ test("ui snapshots", async ({ browser, request }, testInfo) => {
     });
     await pendingPage.close();
 
-    await approveProfile(request, profileA.id, profileB.id);
+    await approveProfile(request, sessionToken, profileA.id, profileB.id);
 
     const activePage = await contextWithAuth.newPage();
     await runSnapshot(activePage, "profiles-active", {
@@ -369,7 +179,13 @@ test("ui snapshots", async ({ browser, request }, testInfo) => {
     });
     await bearNoSignup.close();
 
-    await createVikingSignup(request, profileA.id, profileA.playerId, profileA.playerName);
+    await createVikingSignup(
+      request,
+      sessionToken,
+      profileA.id,
+      profileA.playerId,
+      profileA.playerName
+    );
 
     const vikingSignup = await contextWithAuth.newPage();
     await runSnapshot(vikingSignup, "viking-active-signup", {
@@ -378,7 +194,13 @@ test("ui snapshots", async ({ browser, request }, testInfo) => {
     });
     await vikingSignup.close();
 
-    await createBearSignup(request, profileA.id, profileA.playerId, profileA.playerName);
+    await createBearSignup(
+      request,
+      sessionToken,
+      profileA.id,
+      profileA.playerId,
+      profileA.playerName
+    );
 
     const bearSignup = await contextWithAuth.newPage();
     await runSnapshot(bearSignup, "bear-active-signup", {
