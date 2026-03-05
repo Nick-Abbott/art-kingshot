@@ -21,7 +21,9 @@
     "test": "npm run test:server && npm run test:i18n && npm run test:client",
     "typecheck": "npm run typecheck --workspace client",
     "seed:test": "node scripts/seedTestScenario.js",
-    "snapshots:playwright": "concurrently -k -s first -n server,client,tests -c blue,green,magenta \"PORT=3002 DB_PATH=$(pwd)/server/data/viking.playwright.sqlite APP_BASE_URL=http://localhost:5174 npm run dev:server\" \"VITE_PROXY_TARGET=http://127.0.0.1:3002 npm run dev --workspace client -- --host localhost --port 5174 --strictPort\" \"wait-on --timeout 60000 http-get://localhost:5174 tcp:127.0.0.1:3002 && sleep 1 && PLAYWRIGHT_DB_PATH=$(pwd)/server/data/viking.playwright.sqlite SNAPSHOT_URL=http://localhost:5174 SERVER_URL=http://127.0.0.1:3002 npx playwright test -c playwright.config.ts\""
+    "test:playwright": "PLAYWRIGHT_DB_PATH=$(pwd)/server/data/viking.playwright.sqlite SNAPSHOT_URL=http://localhost:5174 SERVER_URL=http://127.0.0.1:3002 npx playwright test -c playwright.config.ts",
+    "test:visual": "PLAYWRIGHT_DB_PATH=$(pwd)/server/data/viking.playwright.sqlite SNAPSHOT_URL=http://localhost:5174 SERVER_URL=http://127.0.0.1:3002 npx playwright test -c playwright.config.ts playwright/ui-snapshots.spec.ts",
+    "test:e2e": "PLAYWRIGHT_DB_PATH=$(pwd)/server/data/viking.playwright.sqlite SNAPSHOT_URL=http://localhost:5174 SERVER_URL=http://127.0.0.1:3002 npx playwright test -c playwright.config.ts playwright/ui-flows.spec.ts"
   },
   "author": "",
   "license": "ISC",

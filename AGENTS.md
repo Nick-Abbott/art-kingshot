@@ -13,12 +13,17 @@ These instructions are for agents working in this repository.
 - When refactoring shared client logic, run `npm run typecheck --workspace client` before broad adoption; migrate one call site at a time to keep the app booting.
 - For client-side schema validation, prefer `zod/mini`-compatible APIs only; avoid full `zod` helpers that are not available in the mini build.
 - Treat test changes as a last resort: only adjust tests after confirming the app builds and boots without runtime errors, and never to mask product regressions.
+- Use TanStack Query for server state; avoid manual fetch + local state unless explicitly approved.
+- Refer to `docs/architecture.md` for current data flow and hook conventions.
 
 ## Required Verification
 
-- UI changes:
-  - Run the Playwright snapshot suite and review outputs in `snapshots/playwright/`.
-    - Command: `npm run snapshots:playwright`
+- UI logic changes (behavior, state, permissions, data flow):
+  - Run Playwright UI flows only.
+    - Command: `npm run test:e2e`
+- Visual/UI styling changes:
+  - Run Playwright snapshots and review outputs in `snapshots/playwright/`.
+    - Command: `npm run test:visual`
     - One-shot local runner (starts server + client, uses a separate DB and seeded session token) on alternate ports.
 - Server changes:
   - Run server tests before marking the task complete.
@@ -36,6 +41,9 @@ If you cannot run these checks, state what was skipped and why, and list any ris
 - Tests (all): `npm run test`
 - Tests (server): `npm run test:server`
 - Tests (client): `npm run test:client`
+- Playwright (all): `npm run test:playwright`
+- Playwright (flows): `npm run test:e2e`
+- Playwright (snapshots): `npm run test:visual`
 - i18n key check: `npm run test:i18n`
 - Smoke checks:
   - `node scripts/check-auth-flow.js`

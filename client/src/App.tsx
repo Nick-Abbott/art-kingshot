@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useProfileSelection } from "./hooks/useProfileSelection";
 import { useSession } from "./hooks/useSession";
+import { useProfilesQuery } from "./hooks/useProfilesQuery";
 import VikingVengeance from "./VikingVengeance";
 import BearRally from "./BearRally";
 import Profiles from "./Profiles";
@@ -19,8 +20,9 @@ function App() {
     () => window.localStorage.getItem("currentPage") || "viking"
   );
   const [navOpen, setNavOpen] = useState(false);
-  const { status, user, profiles, setProfiles, error, setError, logout } =
-    useSession();
+  const { status, user, error, setError, logout } = useSession();
+  const profilesQuery = useProfilesQuery(status === "authenticated");
+  const profiles = profilesQuery.data || [];
   const {
     selectedProfileId,
     setSelectedProfileId,
@@ -247,8 +249,6 @@ function App() {
       ) : showProfilesOnly || page === "profiles" || profilePending ? (
         <Profiles
           user={user}
-          profiles={profiles}
-          setProfiles={setProfiles}
           selectedProfile={selectedProfile}
           selectedProfileId={selectedProfileId}
         />
@@ -257,22 +257,12 @@ function App() {
           profileId={selectedProfileId}
           profile={selectedProfile}
           canManage={canManage}
-          onProfileUpdated={(updated) =>
-            setProfiles((prev) =>
-              prev.map((item) => (item.id === updated.id ? updated : item))
-            )
-          }
         />
       ) : (
         <BearRally
           profileId={selectedProfileId}
           profile={selectedProfile}
           canManage={canManage}
-          onProfileUpdated={(updated) =>
-            setProfiles((prev) =>
-              prev.map((item) => (item.id === updated.id ? updated : item))
-            )
-          }
         />
       )}
     </div>

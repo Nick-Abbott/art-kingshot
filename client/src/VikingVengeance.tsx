@@ -5,11 +5,15 @@ import { lookupPlayer } from "./api/playerLookup";
 import type { AssignmentResult } from "./api/assignments";
 import { useAssignments } from "./hooks/useAssignments";
 import { useMembers } from "./hooks/useMembers";
-import { fetchEligibleMembers } from "./api/members";
-import type { EligibleMember, Member } from "./api/members";
+import type { Member } from "./api/members";
 import type { Profile } from "@shared/types";
-import { updateProfile } from "./api/profile";
 import { parsePlayerLookup } from "./utils/playerLookup";
+import { useUpdateProfileMutation } from "./hooks/useProfileMutations";
+import {
+  eligibleMembersQueryKey,
+  useEligibleMembersQuery
+} from "./hooks/useEligibleMembersQuery";
+import { useQueryClient } from "@tanstack/react-query";
 
 type VikingForm = {
   troopCount: string;
@@ -33,15 +37,14 @@ type Props = {
   profileId: string;
   profile: Profile | null;
   canManage: boolean;
-  onProfileUpdated: (profile: Profile) => void;
 };
 
 type AssignmentMember = AssignmentResult["members"][number];
 
-function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Props) {
+function VikingVengeance({ profileId, profile, canManage }: Props) {
   const { t } = useTranslation();
   const [form, setForm] = useState<VikingForm>(emptyForm);
-  const { members, setMembers, saveMember, deleteMember } = useMembers(profileId);
+  const { members, saveMember, deleteMember } = useMembers(profileId);
   const { results, run, reset } = useAssignments(profileId);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -50,8 +53,11 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
   const [editingMember, setEditingMember] = useState<string | null>(null);
   const [lastLookupId, setLastLookupId] = useState("");
   const [profileWarning, setProfileWarning] = useState("");
-  const [eligibleMembers, setEligibleMembers] = useState<EligibleMember[]>([]);
   const [adminTargetId, setAdminTargetId] = useState("");
+  const updateProfileMutation = useUpdateProfileMutation();
+  const queryClient = useQueryClient();
+  const eligibleMembersQuery = useEligibleMembersQuery(profileId, canManage);
+  const eligibleMembers = eligibleMembersQuery.data || [];
   const adminOptions = useMemo(() => {
     const options: { playerId: string; playerName: string }[] = [];
     if (profile?.playerId) {
@@ -185,24 +191,12 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
   }, [canManage, profile?.playerId, editingMember]);
 
   useEffect(() => {
-    let active = true;
-    if (!profileId || !canManage) {
-      setEligibleMembers([]);
-      return undefined;
+    if (!canManage) return;
+    if (!adminTargetId || !profile?.playerId) return;
+    if (!adminOptions.some((member) => member.playerId === adminTargetId)) {
+      setAdminTargetId(profile.playerId);
     }
-    fetchEligibleMembers(profileId)
-      .then((data) => {
-        if (!active) return;
-        setEligibleMembers(data);
-      })
-      .catch(() => {
-        if (!active) return;
-        setEligibleMembers([]);
-      });
-    return () => {
-      active = false;
-    };
-  }, [profileId, canManage]);
+  }, [adminOptions, adminTargetId, canManage, profile?.playerId]);
 
   function updateForm(
     event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -286,37 +280,35 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
         setLastLookupId(fid);
       }
 
-      const updatedMembers = await saveMember({
+      await saveMember({
         playerId: fid,
         troopCount: parseNumber(form.troopCount),
         playerName: resolvedName,
         marchCount: Number(form.marchCount),
         power: parseNumber(form.power)
       });
-      setMembers(updatedMembers);
       setError("");
       if (!editingMember && !usingAdminTarget) {
-        const updatedProfile = await updateProfile(profileId, {
-          playerId: fid,
-          troopCount: parseNumber(form.troopCount),
-          playerName: resolvedName,
-          marchCount: Number(form.marchCount),
-          power: parseNumber(form.power),
-          playerAvatar: resolvedAvatar || null,
-          kingdomId: resolvedKingdomId
+        const updatedProfile = await updateProfileMutation.mutateAsync({
+          profileId,
+          payload: {
+            playerId: fid,
+            troopCount: parseNumber(form.troopCount),
+            playerName: resolvedName,
+            marchCount: Number(form.marchCount),
+            power: parseNumber(form.power),
+            playerAvatar: resolvedAvatar || null,
+            kingdomId: resolvedKingdomId
+          }
         });
-        if (updatedProfile) {
-          onProfileUpdated(updatedProfile);
-        } else {
+        if (!updatedProfile) {
           setProfileWarning(t("profiles.errors.updateFailed"));
         }
       }
       if (usingAdminTarget) {
-        const nextEligible = await fetchEligibleMembers(profileId);
-        setEligibleMembers(nextEligible);
-        if (!nextEligible.some((member) => member.playerId === adminTarget)) {
-          setAdminTargetId("");
-        }
+        await queryClient.invalidateQueries({
+          queryKey: eligibleMembersQueryKey(profileId)
+        });
       }
       setForm(emptyForm);
       setLookupStatus("");
@@ -435,7 +427,9 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
 
     try {
       await reset();
-      setMembers([]);
+      await queryClient.invalidateQueries({
+        queryKey: eligibleMembersQueryKey(profileId)
+      });
       setForm(emptyForm);
       setLookupStatus("");
       setSearchQuery("");
@@ -462,8 +456,10 @@ function VikingVengeance({ profileId, profile, canManage, onProfileUpdated }: Pr
     }
 
     try {
-      const updatedMembers = await deleteMember(playerId);
-      setMembers(updatedMembers);
+      await deleteMember(playerId);
+      await queryClient.invalidateQueries({
+        queryKey: eligibleMembersQueryKey(profileId)
+      });
       setError("");
     } catch (err: any) {
       if (err instanceof ApiError && err.status === 403) {

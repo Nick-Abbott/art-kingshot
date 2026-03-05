@@ -1,5 +1,6 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import VikingVengeance from "../VikingVengeance";
 import type { Profile } from "@shared/types";
 
@@ -13,7 +14,6 @@ const member = {
 
 const saveMember = vi.fn().mockResolvedValue([member]);
 const deleteMember = vi.fn().mockResolvedValue([]);
-const setMembers = vi.fn();
 
 const updateProfile = vi.fn().mockResolvedValue({
   id: "p1",
@@ -28,7 +28,6 @@ const updateProfile = vi.fn().mockResolvedValue({
 vi.mock("../hooks/useMembers", () => ({
   useMembers: () => ({
     members: [member],
-    setMembers,
     saveMember,
     deleteMember,
     loading: false,
@@ -77,13 +76,22 @@ describe("VikingVengeance", () => {
     updateProfile.mockClear();
   });
 
+  function renderWithClient(ui: React.ReactElement) {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } }
+    });
+    return {
+      queryClient,
+      ...render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>)
+    };
+  }
+
   it("keeps edit values even when profile defaults exist", async () => {
-    render(
+    renderWithClient(
       <VikingVengeance
         profileId="p1"
         profile={baseProfile}
         canManage={true}
-        onProfileUpdated={vi.fn()}
       />
     );
 
@@ -95,12 +103,11 @@ describe("VikingVengeance", () => {
   });
 
   it("submits update without triggering lookup", async () => {
-    render(
+    renderWithClient(
       <VikingVengeance
         profileId="p1"
         profile={baseProfile}
         canManage={true}
-        onProfileUpdated={vi.fn()}
       />
     );
 
@@ -116,12 +123,11 @@ describe("VikingVengeance", () => {
   });
 
   it("runs player lookup when profile name is missing", async () => {
-    render(
+    renderWithClient(
       <VikingVengeance
         profileId="p1"
         profile={{ ...baseProfile, playerName: "", playerId: "PROFILE" }}
         canManage={true}
-        onProfileUpdated={vi.fn()}
       />
     );
 
@@ -134,24 +140,24 @@ describe("VikingVengeance", () => {
   });
 
   it("clears edit mode on profile switch", async () => {
-    const { rerender } = render(
+    const { rerender, queryClient } = renderWithClient(
       <VikingVengeance
         profileId="p1"
         profile={baseProfile}
         canManage={true}
-        onProfileUpdated={vi.fn()}
       />
     );
 
     fireEvent.click(screen.getByText("viking.edit"));
 
     rerender(
-      <VikingVengeance
-        profileId="p2"
-        profile={{ ...baseProfile, id: "p2" }}
-        canManage={true}
-        onProfileUpdated={vi.fn()}
-      />
+      <QueryClientProvider client={queryClient}>
+        <VikingVengeance
+          profileId="p2"
+          profile={{ ...baseProfile, id: "p2" }}
+          canManage={true}
+        />
+      </QueryClientProvider>
     );
 
     const submitButton = screen.getByRole("button", { name: "viking.saveSignup" });

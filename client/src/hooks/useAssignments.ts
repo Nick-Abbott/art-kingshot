@@ -1,63 +1,59 @@
-import { useEffect, useRef, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchResults, resetEvent, runAssignments } from "../api/assignments";
 import type { AssignmentResult } from "../api/assignments";
+import { vikingMembersQueryKey } from "./useVikingMembersQuery";
 
 export function useAssignments(profileId: string) {
-  const [results, setResults] = useState<AssignmentResult | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const requestId = useRef(0);
+  const queryClient = useQueryClient();
+  const assignmentsQuery = useQuery<AssignmentResult | null>({
+    queryKey: ["assignments", profileId],
+    queryFn: () => fetchResults(profileId),
+    enabled: Boolean(profileId)
+  });
 
-  useEffect(() => {
-    if (!profileId) {
-      setResults(null);
-      setError("");
-      setLoading(false);
-      return;
+  const runMutation = useMutation({
+    mutationFn: () => {
+      if (!profileId) return Promise.resolve<AssignmentResult | null>(null);
+      return runAssignments(profileId);
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(["assignments", profileId], data || null);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["assignments", profileId] });
     }
-    const current = ++requestId.current;
-    setLoading(true);
-    setError("");
-    fetchResults(profileId)
-      .then((data) => {
-        if (current !== requestId.current) return;
-        setResults(data || null);
-      })
-      .catch((err) => {
-        if (current !== requestId.current) return;
-        setError(err.message || "Failed to load results.");
-      })
-      .finally(() => {
-        if (current !== requestId.current) return;
-        setLoading(false);
-      });
-  }, [profileId]);
+  });
 
-  useEffect(() => {
-    if (!profileId) return;
-    setError("");
-  }, [profileId]);
+  const resetMutation = useMutation({
+    mutationFn: () => {
+      if (!profileId) return Promise.resolve(null);
+      return resetEvent(profileId);
+    },
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["assignments", profileId] });
+      await queryClient.cancelQueries({ queryKey: vikingMembersQueryKey(profileId) });
+      queryClient.setQueryData(["assignments", profileId], null);
+      queryClient.setQueryData(vikingMembersQueryKey(profileId), []);
+    },
+    onSuccess: () => {
+      queryClient.setQueryData(["assignments", profileId], null);
+      queryClient.setQueryData(vikingMembersQueryKey(profileId), []);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["assignments", profileId] });
+      queryClient.invalidateQueries({ queryKey: vikingMembersQueryKey(profileId) });
+    }
+  });
 
-  async function run() {
-    if (!profileId) return null;
-    const data = await runAssignments(profileId);
-    setResults(data || null);
-    setError("");
-    return data;
-  }
-
-  async function reset() {
-    if (!profileId) return;
-    await resetEvent(profileId);
-    setResults(null);
-    setError("");
-  }
+  const results = assignmentsQuery.data || null;
+  const loading = assignmentsQuery.isLoading;
+  const error = (assignmentsQuery.error as Error | null)?.message || "";
 
   return {
     results,
     loading,
     error,
-    run,
-    reset
+    run: () => runMutation.mutateAsync(),
+    reset: () => resetMutation.mutateAsync()
   };
 }

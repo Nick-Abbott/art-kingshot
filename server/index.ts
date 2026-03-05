@@ -29,6 +29,9 @@ const isProduction = config.nodeEnv === "production";
 
 app.use(express.json());
 app.set("trust proxy", 1);
+app.get("/health", (_req, res) => {
+  res.status(200).json({ ok: true });
+});
 
 const serverRoot = process.cwd();
 const dbPath =

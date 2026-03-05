@@ -1,22 +1,23 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { Alliance, Profile, User } from "@shared/types";
-import { createAlliance, deleteAlliance, fetchAlliances } from "./api/alliances";
-import {
-  createProfile,
-  createAllianceProfile,
-  fetchAllianceProfiles,
-  updateAllianceProfile,
-  updateProfile
-} from "./api/profile";
+import type { Profile, User } from "@shared/types";
+import { createAlliance, deleteAlliance } from "./api/alliances";
 import { lookupPlayer } from "./api/playerLookup";
 import { parsePlayerLookup } from "./utils/playerLookup";
 import { ApiError } from "./apiClient";
+import {
+  useCreateAllianceProfileMutation,
+  useCreateProfileMutation,
+  useUpdateProfileMutation
+} from "./hooks/useProfileMutations";
+import { useQueryClient } from "@tanstack/react-query";
+import { profilesQueryKey } from "./hooks/useProfilesQuery";
+import { useAllianceProfilesQuery } from "./hooks/useAllianceProfilesQuery";
+import { useAllianceProfileMutation } from "./hooks/useAllianceProfileMutations";
+import { useAlliancesQuery } from "./hooks/useAlliancesQuery";
 
 type Props = {
   user: User | null;
-  profiles: Profile[];
-  setProfiles: React.Dispatch<React.SetStateAction<Profile[]>>;
   selectedProfile: Profile | null;
   selectedProfileId: string;
 };
@@ -25,16 +26,13 @@ const emptyForm = {
   playerId: ""
 };
 
-function Profiles({
-  user,
-  profiles,
-  setProfiles,
-  selectedProfile,
-  selectedProfileId
-}: Props) {
+function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const createProfileMutation = useCreateProfileMutation();
+  const updateProfileMutation = useUpdateProfileMutation();
+  const createAllianceProfileMutation = useCreateAllianceProfileMutation();
   const [form, setForm] = useState(emptyForm);
-  const [alliances, setAlliances] = useState<Alliance[]>([]);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [lookupStatus, setLookupStatus] = useState("");
@@ -46,36 +44,28 @@ function Profiles({
   const [createError, setCreateError] = useState("");
   const [createSuccess, setCreateSuccess] = useState("");
   const [deleteError, setDeleteError] = useState("");
-  const [adminProfiles, setAdminProfiles] = useState<Profile[]>([]);
-  const [loadingAdmin, setLoadingAdmin] = useState(false);
+  const canManage =
+    Boolean(user?.isAppAdmin) || selectedProfile?.role === "alliance_admin";
+  const allianceProfileMutation = useAllianceProfileMutation(
+    selectedProfileId,
+    selectedProfile?.allianceId || null
+  );
+  const allianceProfilesQuery = useAllianceProfilesQuery(
+    selectedProfileId,
+    canManage
+  );
+  const alliancesQuery = useAlliancesQuery(
+    selectedProfile?.kingdomId ?? null,
+    Boolean(selectedProfile && !selectedProfile.allianceId)
+  );
   const [addPlayerId, setAddPlayerId] = useState("");
   const [addPlayerError, setAddPlayerError] = useState("");
   const [addPlayerSuccess, setAddPlayerSuccess] = useState("");
   const [addPlayerBusy, setAddPlayerBusy] = useState(false);
   const [addLookupStatus, setAddLookupStatus] = useState("");
-
-  const canManage =
-    Boolean(user?.isAppAdmin) || selectedProfile?.role === "alliance_admin";
-
-  async function refreshAdminProfiles(profileId: string) {
-    setLoadingAdmin(true);
-    try {
-      const data = await fetchAllianceProfiles(profileId);
-      setAdminProfiles(data);
-    } catch {
-      setAdminProfiles([]);
-    } finally {
-      setLoadingAdmin(false);
-    }
-  }
-
-  useEffect(() => {
-    if (!selectedProfileId || !canManage) {
-      setAdminProfiles([]);
-      return;
-    }
-    refreshAdminProfiles(selectedProfileId);
-  }, [selectedProfileId, canManage]);
+  const alliances = alliancesQuery.data || [];
+  const adminProfiles = allianceProfilesQuery.data || [];
+  const loadingAdmin = allianceProfilesQuery.isLoading;
 
   useEffect(() => {
     setJoinError("");
@@ -90,12 +80,8 @@ function Profiles({
     setAddPlayerSuccess("");
     setAddLookupStatus("");
     if (!selectedProfile || selectedProfile.allianceId) {
-      setAlliances([]);
       return;
     }
-    fetchAlliances(selectedProfile.kingdomId)
-      .then(setAlliances)
-      .catch(() => setAlliances([]));
   }, [selectedProfile]);
 
   async function submitProfile(event: React.FormEvent<HTMLFormElement>) {
@@ -137,12 +123,11 @@ function Profiles({
     };
 
     try {
-      const profile = await createProfile(payload);
+      const profile = await createProfileMutation.mutateAsync(payload);
       if (!profile) {
         setError(t("profiles.errors.createFailed"));
         return;
       }
-      setProfiles((prev) => [...prev, profile]);
       setForm(emptyForm);
       setSuccess(t("profiles.created"));
     } catch (createError) {
@@ -206,10 +191,13 @@ function Profiles({
     }
     setAddPlayerBusy(true);
     try {
-      const profile = await createAllianceProfile(selectedProfileId, {
-        playerId: value,
-        playerName: playerName || null,
-        kingdomId
+      const profile = await createAllianceProfileMutation.mutateAsync({
+        profileId: selectedProfileId,
+        payload: {
+          playerId: value,
+          playerName: playerName || null,
+          kingdomId
+        }
       });
       if (!profile) {
         setAddPlayerError(t("profiles.errors.addProfileFailed"));
@@ -217,7 +205,6 @@ function Profiles({
       }
       setAddPlayerSuccess(t("profiles.adminAddSuccess"));
       setAddPlayerId("");
-      await refreshAdminProfiles(selectedProfileId);
     } finally {
       setAddPlayerBusy(false);
     }
@@ -240,15 +227,15 @@ function Profiles({
       const playerAvatar = rawAvatar
         ? `${rawAvatar}${rawAvatar.includes("?") ? "&" : "?"}v=${Date.now()}`
         : "";
-      const updated = await updateProfile(selectedProfile.id, {
-        playerName: playerName || null,
-        playerAvatar: playerAvatar || null,
-        kingdomId: parsed.kingdomId
+      const updated = await updateProfileMutation.mutateAsync({
+        profileId: selectedProfile.id,
+        payload: {
+          playerName: playerName || null,
+          playerAvatar: playerAvatar || null,
+          kingdomId: parsed.kingdomId
+        }
       });
       if (updated) {
-        setProfiles((prev) =>
-          prev.map((item) => (item.id === updated.id ? updated : item))
-        );
         setSuccess(t("profiles.refreshed"));
       } else {
         setError(t("profiles.errors.updateFailed"));
@@ -262,33 +249,29 @@ function Profiles({
 
   async function approveProfile(target: Profile, status: "pending" | "active") {
     if (!selectedProfileId) return;
-    const updated = await updateAllianceProfile(selectedProfileId, target.id, {
-      status
+    const updated = await allianceProfileMutation.mutateAsync({
+      targetProfileId: target.id,
+      payload: { status }
     });
     if (!updated) return;
-    setAdminProfiles((prev) =>
-      updated.allianceId && updated.allianceId === selectedProfile?.allianceId
-        ? prev.map((item) => (item.id === updated.id ? updated : item))
-        : prev.filter((item) => item.id !== updated.id)
-    );
   }
 
   async function rejectProfile(target: Profile) {
     if (!selectedProfileId) return;
-    const updated = await updateAllianceProfile(selectedProfileId, target.id, {
-      action: "reject"
+    const updated = await allianceProfileMutation.mutateAsync({
+      targetProfileId: target.id,
+      payload: { action: "reject" }
     });
     if (!updated) return;
-    setAdminProfiles((prev) => prev.filter((item) => item.id !== updated.id));
   }
 
   async function setRole(target: Profile, role: "member" | "alliance_admin") {
     if (!selectedProfileId) return;
-    const updated = await updateAllianceProfile(selectedProfileId, target.id, { role });
+    const updated = await allianceProfileMutation.mutateAsync({
+      targetProfileId: target.id,
+      payload: { role }
+    });
     if (!updated) return;
-    setAdminProfiles((prev) =>
-      prev.map((item) => (item.id === updated.id ? updated : item))
-    );
   }
 
   async function submitJoinRequest(event: React.FormEvent<HTMLFormElement>) {
@@ -306,14 +289,14 @@ function Profiles({
       return;
     }
 
-    const updated = await updateProfile(selectedProfile.id, {
-      allianceId: joinAllianceId
+    const updated = await updateProfileMutation.mutateAsync({
+      profileId: selectedProfile.id,
+      payload: { allianceId: joinAllianceId }
     });
     if (!updated) {
       setJoinError(t("profiles.errors.joinFailed"));
       return;
     }
-    setProfiles((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
     setJoinSuccess(t("profiles.joinRequested"));
   }
 
@@ -348,9 +331,6 @@ function Profiles({
       setCreateError(t("profiles.errors.createAllianceFailed"));
       return;
     }
-    setProfiles((prev) =>
-      prev.map((item) => (item.id === updatedProfile.id ? updatedProfile : item))
-    );
     setCreateSuccess(t("profiles.createdAlliance"));
   }
 
@@ -367,19 +347,7 @@ function Profiles({
       setDeleteError(t("profiles.errors.deleteAllianceFailed"));
       return;
     }
-    setProfiles((prev) =>
-      prev.map((item) =>
-        item.allianceId === selectedProfile.allianceId
-          ? {
-              ...item,
-              allianceId: null,
-              allianceName: null,
-              role: "member",
-              status: "pending",
-            }
-          : item
-      )
-    );
+    await queryClient.invalidateQueries({ queryKey: profilesQueryKey });
   }
 
   return (

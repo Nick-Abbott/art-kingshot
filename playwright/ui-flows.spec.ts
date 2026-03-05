@@ -26,14 +26,14 @@ function requireEnv(name: string, value: string) {
   }
 }
 
-function createSessionToken() {
+function createSessionToken(isAppAdmin = false) {
   const db = new Database(DB_PATH);
   const now = Date.now();
   const userId = crypto.randomUUID();
   const token = crypto.randomBytes(32).toString("hex");
   db.prepare(
     "INSERT INTO users (id, discordId, displayName, avatar, isAppAdmin, createdAt) VALUES (?, ?, ?, ?, ?, ?)"
-  ).run(userId, `playwright-${userId}`, "Playwright", null, 0, now);
+  ).run(userId, `playwright-${userId}`, "Playwright", null, isAppAdmin ? 1 : 0, now);
   db.prepare(
     "INSERT INTO sessions (token, userId, expiresAt, createdAt) VALUES (?, ?, ?, ?)"
   ).run(token, userId, now + 14 * 24 * 60 * 60 * 1000, now);
@@ -414,6 +414,181 @@ test("admin signup controls are only visible to alliance admins", async ({
   await page.getByTestId("profile-switcher").click({ timeout: WAIT_TIMEOUT });
   await page.getByRole("menuitem", { name: profileB.playerName }).click();
   await expect(page.getByLabel("Alliance member (admin)")).toHaveCount(0);
+
+  await context.close();
+});
+
+test("alliance admin updates applicants list immediately", async ({
+  browser,
+  request,
+}) => {
+  test.setTimeout(30000);
+  requireEnv("PLAYWRIGHT_DB_PATH", DB_PATH);
+  sessionToken = createSessionToken();
+  await assertSession(request);
+  const { profileA, profileB, allianceId } = await seedProfiles(request);
+  await joinAlliance(request, profileB.id, allianceId);
+
+  const context = await browser.newContext({ baseURL: CLIENT_URL });
+  await context.addCookies([
+    { name: "ak_session", value: sessionToken, domain: CLIENT_HOST, path: "/" },
+  ]);
+  await context.addInitScript((token) => {
+    document.cookie = `ak_session=${token}; path=/`;
+  }, sessionToken);
+  const page = await context.newPage();
+
+  await openPage(page, { pageKey: "profiles", selectedProfileId: profileA.id });
+
+  const applicantsHeading = () => page.getByRole("heading", { name: "Applicants" });
+  const applicantsList = () =>
+    applicantsHeading().locator("xpath=following-sibling::div[1]");
+  const membersList = () =>
+    page.getByRole("heading", { name: "Members" }).locator("xpath=following-sibling::div[1]");
+  const memberCard = () =>
+    membersList().locator(".ui-card-muted", { hasText: profileB.playerName });
+
+  await expect(applicantsList()).toContainText(profileB.playerName, {
+    timeout: WAIT_TIMEOUT,
+  });
+
+  await applicantsList().getByRole("button", { name: "Approve" }).click({
+    timeout: WAIT_TIMEOUT,
+  });
+  await expect(membersList()).toContainText(profileB.playerName, {
+    timeout: WAIT_TIMEOUT,
+  });
+  await expect(applicantsHeading()).toHaveCount(0, {
+    timeout: WAIT_TIMEOUT,
+  });
+
+  await memberCard().getByRole("button", { name: "Suspend" }).click({
+    timeout: WAIT_TIMEOUT,
+  });
+  await expect(applicantsList()).toContainText(profileB.playerName, {
+    timeout: WAIT_TIMEOUT,
+  });
+
+  await applicantsList().getByRole("button", { name: "Approve" }).click({
+    timeout: WAIT_TIMEOUT,
+  });
+  await memberCard().getByRole("button", { name: "Make admin" }).click({
+    timeout: WAIT_TIMEOUT,
+  });
+  await expect(
+    memberCard().getByRole("button", { name: "Make member" })
+  ).toBeVisible({ timeout: WAIT_TIMEOUT });
+
+  await memberCard().getByRole("button", { name: "Suspend" }).click({
+    timeout: WAIT_TIMEOUT,
+  });
+  await applicantsList().getByRole("button", { name: "Reject" }).click({
+    timeout: WAIT_TIMEOUT,
+  });
+  await expect(applicantsHeading()).toHaveCount(0, {
+    timeout: WAIT_TIMEOUT,
+  });
+  await expect(membersList()).not.toContainText(profileB.playerName, {
+    timeout: WAIT_TIMEOUT,
+  });
+
+  await context.close();
+});
+
+test("admin panel updates alliances and profiles without reload", async ({
+  browser,
+  request,
+}) => {
+  test.setTimeout(30000);
+  requireEnv("PLAYWRIGHT_DB_PATH", DB_PATH);
+  sessionToken = createSessionToken(true);
+  await assertSession(request);
+
+  const kingdomA = 9100 + Math.floor(Math.random() * 100);
+  const kingdomB = kingdomA + 100;
+  const runToken = `${Date.now()}${Math.floor(Math.random() * 1000)
+    .toString()
+    .padStart(3, "0")}`;
+  const profileAdminA = await createProfile(request, {
+    playerId: `FID${runToken}A`,
+    playerName: "Admin A",
+    kingdomId: kingdomA,
+  });
+  const profileMemberA = await createProfile(request, {
+    playerId: `FID${runToken}B`,
+    playerName: "Member A",
+    kingdomId: kingdomA,
+  });
+  const profileAdminB = await createProfile(request, {
+    playerId: `FID${runToken}C`,
+    playerName: "Admin B",
+    kingdomId: kingdomB,
+  });
+  const allianceA = await createAlliance(request, profileAdminA.id);
+  const allianceB = await createAlliance(request, profileAdminB.id);
+  await joinAlliance(request, profileMemberA.id, allianceA.alliance.id);
+
+  const context = await browser.newContext({ baseURL: CLIENT_URL });
+  await context.addCookies([
+    { name: "ak_session", value: sessionToken, domain: CLIENT_HOST, path: "/" },
+  ]);
+  await context.addInitScript((token) => {
+    document.cookie = `ak_session=${token}; path=/`;
+  }, sessionToken);
+  const page = await context.newPage();
+
+  await openPage(page, { pageKey: "profiles", selectedProfileId: profileAdminA.id });
+  await openNavMenu(page);
+  await page
+    .getByRole("button", { name: "Admin", exact: true })
+    .click({ timeout: WAIT_TIMEOUT });
+  await page.getByLabel("Kingdom").waitFor({ timeout: WAIT_TIMEOUT });
+
+  await page.getByLabel("Kingdom").selectOption(String(kingdomA));
+  await page.getByLabel("Alliance").selectOption(allianceA.alliance.id);
+
+  const applicantsHeading = () => page.getByRole("heading", { name: "Applicants" });
+  const applicantsList = () =>
+    applicantsHeading().locator("xpath=following-sibling::div[1]");
+  const membersList = () =>
+    page.getByRole("heading", { name: "Members" }).locator("xpath=following-sibling::div[1]");
+  const adminMemberCard = () =>
+    membersList().locator(".ui-card-muted", { hasText: profileMemberA.playerName });
+
+  await expect(applicantsList()).toContainText(profileMemberA.playerName, {
+    timeout: WAIT_TIMEOUT,
+  });
+  await applicantsList().getByRole("button", { name: "Approve" }).click({
+    timeout: WAIT_TIMEOUT,
+  });
+  await expect(membersList()).toContainText(profileMemberA.playerName, {
+    timeout: WAIT_TIMEOUT,
+  });
+  await expect(applicantsHeading()).toHaveCount(0, { timeout: WAIT_TIMEOUT });
+
+  await adminMemberCard().getByRole("button", { name: "Suspend" }).click({
+    timeout: WAIT_TIMEOUT,
+  });
+  await expect(applicantsList()).toContainText(profileMemberA.playerName, {
+    timeout: WAIT_TIMEOUT,
+  });
+
+  await applicantsList().getByRole("button", { name: "Approve" }).click({
+    timeout: WAIT_TIMEOUT,
+  });
+  await adminMemberCard().getByRole("button", { name: "Make admin" }).click({
+    timeout: WAIT_TIMEOUT,
+  });
+  await expect(
+    adminMemberCard().getByRole("button", { name: "Make member" })
+  ).toBeVisible({ timeout: WAIT_TIMEOUT });
+
+  await page.getByLabel("Kingdom").selectOption(String(kingdomB));
+  await expect(page.getByLabel("Alliance")).toHaveValue("");
+  await page.getByLabel("Alliance").selectOption(allianceB.alliance.id);
+  await expect(membersList()).toContainText(profileAdminB.playerName, {
+    timeout: WAIT_TIMEOUT,
+  });
 
   await context.close();
 });

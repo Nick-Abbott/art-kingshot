@@ -79,14 +79,17 @@ Root:
 - `npm run test:server` — Run server tests
 - `npm run test:client` — Run client tests
 - `npm run test:i18n` — Verify i18n keys
+- `npm run test:playwright` — Run all Playwright tests
+- `npm run test:e2e` — Run Playwright UI flows only (desktop + mobile, light mode)
+- `npm run test:visual` — Run Playwright snapshots only (all viewports + color schemes)
 - `npm run seed:test` — Seed test scenario data
 - `node scripts/check-auth-flow.js` — Basic auth/session check (server required)
 - `SESSION_TOKEN=your_token node scripts/check-alliance-switch.js` — Smoke check for alliance selection (server required)
 - `node scripts/seedSession.js --db server/data/viking.sqlite` — Create a DB session token for local scripts
 
-Playwright snapshots (full UI states):
+Playwright UI snapshots (full UI states):
 ```bash
-npm run snapshots:playwright
+npm run test:visual
 ```
 Outputs are saved under `snapshots/playwright/`.
 
@@ -94,12 +97,13 @@ This script is one-shot and runs without manual setup:
 - Starts server on `http://localhost:3002` with `DB_PATH=server/data/viking.playwright.sqlite`
 - Starts client on `http://localhost:5174`
 - Playwright tests seed session tokens directly in the Playwright DB
-If you want to change ports or DB, edit the script in `package.json`.
+- Playwright `webServer` manages startup/shutdown (see `playwright.config.ts`)
 
 ## Notes
 
 - Seed script (`npm run seed:test`) requires a running server and a `SESSION_TOKEN`.
 - API conventions live in `docs/api-contract.md`.
+- Architecture reference: `docs/architecture.md`.
 
 ## UI Layer
 

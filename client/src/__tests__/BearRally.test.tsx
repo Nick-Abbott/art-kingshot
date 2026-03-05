@@ -1,5 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import BearRally from "../BearRally";
 import type { Profile } from "@shared/types";
 
@@ -13,22 +14,16 @@ const bearMember = {
 const upsertMember = vi.fn().mockResolvedValue([bearMember]);
 const removeMember = vi.fn().mockResolvedValue([]);
 const resetGroup = vi.fn().mockResolvedValue([]);
-const refreshGroup = vi.fn().mockResolvedValue([]);
-const setBear1Members = vi.fn();
-const setBear2Members = vi.fn();
 
 vi.mock("../hooks/useBear", () => ({
   useBear: () => ({
     bear1Members: [bearMember],
     bear2Members: [],
-    setBear1Members,
-    setBear2Members,
     loading: false,
     error: "",
     upsertMember,
     removeMember,
-    resetGroup,
-    refreshGroup
+    resetGroup
   })
 }));
 
@@ -69,13 +64,22 @@ describe("BearRally", () => {
     updateProfile.mockClear();
   });
 
+  function renderWithClient(ui: React.ReactElement) {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } }
+    });
+    return {
+      queryClient,
+      ...render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>)
+    };
+  }
+
   it("keeps edit values even when profile defaults exist", () => {
-    render(
+    renderWithClient(
       <BearRally
         profileId="p1"
         profile={baseProfile}
         canManage={true}
-        onProfileUpdated={vi.fn()}
       />
     );
 
@@ -86,24 +90,24 @@ describe("BearRally", () => {
   });
 
   it("clears edit mode on profile switch", () => {
-    const { rerender } = render(
+    const { rerender, queryClient } = renderWithClient(
       <BearRally
         profileId="p1"
         profile={baseProfile}
         canManage={true}
-        onProfileUpdated={vi.fn()}
       />
     );
 
     fireEvent.click(screen.getAllByText("bear.edit")[0]);
 
     rerender(
-      <BearRally
-        profileId="p2"
-        profile={{ ...baseProfile, id: "p2" }}
-        canManage={true}
-        onProfileUpdated={vi.fn()}
-      />
+      <QueryClientProvider client={queryClient}>
+        <BearRally
+          profileId="p2"
+          profile={{ ...baseProfile, id: "p2" }}
+          canManage={true}
+        />
+      </QueryClientProvider>
     );
 
     const submitButton = screen.getByRole("button", { name: "bear.register" });

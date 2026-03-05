@@ -1,15 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { Alliance, Profile } from "@shared/types";
+import type { Profile } from "@shared/types";
 import {
-  deleteAdminAlliance,
   deleteAdminProfile,
-  fetchAdminAllianceProfiles,
-  fetchAdminAlliances,
-  fetchAdminKingdoms,
   fetchAdminProfile,
-  updateAdminAllianceProfile,
 } from "./api/admin";
+import {
+  useAdminAllianceProfilesQuery,
+  useAdminAlliancesQuery,
+  useAdminKingdomsQuery
+} from "./hooks/useAdminQueries";
+import { useAdminAllianceProfileMutation } from "./hooks/useAdminAllianceProfileMutations";
+import { useAdminDeleteAllianceMutation } from "./hooks/useAdminDeleteAllianceMutation";
 
 type Props = {
   isAppAdmin: boolean;
@@ -17,16 +19,24 @@ type Props = {
 
 function Admin({ isAppAdmin }: Props) {
   const { t } = useTranslation();
-  const [kingdoms, setKingdoms] = useState<number[]>([]);
-  const [alliances, setAlliances] = useState<Alliance[]>([]);
   const [selectedKingdom, setSelectedKingdom] = useState<number | null>(null);
   const [selectedAllianceId, setSelectedAllianceId] = useState("");
-  const [profiles, setProfiles] = useState<Profile[]>([]);
   const [profileLookupId, setProfileLookupId] = useState("");
   const [profileLookupResult, setProfileLookupResult] = useState<Profile | null>(null);
   const [profileLookupError, setProfileLookupError] = useState("");
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const kingdomsQuery = useAdminKingdomsQuery(isAppAdmin);
+  const alliancesQuery = useAdminAlliancesQuery(selectedKingdom, isAppAdmin);
+  const profilesQuery = useAdminAllianceProfilesQuery(selectedAllianceId, isAppAdmin);
+  const allianceProfileMutation = useAdminAllianceProfileMutation(selectedAllianceId);
+  const deleteAllianceMutation = useAdminDeleteAllianceMutation(selectedKingdom);
+  const kingdoms = kingdomsQuery.data || [];
+  const alliances = alliancesQuery.data || [];
+  const profiles = profilesQuery.data || [];
+  const loading = profilesQuery.isLoading;
+  const profilesError =
+    profilesQuery.isError && selectedAllianceId ? t("admin.loadFailed") : "";
+  const activeError = profilesError || error;
 
   const selectedAlliance = useMemo(
     () => alliances.find((alliance) => alliance.id === selectedAllianceId) || null,
@@ -34,77 +44,39 @@ function Admin({ isAppAdmin }: Props) {
   );
 
   useEffect(() => {
-    if (!isAppAdmin) return;
-    fetchAdminKingdoms()
-      .then((data) => setKingdoms(data))
-      .catch(() => setKingdoms([]));
-  }, [isAppAdmin]);
-
-  useEffect(() => {
-    if (!isAppAdmin) return;
-    if (selectedKingdom === null) {
-      setAlliances([]);
-      setSelectedAllianceId("");
-      return;
-    }
-    fetchAdminAlliances(selectedKingdom)
-      .then((data) => setAlliances(data))
-      .catch(() => setAlliances([]));
-  }, [isAppAdmin, selectedKingdom]);
-
-  useEffect(() => {
-    if (!isAppAdmin || !selectedAllianceId) {
-      setProfiles([]);
-      return;
-    }
-    setLoading(true);
-    setError("");
-    fetchAdminAllianceProfiles(selectedAllianceId)
-      .then((data) => setProfiles(data))
-      .catch(() => setError(t("admin.loadFailed")))
-      .finally(() => setLoading(false));
-  }, [isAppAdmin, selectedAllianceId, t]);
+    setSelectedAllianceId("");
+  }, [selectedKingdom]);
 
   async function handleApprove(profile: Profile) {
     if (!selectedAllianceId) return;
-    const updated = await updateAdminAllianceProfile(selectedAllianceId, profile.id, {
-      status: "active",
+    await allianceProfileMutation.mutateAsync({
+      profileId: profile.id,
+      payload: { status: "active" }
     });
-    if (!updated) return;
-    setProfiles((prev) =>
-      prev.map((item) => (item.id === updated.id ? updated : item))
-    );
   }
 
   async function handleReject(profile: Profile) {
     if (!selectedAllianceId) return;
-    const updated = await updateAdminAllianceProfile(selectedAllianceId, profile.id, {
-      action: "reject",
+    await allianceProfileMutation.mutateAsync({
+      profileId: profile.id,
+      payload: { action: "reject" }
     });
-    if (!updated) return;
-    setProfiles((prev) => prev.filter((item) => item.id !== profile.id));
   }
 
   async function handleSuspend(profile: Profile) {
     if (!selectedAllianceId) return;
-    const updated = await updateAdminAllianceProfile(selectedAllianceId, profile.id, {
-      status: "pending",
+    await allianceProfileMutation.mutateAsync({
+      profileId: profile.id,
+      payload: { status: "pending" }
     });
-    if (!updated) return;
-    setProfiles((prev) =>
-      prev.map((item) => (item.id === updated.id ? updated : item))
-    );
   }
 
   async function handleRoleToggle(profile: Profile) {
     if (!selectedAllianceId) return;
-    const updated = await updateAdminAllianceProfile(selectedAllianceId, profile.id, {
-      role: profile.role === "member" ? "alliance_admin" : "member",
+    await allianceProfileMutation.mutateAsync({
+      profileId: profile.id,
+      payload: { role: profile.role === "member" ? "alliance_admin" : "member" }
     });
-    if (!updated) return;
-    setProfiles((prev) =>
-      prev.map((item) => (item.id === updated.id ? updated : item))
-    );
   }
 
   async function handleDeleteAlliance() {
@@ -113,14 +85,13 @@ function Admin({ isAppAdmin }: Props) {
       t("admin.deleteAllianceConfirm", { name: selectedAlliance.name })
     );
     if (!confirmed) return;
-    const ok = await deleteAdminAlliance(selectedAllianceId);
+    const ok = await deleteAllianceMutation.mutateAsync(selectedAllianceId);
     if (!ok) {
       setError(t("admin.deleteFailed"));
       return;
     }
-    setProfiles([]);
     setSelectedAllianceId("");
-    setAlliances((prev) => prev.filter((item) => item.id !== selectedAllianceId));
+    setError("");
   }
 
   async function handleLookupProfile() {
@@ -283,7 +254,7 @@ function Admin({ isAppAdmin }: Props) {
                 {t("admin.deleteAlliance")}
               </button>
             </div>
-            {error && <p className="ui-error">{error}</p>}
+            {activeError && <p className="ui-error">{activeError}</p>}
             {loading ? (
               <p className="ui-empty-state">{t("admin.loading")}</p>
             ) : (

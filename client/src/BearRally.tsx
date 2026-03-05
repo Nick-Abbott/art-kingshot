@@ -3,16 +3,19 @@ import { useTranslation } from "react-i18next";
 import { ApiError } from "./apiClient";
 import { lookupPlayer } from "./api/playerLookup";
 import { useBear } from "./hooks/useBear";
-import type { EligibleMember, Profile } from "@shared/types";
-import { updateProfile } from "./api/profile";
-import { fetchEligibleBearMembers } from "./api/bear";
+import type { Profile } from "@shared/types";
+import { useUpdateProfileMutation } from "./hooks/useProfileMutations";
 import { parsePlayerLookup } from "./utils/playerLookup";
+import {
+  useEligibleBearMembersQuery,
+  eligibleBearMembersQueryKey
+} from "./hooks/useEligibleBearMembersQuery";
+import { useQueryClient } from "@tanstack/react-query";
 
 type Props = {
   profileId: string;
   profile: Profile | null;
   canManage: boolean;
-  onProfileUpdated: (profile: Profile) => void;
 };
 
 type BearForm = {
@@ -36,15 +39,14 @@ function parseNumber(value: string) {
   return digits ? Number(digits) : 0;
 }
 
-function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
+function BearRally({ profileId, profile, canManage }: Props) {
   const { t } = useTranslation();
   const {
     bear1Members,
     bear2Members,
     upsertMember,
     removeMember,
-    resetGroup,
-    refreshGroup
+    resetGroup
   } = useBear(profileId);
   const [form, setForm] = useState<BearForm>({
     rallySize: "",
@@ -64,8 +66,11 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
     bearGroup: "bear1" | "bear2";
   } | null>(null);
   const [profileWarning, setProfileWarning] = useState("");
-  const [eligibleMembers, setEligibleMembers] = useState<EligibleMember[]>([]);
   const [adminTargetId, setAdminTargetId] = useState("");
+  const updateProfileMutation = useUpdateProfileMutation();
+  const queryClient = useQueryClient();
+  const eligibleMembersQuery = useEligibleBearMembersQuery(profileId, canManage);
+  const eligibleMembers = eligibleMembersQuery.data || [];
   const adminOptions = useMemo(() => {
     const options: { playerId: string; playerName: string }[] = [];
     if (profile?.playerId) {
@@ -100,24 +105,12 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
   }, [profile, editingMember]);
 
   useEffect(() => {
-    let active = true;
-    if (!profileId || !canManage) {
-      setEligibleMembers([]);
-      return undefined;
+    if (!canManage) return;
+    if (!adminTargetId || !profile?.playerId) return;
+    if (!adminOptions.some((member) => member.playerId === adminTargetId)) {
+      setAdminTargetId(profile.playerId);
     }
-    fetchEligibleBearMembers(profileId)
-      .then((data) => {
-        if (!active) return;
-        setEligibleMembers(data);
-      })
-      .catch(() => {
-        if (!active) return;
-        setEligibleMembers([]);
-      });
-    return () => {
-      active = false;
-    };
-  }, [profileId, canManage]);
+  }, [adminOptions, adminTargetId, canManage, profile?.playerId]);
 
   useEffect(() => {
     if (!profile || editingMember) return;
@@ -172,14 +165,6 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
         editingMember?.playerId ||
         (usingAdminTarget ? adminTarget : profile.playerId)
       ).trim();
-      const inferredSourceGroup =
-        form.bearGroup === "bear1"
-          ? bear2Members.some((member) => member.playerId === fid)
-            ? "bear2"
-            : null
-          : bear1Members.some((member) => member.playerId === fid)
-          ? "bear1"
-          : null;
       let resolvedName = form.playerName;
 
       if (!editingMember && !resolvedName) {
@@ -193,33 +178,24 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
       });
 
       if (!editingMember && !usingAdminTarget) {
-        const updatedProfile = await updateProfile(profileId, {
-          playerId: fid,
-          playerName: resolvedName,
-          rallySize: parseNumber(form.rallySize)
+        const updatedProfile = await updateProfileMutation.mutateAsync({
+          profileId,
+          payload: {
+            playerId: fid,
+            playerName: resolvedName,
+            rallySize: parseNumber(form.rallySize)
+          }
         });
-        if (updatedProfile) {
-          onProfileUpdated(updatedProfile);
-        } else {
+        if (!updatedProfile) {
           setProfileWarning(t("profiles.errors.updateFailed"));
         }
       }
       if (usingAdminTarget) {
-        const nextEligible = await fetchEligibleBearMembers(profileId);
-        setEligibleMembers(nextEligible);
-        if (!nextEligible.some((member) => member.playerId === adminTarget)) {
-          setAdminTargetId("");
-        }
+        await queryClient.invalidateQueries({
+          queryKey: eligibleBearMembersQueryKey(profileId)
+        });
       }
 
-      const sourceGroup =
-        editingMember && editingMember.bearGroup !== form.bearGroup
-          ? editingMember.bearGroup
-          : inferredSourceGroup;
-
-      if (sourceGroup) {
-        await refreshGroup(sourceGroup);
-      }
       setForm({ rallySize: "", bearGroup: form.bearGroup, playerName: "" });
       setLookupStatus("");
       setEditingMember(null);
@@ -294,8 +270,9 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
     try {
       await resetGroup(bearGroup);
       if (canManage && profileId) {
-        const nextEligible = await fetchEligibleBearMembers(profileId);
-        setEligibleMembers(nextEligible);
+        await queryClient.invalidateQueries({
+          queryKey: eligibleBearMembersQueryKey(profileId)
+        });
       }
     } catch (err: any) {
       if (err instanceof ApiError && err.status === 403) {
@@ -321,8 +298,9 @@ function BearRally({ profileId, profile, canManage, onProfileUpdated }: Props) {
     try {
       await removeMember(bearGroup, playerId);
       if (canManage && profileId) {
-        const nextEligible = await fetchEligibleBearMembers(profileId);
-        setEligibleMembers(nextEligible);
+        await queryClient.invalidateQueries({
+          queryKey: eligibleBearMembersQueryKey(profileId)
+        });
       }
     } catch (err: any) {
       if (err instanceof ApiError && err.status === 403) {
