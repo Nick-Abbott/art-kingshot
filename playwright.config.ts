@@ -1,6 +1,8 @@
 import { defineConfig } from "@playwright/test";
+
 const baseURL = process.env.SNAPSHOT_URL || "http://localhost:5173";
 const executablePath = process.env.CHROME_PATH;
+const isCI = Boolean(process.env.CI);
 
 export default defineConfig({
   testDir: "playwright",
@@ -8,11 +10,13 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   fullyParallel: false,
   workers: 4,
-  reporter: "list",
+  reporter: isCI ? "github" : "list",
   snapshotPathTemplate: "snapshots/playwright/{arg}{ext}",
+  retries: isCI ? 2 : 0,
   use: {
     baseURL,
-    trace: "off",
+    trace: isCI ? "on-first-retry" : "off",
+    video: isCI ? "on-first-retry" : "off",
     launchOptions: executablePath ? { executablePath } : undefined,
   },
   projects: [

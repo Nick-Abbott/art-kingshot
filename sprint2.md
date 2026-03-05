@@ -274,6 +274,7 @@ Validate PW-05 by confirming:
 
 ### PW-06: Playwright Config for CI Reliability
 **Problem**: The current Playwright config lacks retries and trace capture, making CI failures hard to debug.
+**Status**: Complete
 
 **Scope / Requirements**
 - Add CI-aware Playwright config behavior:
@@ -296,6 +297,36 @@ You are implementing PW-06. Update `playwright.config.ts` to enable retries and 
 Validate PW-06 by confirming:
 1) CI config enables retries and trace/video.
 2) Local config remains unchanged when `CI` is not set.
+
+- **Next Steps for Engineer**:
+  - Add Playwright execution to CI so the CI-only settings are actually exercised.
+  - Recommended approach:
+    - PR workflow: run `npm run test:e2e` (flows only).
+    - Nightly workflow (schedule): run `npm run test:visual` (snapshots).
+  - Keep deploy workflow unchanged unless explicitly requested.
+
+- **QA Success Criteria**:
+  - PR CI runs `npm run test:e2e` and surfaces Playwright failures with CI reporter/trace on retry.
+  - Nightly CI runs `npm run test:visual` and stores snapshot artifacts on failure.
+  - Local runs (without `CI`) keep retries = 0, trace/video off, and `list` reporter.
+
+- **Engineer Update (2026-03-05)**: added CI-aware Playwright retries, trace/video on first retry, and GitHub reporter while keeping local defaults unchanged.
+- **Engineer Tests (2026-03-05)**: `npm run test:playwright` (not run; config-only change).
+- **Engineer Update (2026-03-05)**: added PR Playwright flows run in CI, plus a scheduled nightly workflow for snapshot runs with artifact uploads on failure.
+- **Engineer Tests (2026-03-05)**: `npm run test:e2e` (not run; CI-only), `npm run test:visual` (not run; nightly CI-only).
+- **QA Validation (2026-03-05)**:
+  - [x] CI config enables retries, trace, and video on first retry via `isCI` gating in `playwright.config.ts`.
+  - [x] Local defaults remain unchanged when `CI` is not set (retries 0, trace/video off, list reporter).
+- **QA Tests (2026-03-05)**:
+  - `npm run test:playwright` — not run (config-only change; not required).
+- **QA Validation (2026-03-05)**:
+  - [x] PR workflow runs `npm run test:e2e` with artifact upload on failure (`.github/workflows/pr.yml`).
+  - [x] Nightly workflow runs `npm run test:visual` with artifact uploads on failure (`.github/workflows/nightly-playwright.yml`).
+  - [x] CI gating in `playwright.config.ts` ensures retries/trace/video are only on when `CI` is set.
+  - [x] Local defaults remain unchanged when `CI` is not set (retries 0, trace/video off, list reporter).
+- **QA Tests (2026-03-05)**:
+  - `npm run test:e2e` — not run (CI-only requirement).
+  - `npm run test:visual` — not run (nightly CI-only requirement).
 
 ---
 
