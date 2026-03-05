@@ -1,13 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ApiError } from "./apiClient";
-import { lookupPlayer } from "./api/playerLookup";
 import type { AssignmentResult } from "./api/assignments";
 import { useAssignments } from "./hooks/useAssignments";
 import { useMembers } from "./hooks/useMembers";
 import type { Member } from "./api/members";
 import type { Profile } from "@shared/types";
-import { parsePlayerLookup } from "./utils/playerLookup";
+import { lookupAndParsePlayer } from "./utils/playerLookup";
 import { useUpdateProfileMutation } from "./hooks/useProfileMutations";
 import {
   eligibleMembersQueryKey,
@@ -241,12 +240,13 @@ function VikingVengeance({ profileId, profile, canManage }: Props) {
   }
 
   async function lookupPlayerProfile(fid: string) {
-    setLookupStatus(t("viking.lookup.looking"));
     try {
-      const res = await lookupPlayer(fid);
-      const parsed = parsePlayerLookup(res);
-      if (!parsed?.playerName) throw new Error(t("viking.errors.noPlayerName"));
-      setLookupStatus(t("viking.lookup.found", { name: parsed.playerName }));
+      const parsed = await lookupAndParsePlayer(fid, {
+        onStart: () => setLookupStatus(t("viking.lookup.looking")),
+        onSuccess: (name) => setLookupStatus(t("viking.lookup.found", { name })),
+        onError: () => setLookupStatus(""),
+        noPlayerNameError: new Error(t("viking.errors.noPlayerName"))
+      });
       return {
         name: parsed.playerName,
         avatar: parsed.avatar || "",

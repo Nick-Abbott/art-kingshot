@@ -1,4 +1,5 @@
 import { z } from "zod/mini";
+import { lookupPlayer } from "../api/playerLookup";
 
 const LookupResponseSchema = z.object({ data: z.any() });
 
@@ -6,6 +7,15 @@ type LookupResult = {
   playerName: string;
   kingdomId: number | null;
   avatar: string | null;
+};
+
+export type NormalizedPlayerLookup = LookupResult;
+
+type LookupHandlers = {
+  onStart?: () => void;
+  onSuccess?: (playerName: string) => void;
+  onError?: () => void;
+  noPlayerNameError?: Error;
 };
 
 function getNestedValue(source: unknown, path: string[]) {
@@ -101,4 +111,27 @@ export function parsePlayerLookup(payload: unknown): LookupResult | null {
     kingdomId,
     avatar: avatar || null
   };
+}
+
+export async function lookupAndParsePlayer(
+  fid: string,
+  handlers: LookupHandlers = {}
+): Promise<LookupResult> {
+  handlers.onStart?.();
+  try {
+    const lookup = await lookupPlayer(fid);
+    const parsed = parsePlayerLookup(lookup);
+    if (!parsed?.playerName) {
+      throw handlers.noPlayerNameError || new Error("Player name not found");
+    }
+    handlers.onSuccess?.(parsed.playerName);
+    return {
+      playerName: parsed.playerName,
+      kingdomId: parsed.kingdomId ?? null,
+      avatar: parsed.avatar ?? null
+    };
+  } catch (error) {
+    handlers.onError?.();
+    throw error;
+  }
 }

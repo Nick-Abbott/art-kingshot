@@ -2,8 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Profile, User } from "@shared/types";
 import { createAlliance, deleteAlliance } from "./api/alliances";
-import { lookupPlayer } from "./api/playerLookup";
-import { parsePlayerLookup } from "./utils/playerLookup";
+import { lookupAndParsePlayer } from "./utils/playerLookup";
 import { ApiError } from "./apiClient";
 import {
   useCreateAllianceProfileMutation,
@@ -99,16 +98,14 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
     let playerAvatar = "";
     let kingdomId: number | null = null;
     try {
-      setLookupStatus(t("profiles.lookupStatus"));
-      const lookup = await lookupPlayer(form.playerId.trim());
-      const parsed = parsePlayerLookup(lookup);
-      if (!parsed) {
-        throw new Error(t("profiles.errors.lookupFailed"));
-      }
+      const parsed = await lookupAndParsePlayer(form.playerId.trim(), {
+        onStart: () => setLookupStatus(t("profiles.lookupStatus")),
+        onSuccess: (name) => setLookupStatus(t("profiles.lookupFound", { name })),
+        onError: () => setLookupStatus("")
+      });
       playerName = parsed.playerName;
       playerAvatar = parsed.avatar || "";
       kingdomId = parsed.kingdomId;
-      setLookupStatus(t("profiles.lookupFound", { name: playerName }));
     } catch {
       setLookupStatus("");
       setError(t("profiles.errors.lookupFailed"));
@@ -167,15 +164,13 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
     let playerName = "";
     let kingdomId: number | null = null;
     try {
-      setAddLookupStatus(t("profiles.lookupStatus"));
-      const lookup = await lookupPlayer(value);
-      const parsed = parsePlayerLookup(lookup);
-      if (!parsed) {
-        throw new Error(t("profiles.errors.lookupFailed"));
-      }
+      const parsed = await lookupAndParsePlayer(value, {
+        onStart: () => setAddLookupStatus(t("profiles.lookupStatus")),
+        onSuccess: (name) => setAddLookupStatus(t("profiles.lookupFound", { name })),
+        onError: () => setAddLookupStatus("")
+      });
       playerName = parsed.playerName;
       kingdomId = parsed.kingdomId;
-      setAddLookupStatus(t("profiles.lookupFound", { name: playerName }));
     } catch {
       setAddLookupStatus("");
       setAddPlayerError(t("profiles.errors.lookupFailed"));
@@ -216,12 +211,9 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
     setSuccess("");
     setLookupStatus("");
     try {
-      setLookupStatus(t("profiles.lookupStatus"));
-      const lookup = await lookupPlayer(selectedProfile.playerId);
-      const parsed = parsePlayerLookup(lookup);
-      if (!parsed) {
-        throw new Error(t("profiles.errors.lookupFailed"));
-      }
+      const parsed = await lookupAndParsePlayer(selectedProfile.playerId, {
+        onStart: () => setLookupStatus(t("profiles.lookupStatus"))
+      });
       const playerName = parsed.playerName;
       const rawAvatar = parsed.avatar || "";
       const playerAvatar = rawAvatar

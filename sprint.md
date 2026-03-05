@@ -176,6 +176,14 @@ Validate TD-04 by confirming:
 2) UI flows that rely on lookup still resolve player name and kingdom correctly.
 3) `npm run test:e2e` passes.
 
+**Update (2026-03-05)**
+- Added `lookupAndParsePlayer` helper in `client/src/utils/playerLookup.ts` to wrap `lookupPlayer` + `parsePlayerLookup`.
+- Replaced lookup/parse blocks in `client/src/Profiles.tsx`, `client/src/VikingVengeance.tsx`, and `client/src/BearRally.tsx` with the shared helper.
+- Tests not run: `npm run test:e2e`.
+
+**Validation (2026-03-05)**
+- Passed: `npm run test:e2e`.
+
 ---
 
 ### TD-05: Decompose Monolithic Feature Screens

@@ -1,11 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ApiError } from "./apiClient";
-import { lookupPlayer } from "./api/playerLookup";
 import { useBear } from "./hooks/useBear";
 import type { Profile } from "@shared/types";
 import { useUpdateProfileMutation } from "./hooks/useProfileMutations";
-import { parsePlayerLookup } from "./utils/playerLookup";
+import { lookupAndParsePlayer } from "./utils/playerLookup";
 import {
   useEligibleBearMembersQuery,
   eligibleBearMembersQueryKey
@@ -141,12 +140,13 @@ function BearRally({ profileId, profile, canManage }: Props) {
   }, [canManage, profile?.playerId, editingMember]);
 
   async function lookupPlayerName(fid: string) {
-    setLookupStatus(t("bear.lookup.looking"));
     try {
-      const res = await lookupPlayer(fid);
-      const parsed = parsePlayerLookup(res);
-      if (!parsed?.playerName) throw new Error(t("bear.errors.noPlayerName"));
-      setLookupStatus(t("bear.lookup.found", { name: parsed.playerName }));
+      const parsed = await lookupAndParsePlayer(fid, {
+        onStart: () => setLookupStatus(t("bear.lookup.looking")),
+        onSuccess: (name) => setLookupStatus(t("bear.lookup.found", { name })),
+        onError: () => setLookupStatus(""),
+        noPlayerNameError: new Error(t("bear.errors.noPlayerName"))
+      });
       return parsed.playerName;
     } catch (lookupErr) {
       setLookupStatus("");
