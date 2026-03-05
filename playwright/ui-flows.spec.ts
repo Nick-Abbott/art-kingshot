@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
-import crypto from "node:crypto";
-const Database = require("better-sqlite3");
+import * as crypto from "node:crypto";
+import Database from "better-sqlite3";
 
 const ACTION_TIMEOUT = 5000;
 const WAIT_TIMEOUT = 5000;

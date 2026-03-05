@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:i18n": "node scripts/check-i18n.js",
+    "test:i18n": "node scripts/check-i18n.mjs",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [],

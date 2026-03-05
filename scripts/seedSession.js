@@ -1,5 +1,5 @@
 const path = require("node:path");
-const crypto = require("node:crypto");
+const cryptoModule = require("node:crypto");
 const Database = require("better-sqlite3");
 const fs = require("node:fs");
 
@@ -79,19 +79,19 @@ function main() {
 
   const dbPath = args.dbPath;
   const discordId =
-    args.discordId || `session-${crypto.randomBytes(6).toString("hex")}`;
+    args.discordId || `session-${cryptoModule.randomBytes(6).toString("hex")}`;
   const displayName = args.displayName || "Session User";
   const now = Date.now();
 
   const db = new Database(dbPath);
   runMigrations(db, path.join(process.cwd(), "server", "db", "migrations"));
 
-  const userId = crypto.randomUUID();
+  const userId = cryptoModule.randomUUID();
   db.prepare(
     "INSERT INTO users (id, discordId, displayName, avatar, isAppAdmin, createdAt) VALUES (?, ?, ?, ?, ?, ?)"
   ).run(userId, discordId, displayName, null, args.appAdmin ? 1 : 0, now);
 
-  const token = crypto.randomBytes(32).toString("hex");
+  const token = cryptoModule.randomBytes(32).toString("hex");
   const expiresAt = now + 14 * 24 * 60 * 60 * 1000;
   db.prepare(
     "INSERT INTO sessions (token, userId, expiresAt, createdAt) VALUES (?, ?, ?, ?)"

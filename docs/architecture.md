@@ -40,6 +40,8 @@ This guide is a quick reference for agents working in this repo. It summarizes h
 
 - Express app in `server/index.ts`.
 - SQLite db with migrations in `server/db/migrations`.
+- DB access is centralized in `server/db/queries.ts` and exposed via `ctx.queries` (avoid raw `db.prepare` in routes).
+- Request payload validation lives in `server/validation.ts` using `zod/mini`.
 - **Auth**: Discord OAuth + session cookie `ak_session`.
 - **Health**: `GET /health` for Playwright `webServer` readiness.
 
@@ -69,6 +71,7 @@ Playwright uses `webServer` in `playwright.config.ts` to boot:
 ## Patterns to Follow
 
 - Update `shared/types.ts` when API payloads change.
+- Linting uses ESLint 9 with a custom Airbnb-like flat config (`eslint.config.js`); run `npm run lint` from the repo root.
 - Favor TanStack Query for server state (avoid manual fetch + local state).
 - In mutation flows that change list membership, use optimistic updates and invalidate the relevant query key.
 - Keep admin/user flows in separate endpoints for auth clarity; share hooks/helpers to reduce duplication.

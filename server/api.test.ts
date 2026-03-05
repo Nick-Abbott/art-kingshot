@@ -1,10 +1,11 @@
-const test = require("node:test");
-const assert = require("node:assert/strict");
-const http = require("node:http");
-const path = require("node:path");
-const fs = require("node:fs");
-const crypto = require("node:crypto");
-const Database = require("better-sqlite3");
+import test from "node:test";
+import assert from "node:assert/strict";
+import * as http from "node:http";
+import * as path from "node:path";
+import * as fs from "node:fs";
+import * as crypto from "node:crypto";
+import Database from "better-sqlite3";
+import { createApp } from "./index";
 
 type ServerHandle = {
   httpServer: import("node:http").Server;
@@ -13,13 +14,7 @@ type ServerHandle = {
 
 function startServer(): Promise<ServerHandle> {
   return new Promise((resolve, reject) => {
-    delete require.cache[require.resolve("./index")];
-    delete require.cache[require.resolve("./config")];
-    const app = require("./index");
-    if (!app) {
-      reject(new Error("Server did not export app."));
-      return;
-    }
+    const app = createApp({ dbPath: process.env.DB_PATH });
     const httpServer = http.createServer(app);
     httpServer.listen(0, () => {
       const address = httpServer.address();
@@ -54,9 +49,9 @@ function requestJson(
         path,
         headers: headers || {},
       },
-      (res) => {
+      (res: import("node:http").IncomingMessage) => {
         let data = "";
-        res.on("data", (chunk) => (data += chunk));
+        res.on("data", (chunk: Buffer) => (data += chunk));
         res.on("end", () => {
           let parsed = null;
           try {
@@ -83,7 +78,10 @@ function tmpDbPath() {
   return path.join(dir, "test.sqlite");
 }
 
-function createSessionCookie(dbPath, { isAppAdmin = false } = {}) {
+function createSessionCookie(
+  dbPath: string,
+  { isAppAdmin = false }: { isAppAdmin?: boolean } = {}
+): string {
   const db = new Database(dbPath);
   const now = Date.now();
   const userId = crypto.randomUUID();
@@ -229,7 +227,9 @@ test("alliance create and delete updates profile", async () => {
     assert.equal(deleteAlliance.status, 200);
 
     const me = await requestJson(port, "GET", "/api/me", headers);
-    const updated = me.data.data.profiles.find((p) => p.id === profileId);
+    const updated = me.data.data.profiles.find(
+      (p: { id: string }) => p.id === profileId
+    );
     assert.ok(updated);
     assert.equal(updated.allianceId, null);
   } finally {
@@ -469,7 +469,7 @@ test("eligible signup lists return active alliance members not yet signed up", a
       adminHeaders
     );
     const memberOneProfile = profilesAfterSignup.data.data.profiles.find(
-      (profile) => profile.playerId === "FIDMEM1"
+      (profile: { playerId: string }) => profile.playerId === "FIDMEM1"
     );
     assert.ok(memberOneProfile);
     assert.equal(memberOneProfile.troopCount, 1000);
@@ -483,7 +483,9 @@ test("eligible signup lists return active alliance members not yet signed up", a
       adminHeaders
     );
     assert.equal(eligibleMembers.status, 200);
-    const eligibleIds = eligibleMembers.data.data.members.map((m) => m.playerId);
+    const eligibleIds = eligibleMembers.data.data.members.map(
+      (m: { playerId: string }) => m.playerId
+    );
     assert.ok(eligibleIds.includes("FIDMEM2"));
     assert.ok(!eligibleIds.includes("FIDMEM1"));
 
@@ -506,7 +508,7 @@ test("eligible signup lists return active alliance members not yet signed up", a
       adminHeaders
     );
     const memberOneAfterBear = profilesAfterBear.data.data.profiles.find(
-      (profile) => profile.playerId === "FIDMEM1"
+      (profile: { playerId: string }) => profile.playerId === "FIDMEM1"
     );
     assert.ok(memberOneAfterBear);
     assert.equal(memberOneAfterBear.rallySize, 500000);
@@ -518,7 +520,9 @@ test("eligible signup lists return active alliance members not yet signed up", a
       adminHeaders
     );
     assert.equal(eligibleBear.status, 200);
-    const bearIds = eligibleBear.data.data.members.map((m) => m.playerId);
+    const bearIds = eligibleBear.data.data.members.map(
+      (m: { playerId: string }) => m.playerId
+    );
     assert.ok(bearIds.includes("FIDMEM2"));
     assert.ok(!bearIds.includes("FIDMEM1"));
   } finally {
@@ -671,7 +675,9 @@ test("app admin can manage alliances across kingdoms", async () => {
       headers
     );
     assert.equal(profiles.status, 200);
-    const pending = profiles.data.data.profiles.find((p) => p.id === memberProfileId);
+    const pending = profiles.data.data.profiles.find(
+      (p: { id: string }) => p.id === memberProfileId
+    );
     assert.ok(pending);
 
     const approve = await requestJson(

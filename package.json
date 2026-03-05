@@ -23,15 +23,29 @@
     "seed:test": "node scripts/seedTestScenario.js",
     "test:playwright": "PLAYWRIGHT_DB_PATH=$(pwd)/server/data/viking.playwright.sqlite SNAPSHOT_URL=http://localhost:5174 SERVER_URL=http://127.0.0.1:3002 npx playwright test -c playwright.config.ts",
     "test:visual": "PLAYWRIGHT_DB_PATH=$(pwd)/server/data/viking.playwright.sqlite SNAPSHOT_URL=http://localhost:5174 SERVER_URL=http://127.0.0.1:3002 npx playwright test -c playwright.config.ts playwright/ui-snapshots.spec.ts",
-    "test:e2e": "PLAYWRIGHT_DB_PATH=$(pwd)/server/data/viking.playwright.sqlite SNAPSHOT_URL=http://localhost:5174 SERVER_URL=http://127.0.0.1:3002 npx playwright test -c playwright.config.ts playwright/ui-flows.spec.ts"
+    "test:e2e": "PLAYWRIGHT_DB_PATH=$(pwd)/server/data/viking.playwright.sqlite SNAPSHOT_URL=http://localhost:5174 SERVER_URL=http://127.0.0.1:3002 npx playwright test -c playwright.config.ts playwright/ui-flows.spec.ts",
+    "lint": "eslint ."
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@playwright/test": "^1.56.1",
+    "@playwright/test": "1.56.1",
+    "@eslint/js": "^9.0.0",
+    "@eslint/eslintrc": "^3.1.0",
+    "@typescript-eslint/eslint-plugin": "^8.56.1",
+    "@typescript-eslint/parser": "^8.56.1",
+    "eslint-import-resolver-typescript": "^4.4.4",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-playwright": "^2.9.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "globals": "^15.9.0",
     "concurrently": "^9.2.1",
     "dotenv-cli": "^11.0.0",
-    "playwright": "^1.56.1",
+    "eslint": "^9.9.1",
+    "typescript-eslint": "^8.56.1",
+    "playwright": "1.56.1",
     "wait-on": "^9.0.4"
   }
 }

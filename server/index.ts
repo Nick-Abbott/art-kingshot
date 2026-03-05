@@ -1,436 +1,371 @@
-const express = require("express");
-const path = require("node:path");
-const fs = require("node:fs");
-const crypto = require("node:crypto") as typeof import("node:crypto");
-const Database = require("better-sqlite3");
-const { runMigrations } = require("./db/migrate");
-const { config } = require("./config");
-const { generateAssignments } = require("./assignments");
-const { buildPlayerLookupPayload } = require("./kingshot");
-const createAccessMiddleware = require("./middleware/access");
-const authRoutes = require("./routes/auth");
-const membersRoutes = require("./routes/members");
-const assignmentsRoutes = require("./routes/assignments");
-const bearRoutes = require("./routes/bear");
-const profileRoutes = require("./routes/profile");
-const adminRoutes = require("./routes/admin");
-const { createMembersRepo } = require("./repos/membersRepo");
-const { createMetaRepo } = require("./repos/metaRepo");
-import type { Member } from "../shared/types";
+import type { Request, Response, NextFunction } from "express";
+import express from "express";
+import * as path from "node:path";
+import * as fs from "node:fs";
+import * as crypto from "node:crypto";
+import Database from "better-sqlite3";
+import { runMigrations } from "./db/migrate";
+import { createQueries } from "./db/queries";
+import { config } from "./config";
+import { generateAssignments } from "./assignments";
+import { buildPlayerLookupPayload } from "./kingshot";
+import createAccessMiddleware from "./middleware/access";
+import {
+  parseMemberPayload,
+  parseBearPayload,
+  parseAllianceCreatePayload,
+  parsePlayerLookupPayload,
+  parseProfileCreatePayload,
+  parseProfileUpdatePayload,
+  parseAllianceProfileUpdatePayload,
+} from "./validation";
+import authRoutes from "./routes/auth";
+import membersRoutes from "./routes/members";
+import assignmentsRoutes from "./routes/assignments";
+import bearRoutes from "./routes/bear";
+import profileRoutes from "./routes/profile";
+import adminRoutes from "./routes/admin";
+import { createMembersRepo } from "./repos/membersRepo";
+import { createMetaRepo } from "./repos/metaRepo";
+import type {
+  CookieOptions,
+  RateLimitOptions,
+  RouteContext,
+  RoleRequirement,
+} from "./types";
 
-const app = express();
-const port = config.port;
-const APP_BASE_URL = config.appBaseUrl;
-const DISCORD_CLIENT_ID = config.discordClientId;
-const DISCORD_CLIENT_SECRET = config.discordClientSecret;
-const DISCORD_REDIRECT_URI = config.discordRedirectUri;
-const SESSION_TTL_MS = config.sessionTtlDays * 24 * 60 * 60 * 1000;
-const isProduction = config.nodeEnv === "production";
+export function createApp({ dbPath: dbPathOverride }: { dbPath?: string } = {}) {
+  const app = express();
+  const APP_BASE_URL = config.appBaseUrl;
+  const DISCORD_CLIENT_ID = config.discordClientId;
+  const DISCORD_CLIENT_SECRET = config.discordClientSecret;
+  const DISCORD_REDIRECT_URI = config.discordRedirectUri;
+  const SESSION_TTL_MS = config.sessionTtlDays * 24 * 60 * 60 * 1000;
+  const isProduction = config.nodeEnv === "production";
 
-app.use(express.json());
-app.set("trust proxy", 1);
-app.get("/health", (_req, res) => {
-  res.status(200).json({ ok: true });
-});
+  app.use(express.json());
+  app.set("trust proxy", 1);
+  app.get("/health", (_req, res) => {
+    res.status(200).json({ ok: true });
+  });
 
-const serverRoot = process.cwd();
-const dbPath =
-  process.env.DB_PATH ||
-  path.join(serverRoot, "data", "viking.sqlite");
-fs.mkdirSync(path.dirname(dbPath), { recursive: true });
-const db = new Database(dbPath);
-runMigrations(db, path.join(serverRoot, "db", "migrations"));
+  const serverRoot = process.cwd();
+  const dbPath =
+    dbPathOverride ||
+    process.env.DB_PATH ||
+    path.join(serverRoot, "data", "viking.sqlite");
+  fs.mkdirSync(path.dirname(dbPath), { recursive: true });
+  const db = new Database(dbPath);
+  runMigrations(db, path.join(serverRoot, "db", "migrations"));
 
-const rateBuckets = new Map();
+  const rateBuckets = new Map<string, { count: number; resetAt: number }>();
 
-function enforceRateLimit(req, res, { key, max, windowMs }) {
-  const now = Date.now();
-  const bucketKey = key || `${req.ip || "unknown"}:${req.path}`;
-  const entry = rateBuckets.get(bucketKey);
-  if (!entry || entry.resetAt <= now) {
-    rateBuckets.set(bucketKey, { count: 1, resetAt: now + windowMs });
+  function enforceRateLimit(
+    req: Request,
+    res: Response,
+    { key, max, windowMs }: RateLimitOptions
+  ): boolean {
+    const now = Date.now();
+    const bucketKey = key || `${req.ip || "unknown"}:${req.path}`;
+    const entry = rateBuckets.get(bucketKey);
+    if (!entry || entry.resetAt <= now) {
+      rateBuckets.set(bucketKey, { count: 1, resetAt: now + windowMs });
+      return true;
+    }
+    if (entry.count >= max) {
+      res.status(429).json({ ok: false, error: "Too many requests." });
+      return false;
+    }
+    entry.count += 1;
     return true;
   }
-  if (entry.count >= max) {
-    res.status(429).json({ ok: false, error: "Too many requests." });
+
+  const queries = createQueries(db);
+  const {
+    getUserByDiscordId,
+    getUserById,
+    getProfileById,
+    getProfileByPlayerId,
+    getProfilesByUser,
+    getAllianceById,
+    insertUser,
+    updateUser,
+    insertBootstrapRow,
+    insertSession,
+    getSession,
+    deleteSession,
+    insertProfile,
+    updateProfile,
+    updateProfileClaim,
+    updateProfileFields,
+    updateProfileStatus,
+  } = queries;
+
+  function ok(res: Response, data: unknown, status = 200): void {
+    res.status(status).json({ ok: true, data });
+  }
+
+  function fail(res: Response, status: number, message: string): void {
+    res.status(status).json({ ok: false, error: message });
+  }
+
+  function serializeCookie(
+    name: string,
+    value: string,
+    options: CookieOptions = {}
+  ) {
+    const parts = [`${name}=${value}`];
+    if (options.maxAge !== undefined) parts.push(`Max-Age=${options.maxAge}`);
+    if (options.path) parts.push(`Path=${options.path}`);
+    if (options.httpOnly) parts.push("HttpOnly");
+    if (options.secure) parts.push("Secure");
+    if (options.sameSite) parts.push(`SameSite=${options.sameSite}`);
+    return parts.join("; ");
+  }
+
+  function appendSetCookie(res: Response, cookie: string): void {
+    const existing = res.getHeader("Set-Cookie");
+    if (!existing) {
+      res.setHeader("Set-Cookie", cookie);
+      return;
+    }
+    const currentValues = Array.isArray(existing)
+      ? existing.map((value) => String(value))
+      : [String(existing)];
+    res.setHeader("Set-Cookie", [...currentValues, cookie]);
+  }
+
+  function setCookie(
+    res: Response,
+    name: string,
+    value: string,
+    options: CookieOptions = {}
+  ): void {
+    appendSetCookie(res, serializeCookie(name, value, options));
+  }
+
+  function clearCookie(res: Response, name: string): void {
+    appendSetCookie(
+      res,
+      serializeCookie(name, "", {
+        path: "/",
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: "Lax",
+        maxAge: 0,
+      })
+    );
+  }
+
+  function parseCookies(cookieHeader: string): Record<string, string> {
+    if (!cookieHeader) return {};
+    return cookieHeader.split(";").reduce((acc, part) => {
+      const [rawKey, ...rest] = part.trim().split("=");
+      if (!rawKey) return acc;
+      acc[rawKey] = rest.join("=");
+      return acc;
+    }, {} as Record<string, string>);
+  }
+
+  function createSession(userId: string): string {
+    const token = crypto.randomBytes(32).toString("hex");
+    const now = Date.now();
+    insertSession(token, userId, now + SESSION_TTL_MS, now);
+    return token;
+  }
+
+  function resolveUserFromSession(req: Request) {
+    const cookies = parseCookies(req.headers.cookie || "");
+    const token = cookies.ak_session;
+    if (!token) return null;
+    const session = getSession(token);
+    if (!session) return null;
+    if (session.expiresAt < Date.now()) {
+      deleteSession(token);
+      return null;
+    }
+    const user = getUserById(session.userId);
+    if (!user) return null;
+    const profiles = getProfilesByUser(user.id);
+    return { user, profiles, sessionToken: token };
+  }
+
+  function requireAuth(req: Request, res: Response): boolean {
+    if (req.user) return true;
+    fail(res, 401, "Authentication required.");
     return false;
   }
-  entry.count += 1;
-  return true;
-}
 
-
-const selectUserByDiscordId = db.prepare(
-  "SELECT id, discordId, displayName, avatar, isAppAdmin FROM users WHERE discordId = ?"
-);
-const insertUser = db.prepare(
-  "INSERT INTO users (id, discordId, displayName, avatar, isAppAdmin, createdAt) VALUES (?, ?, ?, ?, ?, ?)"
-);
-const updateUser = db.prepare(
-  "UPDATE users SET displayName = ?, avatar = ? WHERE id = ?"
-);
-const selectUserById = db.prepare(
-  "SELECT id, discordId, displayName, avatar, isAppAdmin FROM users WHERE id = ?"
-);
-const selectProfilesByUser = db.prepare(
-  `SELECT profiles.id,
-          profiles.userId,
-          profiles.playerId,
-          profiles.playerName,
-          profiles.playerAvatar,
-          profiles.kingdomId,
-          profiles.allianceId,
-          profiles.status,
-          profiles.role,
-          profiles.troopCount,
-          profiles.marchCount,
-          profiles.power,
-          profiles.rallySize,
-          alliances.name AS allianceName
-   FROM profiles
-   LEFT JOIN alliances ON alliances.id = profiles.allianceId
-   WHERE profiles.userId = ?`
-);
-const selectProfileById = db.prepare(
-  `SELECT profiles.id,
-          profiles.userId,
-          profiles.playerId,
-          profiles.playerName,
-          profiles.playerAvatar,
-          profiles.kingdomId,
-          profiles.allianceId,
-          profiles.status,
-          profiles.role,
-          profiles.troopCount,
-          profiles.marchCount,
-          profiles.power,
-          profiles.rallySize,
-          alliances.name AS allianceName
-   FROM profiles
-   LEFT JOIN alliances ON alliances.id = profiles.allianceId
-   WHERE profiles.id = ?`
-);
-const insertProfile = db.prepare(
-  `INSERT INTO profiles (
-     id,
-     userId,
-     playerId,
-     playerName,
-     playerAvatar,
-     kingdomId,
-     allianceId,
-     status,
-     role,
-     troopCount,
-     marchCount,
-     power,
-     rallySize,
-     createdAt,
-     updatedAt
-   ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-);
-const updateProfile = db.prepare(
-  `UPDATE profiles
-   SET playerId = ?,
-       playerName = ?,
-       playerAvatar = ?,
-       kingdomId = ?,
-       allianceId = ?,
-       status = ?,
-       role = ?,
-       troopCount = ?,
-       marchCount = ?,
-       power = ?,
-       rallySize = ?,
-       updatedAt = ?
-   WHERE id = ?`
-);
-const updateProfileFields = db.prepare(
-  `UPDATE profiles
-   SET playerId = ?,
-       playerName = ?,
-       playerAvatar = ?,
-       kingdomId = ?,
-       troopCount = ?,
-       marchCount = ?,
-       power = ?,
-       rallySize = ?,
-       updatedAt = ?
-   WHERE id = ?`
-);
-const updateProfileStatus = db.prepare(
-  `UPDATE profiles
-   SET status = ?,
-       role = ?,
-       updatedAt = ?
-   WHERE id = ?`
-);
-const selectAllianceById = db.prepare(
-  "SELECT id, name, kingdomId FROM alliances WHERE id = ?"
-);
-const insertBootstrapRow = db.prepare(
-  "INSERT OR IGNORE INTO app_bootstrap (id, createdAt) VALUES (1, ?)"
-);
-const insertSession = db.prepare(
-  "INSERT INTO sessions (token, userId, expiresAt, createdAt) VALUES (?, ?, ?, ?)"
-);
-const selectSession = db.prepare(
-  "SELECT token, userId, expiresAt FROM sessions WHERE token = ?"
-);
-const deleteSession = db.prepare("DELETE FROM sessions WHERE token = ?");
-
-function ok(res, data, status = 200) {
-  res.status(status).json({ ok: true, data });
-}
-
-function fail(res, status, message) {
-  res.status(status).json({ ok: false, error: message });
-}
-
-type CookieOptions = {
-  maxAge?: number;
-  path?: string;
-  httpOnly?: boolean;
-  secure?: boolean;
-  sameSite?: string;
-};
-
-function serializeCookie(name, value, options: CookieOptions = {}) {
-  const parts = [`${name}=${value}`];
-  if (options.maxAge !== undefined) parts.push(`Max-Age=${options.maxAge}`);
-  if (options.path) parts.push(`Path=${options.path}`);
-  if (options.httpOnly) parts.push("HttpOnly");
-  if (options.secure) parts.push("Secure");
-  if (options.sameSite) parts.push(`SameSite=${options.sameSite}`);
-  return parts.join("; ");
-}
-
-function appendSetCookie(res, cookie) {
-  const existing = res.getHeader("Set-Cookie");
-  if (!existing) {
-    res.setHeader("Set-Cookie", cookie);
-    return;
+  function requireAlliance(req: Request, res: Response): string | null {
+    if (!req.user) {
+      fail(res, 401, "Authentication required.");
+      return null;
+    }
+    const headerProfileId = req.header("x-profile-id");
+    const profileId =
+      typeof headerProfileId === "string" ? headerProfileId.trim() : "";
+    if (!profileId) {
+      fail(res, 400, "Profile is required.");
+      return null;
+    }
+    const profile = getProfileById(profileId);
+    if (!profile) {
+      fail(res, 404, "Profile not found.");
+      return null;
+    }
+    if (profile.userId !== req.user.id && !req.user?.isAppAdmin) {
+      fail(res, 403, "Profile access denied.");
+      return null;
+    }
+    if (!profile.allianceId || profile.status !== "active") {
+      fail(res, 403, "Profile is not active in an alliance.");
+      return null;
+    }
+    req.profile = profile;
+    req.profileRole = profile.role;
+    req.allianceId = profile.allianceId;
+    return profile.allianceId;
   }
-  const next = Array.isArray(existing) ? [...existing, cookie] : [existing, cookie];
-  res.setHeader("Set-Cookie", next);
-}
 
-function setCookie(res, name, value, options: CookieOptions = {}) {
-  appendSetCookie(res, serializeCookie(name, value, options));
-}
-
-function clearCookie(res, name) {
-  appendSetCookie(
-    res,
-    serializeCookie(name, "", {
-      path: "/",
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: "Lax",
-      maxAge: 0,
-    })
-  );
-}
-
-function parseCookies(cookieHeader) {
-  if (!cookieHeader) return {};
-  return cookieHeader.split(";").reduce((acc, part) => {
-    const [rawKey, ...rest] = part.trim().split("=");
-    if (!rawKey) return acc;
-    acc[rawKey] = rest.join("=");
-    return acc;
-  }, {});
-}
-
-function createSession(userId) {
-  const token = crypto.randomBytes(32).toString("hex");
-  const now = Date.now();
-  insertSession.run(token, userId, now + SESSION_TTL_MS, now);
-  return token;
-}
-
-function resolveUserFromSession(req) {
-  const cookies = parseCookies(req.headers.cookie || "");
-  const token = cookies.ak_session;
-  if (!token) return null;
-  const session = selectSession.get(token);
-  if (!session) return null;
-  if (session.expiresAt < Date.now()) {
-    deleteSession.run(token);
-    return null;
+  function requireRole(
+    req: Request,
+    res: Response,
+    roles: RoleRequirement[] = []
+  ): boolean {
+    if (req.user?.isAppAdmin) return true;
+    if (req.profile && roles.includes(req.profile.role)) return true;
+    fail(res, 403, "Insufficient permissions.");
+    return false;
   }
-  const user = selectUserById.get(session.userId);
-  if (!user) return null;
-  const profiles = selectProfilesByUser.all(user.id);
-  return { user, profiles, sessionToken: token };
-}
 
-function requireAuth(req, res) {
-  if (req.user) return true;
-  fail(res, 401, "Authentication required.");
-  return false;
-}
+  async function exchangeDiscordToken(
+    code: string
+  ): Promise<{ access_token: string }> {
+    const body = new URLSearchParams({
+      client_id: DISCORD_CLIENT_ID,
+      client_secret: DISCORD_CLIENT_SECRET,
+      grant_type: "authorization_code",
+      code,
+      redirect_uri: DISCORD_REDIRECT_URI,
+    });
+    const response = await fetch("https://discord.com/api/oauth2/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body,
+    });
+    if (!response.ok) {
+      throw new Error("Failed to exchange Discord token.");
+    }
+    return response.json();
+  }
 
-function requireAlliance(req, res) {
-  const profileId =
-    typeof req.header("x-profile-id") === "string"
-      ? req.header("x-profile-id").trim()
-      : "";
-  if (!profileId) {
-    fail(res, 400, "Profile is required.");
-    return null;
+  async function fetchDiscordUser(accessToken: string): Promise<{
+    id: string;
+    username?: string;
+    global_name?: string | null;
+    avatar?: string | null;
+  }> {
+    const response = await fetch("https://discord.com/api/users/@me", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!response.ok) {
+      throw new Error("Failed to fetch Discord user.");
+    }
+    return response.json();
   }
-  const profile = selectProfileById.get(profileId);
-  if (!profile) {
-    fail(res, 404, "Profile not found.");
-    return null;
-  }
-  if (profile.userId !== req.user.id && !req.user?.isAppAdmin) {
-    fail(res, 403, "Profile access denied.");
-    return null;
-  }
-  if (!profile.allianceId || profile.status !== "active") {
-    fail(res, 403, "Profile is not active in an alliance.");
-    return null;
-  }
-  req.profile = profile;
-  req.profileRole = profile.role;
-  req.allianceId = profile.allianceId;
-  return profile.allianceId;
-}
 
-function requireRole(req, res, roles = []) {
-  if (req.user?.isAppAdmin) return true;
-  if (req.profile && roles.includes(req.profile.role)) return true;
-  fail(res, 403, "Insufficient permissions.");
-  return false;
-}
+  function getDiscordDisplayName(user: {
+    username?: string;
+    global_name?: string | null;
+  }): string {
+    return user.global_name || user.username || "Discord User";
+  }
 
-async function exchangeDiscordToken(code) {
-  const body = new URLSearchParams({
-    client_id: DISCORD_CLIENT_ID,
-    client_secret: DISCORD_CLIENT_SECRET,
-    grant_type: "authorization_code",
-    code,
-    redirect_uri: DISCORD_REDIRECT_URI,
+  const {
+    requireAuthMiddleware,
+    requireAllianceMiddleware,
+    requireRoleMiddleware,
+  } = createAccessMiddleware({ requireAuth, requireAlliance, requireRole });
+
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    const auth = resolveUserFromSession(req);
+    req.user = auth?.user || null;
+    req.profiles = auth?.profiles || [];
+    req.sessionToken = auth?.sessionToken || null;
+    return next();
   });
-  const response = await fetch("https://discord.com/api/oauth2/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body,
-  });
-  if (!response.ok) {
-    throw new Error("Failed to exchange Discord token.");
-  }
-  return response.json();
+
+  const membersRepo = createMembersRepo(db);
+  const metaRepo = createMetaRepo(db);
+
+  const routeContext: RouteContext = {
+    db,
+    queries,
+    ok,
+    fail,
+    crypto,
+    APP_BASE_URL,
+    DISCORD_CLIENT_ID,
+    DISCORD_CLIENT_SECRET,
+    DISCORD_REDIRECT_URI,
+    SESSION_TTL_MS,
+    isProduction,
+    parseMemberPayload,
+    parseBearPayload,
+    parseAllianceCreatePayload,
+    parsePlayerLookupPayload,
+    parseProfileCreatePayload,
+    parseProfileUpdatePayload,
+    parseAllianceProfileUpdatePayload,
+    generateAssignments,
+    buildPlayerLookupPayload,
+    parseCookies,
+    setCookie,
+    clearCookie,
+    createSession,
+    exchangeDiscordToken,
+    fetchDiscordUser,
+    getDiscordDisplayName,
+    requireAuth,
+    requireAlliance,
+    requireRole,
+    requireAuthMiddleware,
+    requireAllianceMiddleware,
+    requireRoleMiddleware,
+    enforceRateLimit,
+    getUserByDiscordId,
+    getUserById,
+    getProfileById,
+    getProfileByPlayerId,
+    getProfilesByUser,
+    getAllianceById,
+    insertUser,
+    updateUser,
+    insertBootstrapRow,
+    insertSession,
+    getSession,
+    insertProfile,
+    updateProfile,
+    updateProfileClaim,
+    updateProfileFields,
+    updateProfileStatus,
+    deleteSession,
+    membersRepo,
+    metaRepo,
+  };
+
+  app.use(authRoutes(routeContext));
+  app.use(membersRoutes(routeContext));
+  app.use(assignmentsRoutes(routeContext));
+  app.use(profileRoutes(routeContext));
+  app.use(bearRoutes(routeContext));
+  app.use(adminRoutes(routeContext));
+
+  return app;
 }
 
-async function fetchDiscordUser(accessToken) {
-  const response = await fetch("https://discord.com/api/users/@me", {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  if (!response.ok) {
-    throw new Error("Failed to fetch Discord user.");
-  }
-  return response.json();
-}
-
-function getDiscordDisplayName(user) {
-  return user.global_name || user.username || "Discord User";
-}
-
-const {
-  requireAuthMiddleware,
-  requireAllianceMiddleware,
-  requireRoleMiddleware,
-} = createAccessMiddleware({ requireAuth, requireAlliance, requireRole });
-
-app.use((req, res, next) => {
-  const auth = resolveUserFromSession(req);
-  req.user = auth?.user || null;
-  req.profiles = auth?.profiles || [];
-  req.sessionToken = auth?.sessionToken || null;
-  return next();
-});
-
-const membersRepo = createMembersRepo(db);
-const metaRepo = createMetaRepo(db);
-
-function normalizeMemberPayload(body): Member | { error: string } {
-  const playerId = typeof body.playerId === "string" ? body.playerId.trim() : "";
-  const troopCount = Number(body.troopCount);
-  const playerName =
-    typeof body.playerName === "string" ? body.playerName.trim() : "";
-  const marchCount = Number(body.marchCount);
-  const power = Number(body.power);
-
-  if (!playerId) {
-    return { error: "playerId is required." };
-  }
-  if (!Number.isFinite(troopCount) || troopCount <= 0) {
-    return { error: "troopCount must be a positive number." };
-  }
-  if (!Number.isFinite(marchCount) || marchCount < 4 || marchCount > 6) {
-    return { error: "marchCount must be between 4 and 6." };
-  }
-  if (!Number.isFinite(power) || power < 1000000) {
-    return { error: "power must be at least 1,000,000." };
-  }
-
-  return { playerId, troopCount, marchCount, power, playerName };
-}
-
-const routeContext = {
-  db,
-  ok,
-  fail,
-  crypto,
-  APP_BASE_URL,
-  DISCORD_CLIENT_ID,
-  DISCORD_CLIENT_SECRET,
-  DISCORD_REDIRECT_URI,
-  SESSION_TTL_MS,
-  isProduction,
-  normalizeMemberPayload,
-  generateAssignments,
-  buildPlayerLookupPayload,
-  parseCookies,
-  setCookie,
-  clearCookie,
-  createSession,
-  exchangeDiscordToken,
-  fetchDiscordUser,
-  getDiscordDisplayName,
-  requireAuth,
-  requireAlliance,
-  requireRole,
-  requireAuthMiddleware,
-  requireAllianceMiddleware,
-  requireRoleMiddleware,
-  enforceRateLimit,
-  selectUserByDiscordId,
-  insertUser,
-  updateUser,
-  selectUserById,
-  insertBootstrapRow,
-  selectAllianceById,
-  selectProfilesByUser,
-  selectProfileById,
-  insertProfile,
-  updateProfile,
-  updateProfileFields,
-  updateProfileStatus,
-  deleteSession,
-  membersRepo,
-  metaRepo,
-};
-
-app.use(authRoutes(routeContext));
-app.use(membersRoutes(routeContext));
-app.use(assignmentsRoutes(routeContext));
-app.use(profileRoutes(routeContext));
-app.use(bearRoutes(routeContext));
-app.use(adminRoutes(routeContext));
+const app = createApp();
+const port = config.port;
 
 if (require.main === module) {
   app.listen(port, () => {
@@ -438,6 +373,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = app;
-
-export {};
+export default app;

@@ -1,8 +1,8 @@
-const crypto = require("node:crypto") as typeof import("node:crypto");
+import * as crypto from "node:crypto";
 
 const SIGN_SECRET = "mN4!pQs6JrYwV9";
 
-function buildSign(params) {
+export function buildSign(params: Record<string, unknown>): string {
   const sortedKeys = Object.keys(params).sort();
   const base = sortedKeys
     .map((key) => {
@@ -18,7 +18,10 @@ function buildSign(params) {
   return crypto.createHash("md5").update(base + SIGN_SECRET).digest("hex");
 }
 
-function buildPlayerLookupPayload(fid, now = Date.now()) {
+export function buildPlayerLookupPayload(
+  fid: string | number,
+  now = Date.now()
+): { fid: string; time: number; sign: string } {
   const payload = {
     fid: String(fid),
     time: now,
@@ -29,10 +32,3 @@ function buildPlayerLookupPayload(fid, now = Date.now()) {
     sign: buildSign(payload),
   };
 }
-
-module.exports = {
-  buildSign,
-  buildPlayerLookupPayload,
-};
-
-export {};

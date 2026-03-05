@@ -1,22 +1,40 @@
-const test = require("node:test");
-const assert = require("node:assert/strict");
-const {
+import test from "node:test";
+import assert from "node:assert/strict";
+import {
   generateAssignments,
   NEED_PER_CITY,
   MAX_SEND,
   MAX_SEND_WHALE,
   WHALE_MULTIPLIER,
-} = require("./assignments");
+} from "./assignments";
 
-function sum(values) {
+function sum(values: number[]): number {
   return values.reduce((total, value) => total + value, 0);
 }
 
 test("assignments satisfy minimum incoming and respect per-target caps", () => {
   const members = [
-    { playerId: "A", troopCount: 500000, power: 35000000, marchCount: 5 },
-    { playerId: "B", troopCount: 350000, power: 120000000, marchCount: 6 },
-    { playerId: "C", troopCount: 420000, power: 28000000, marchCount: 5 },
+    {
+      playerId: "A",
+      playerName: "A",
+      troopCount: 500000,
+      power: 35000000,
+      marchCount: 5,
+    },
+    {
+      playerId: "B",
+      playerName: "B",
+      troopCount: 350000,
+      power: 120000000,
+      marchCount: 6,
+    },
+    {
+      playerId: "C",
+      playerName: "C",
+      troopCount: 420000,
+      power: 28000000,
+      marchCount: 5,
+    },
   ];
 
   const result = generateAssignments(members);
@@ -30,14 +48,14 @@ test("assignments satisfy minimum incoming and respect per-target caps", () => {
   );
 
   for (const member of result.members) {
-    const outgoingTotal = sum(member.outgoing.map((item) => item.troops));
+    const outgoingTotal = sum(member.outgoing.map((item: { troops: number }) => item.troops));
     assert.ok(outgoingTotal <= member.troopCount);
     const effectiveIncoming = sum(
-      member.incoming.map((entry) =>
-        entry.troops * (whaleById.get(entry.fromId) ? 1.5 : 1)
+      member.incoming.map((entry: { troops: number; fromId?: string }) =>
+        entry.troops * (entry.fromId && whaleById.get(entry.fromId) ? 1.5 : 1)
       )
     );
-    const unmetWarning = result.warnings.some((warning) =>
+    const unmetWarning = result.warnings.some((warning: string) =>
       warning.includes(`City ${member.playerId} did not reach`)
     );
     assert.ok(
@@ -60,7 +78,7 @@ test("assignments satisfy minimum incoming and respect per-target caps", () => {
 
 test("returns warnings instead of throwing on invalid inputs", () => {
   const result = generateAssignments([
-    { playerId: "", troopCount: 0, power: 0, marchCount: 0 },
+    { playerId: "", playerName: "", troopCount: 0, power: 0, marchCount: 0 },
   ]);
 
   assert.equal(result.members.length, 0);
@@ -70,14 +88,33 @@ test("returns warnings instead of throwing on invalid inputs", () => {
 
 test("lead is assigned when the strongest sender reinforces", () => {
   const members = [
-    { playerId: "Whale1", troopCount: 600000, power: 120000000, marchCount: 6 },
-    { playerId: "D", troopCount: 400000, power: 15000000, marchCount: 5 },
-    { playerId: "E", troopCount: 400000, power: 16000000, marchCount: 5 },
+    {
+      playerId: "Whale1",
+      playerName: "Whale1",
+      troopCount: 600000,
+      power: 120000000,
+      marchCount: 6,
+    },
+    {
+      playerId: "D",
+      playerName: "D",
+      troopCount: 400000,
+      power: 15000000,
+      marchCount: 5,
+    },
+    {
+      playerId: "E",
+      playerName: "E",
+      troopCount: 400000,
+      power: 16000000,
+      marchCount: 5,
+    },
   ];
 
   const result = generateAssignments(members);
-  const target = result.members.find((member) => member.playerId === "D");
+  const target = result.members.find((member: { playerId: string }) => member.playerId === "D");
 
+  assert.ok(target, "Expected a target member for D");
   assert.ok(target.garrisonLeadId, "Expected a garrison lead for D");
 });
 

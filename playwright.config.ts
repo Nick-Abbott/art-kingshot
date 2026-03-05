@@ -7,7 +7,7 @@ const dbPath = path.join(process.cwd(), "server", "data", "viking.playwright.sql
 
 export default defineConfig({
   testDir: "playwright",
-  timeout: 120_000,
+  timeout: 30_000,
   expect: { timeout: 10_000 },
   fullyParallel: false,
   workers: 1,

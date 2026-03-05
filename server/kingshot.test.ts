@@ -1,6 +1,6 @@
-const test = require("node:test");
-const assert = require("node:assert/strict");
-const { buildPlayerLookupPayload } = require("./kingshot");
+import test from "node:test";
+import assert from "node:assert/strict";
+import { buildPlayerLookupPayload } from "./kingshot";
 
 test("buildPlayerLookupPayload matches known signature", () => {
   const payload = buildPlayerLookupPayload("209927780", 1771962696541);

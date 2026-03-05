@@ -1,8 +1,8 @@
 import { test } from "@playwright/test";
-import crypto from "node:crypto";
-import fs from "node:fs";
-import path from "node:path";
-const Database = require("better-sqlite3");
+import * as crypto from "node:crypto";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import Database from "better-sqlite3";
 
 type ProfileSeed = {
   id: string;
@@ -227,13 +227,17 @@ async function snapshotPage(
   if (options.openNav) {
     const navToggle = page.getByTestId("nav-toggle");
     if (await navToggle.isVisible()) {
-      await navToggle.click();
+      await navToggle.click({ force: true });
       await page.waitForTimeout(150);
+      await page
+        .getByTestId("profile-switcher")
+        .waitFor({ state: "visible", timeout: 2000 });
     }
   }
 
   if (options.openProfileMenu) {
     const trigger = page.getByTestId("profile-switcher");
+    await trigger.waitFor({ state: "visible", timeout: 2000 });
     await trigger.click();
     await page.waitForTimeout(150);
   }
@@ -283,22 +287,32 @@ test("ui snapshots", async ({ browser, request }, testInfo) => {
     document.cookie = `ak_session=${token}; path=/`;
   }, sessionToken);
 
+  const runSnapshot = async (
+    page: Parameters<typeof snapshotPage>[0],
+    name: string,
+    options: Parameters<typeof snapshotPage>[2]
+  ) => {
+    await test.step(`snapshot:${name}`, async () => {
+      await snapshotPage(page, name, options);
+    });
+  };
+
   try {
     const contextLoggedOut = await browser.newContext({ baseURL: CLIENT_URL });
     const loggedOutPage = await contextLoggedOut.newPage();
-    await snapshotPage(loggedOutPage, "profiles-logged-out", { pageKey: "profiles" });
+    await runSnapshot(loggedOutPage, "profiles-logged-out", { pageKey: "profiles" });
     await loggedOutPage.close();
     await contextLoggedOut.close();
 
     const loggedInPage = await contextWithAuth.newPage();
-    await snapshotPage(loggedInPage, "profiles-logged-in", {
+    await runSnapshot(loggedInPage, "profiles-logged-in", {
       pageKey: "profiles",
       selectedProfileId: profileC.id,
     });
     await loggedInPage.close();
 
     const pendingPage = await contextWithAuth.newPage();
-    await snapshotPage(pendingPage, "profiles-pending", {
+    await runSnapshot(pendingPage, "profiles-pending", {
       pageKey: "profiles",
       selectedProfileId: profileB.id,
     });
@@ -307,52 +321,52 @@ test("ui snapshots", async ({ browser, request }, testInfo) => {
     await approveProfile(request, profileA.id, profileB.id);
 
     const activePage = await contextWithAuth.newPage();
-    await snapshotPage(activePage, "profiles-active", {
+    await runSnapshot(activePage, "profiles-active", {
       pageKey: "profiles",
       selectedProfileId: profileB.id,
     });
     await activePage.close();
 
     const dropdownPage = await contextWithAuth.newPage();
-    await snapshotPage(dropdownPage, "profiles-dropdown-open", {
+    await runSnapshot(dropdownPage, "profiles-dropdown-open", {
       pageKey: "profiles",
       selectedProfileId: profileC.id,
       openProfileMenu: true,
-      openNav: testInfo.project.name.startsWith("mobile"),
+      openNav: testInfo.project.name.includes("mobile"),
     });
     await dropdownPage.close();
 
     const navPage = await contextWithAuth.newPage();
-    await snapshotPage(navPage, "profiles-nav-open", {
+    await runSnapshot(navPage, "profiles-nav-open", {
       pageKey: "profiles",
       selectedProfileId: profileC.id,
-      openNav: testInfo.project.name.startsWith("mobile"),
+      openNav: testInfo.project.name.includes("mobile"),
     });
     await navPage.close();
 
     const vikingNoAlliance = await contextWithAuth.newPage();
-    await snapshotPage(vikingNoAlliance, "viking-no-alliance", {
+    await runSnapshot(vikingNoAlliance, "viking-no-alliance", {
       pageKey: "viking",
       selectedProfileId: profileC.id,
     });
     await vikingNoAlliance.close();
 
     const vikingNoSignup = await contextWithAuth.newPage();
-    await snapshotPage(vikingNoSignup, "viking-active-nosignup", {
+    await runSnapshot(vikingNoSignup, "viking-active-nosignup", {
       pageKey: "viking",
       selectedProfileId: profileA.id,
     });
     await vikingNoSignup.close();
 
     const bearNoAlliance = await contextWithAuth.newPage();
-    await snapshotPage(bearNoAlliance, "bear-no-alliance", {
+    await runSnapshot(bearNoAlliance, "bear-no-alliance", {
       pageKey: "bear",
       selectedProfileId: profileC.id,
     });
     await bearNoAlliance.close();
 
     const bearNoSignup = await contextWithAuth.newPage();
-    await snapshotPage(bearNoSignup, "bear-active-nosignup", {
+    await runSnapshot(bearNoSignup, "bear-active-nosignup", {
       pageKey: "bear",
       selectedProfileId: profileA.id,
     });
@@ -361,7 +375,7 @@ test("ui snapshots", async ({ browser, request }, testInfo) => {
     await createVikingSignup(request, profileA.id, profileA.playerId, profileA.playerName);
 
     const vikingSignup = await contextWithAuth.newPage();
-    await snapshotPage(vikingSignup, "viking-active-signup", {
+    await runSnapshot(vikingSignup, "viking-active-signup", {
       pageKey: "viking",
       selectedProfileId: profileA.id,
     });
@@ -370,7 +384,7 @@ test("ui snapshots", async ({ browser, request }, testInfo) => {
     await createBearSignup(request, profileA.id, profileA.playerId, profileA.playerName);
 
     const bearSignup = await contextWithAuth.newPage();
-    await snapshotPage(bearSignup, "bear-active-signup", {
+    await runSnapshot(bearSignup, "bear-active-signup", {
       pageKey: "bear",
       selectedProfileId: profileA.id,
     });

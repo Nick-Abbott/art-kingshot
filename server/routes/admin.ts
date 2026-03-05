@@ -1,44 +1,43 @@
-const express = require("express");
+import express from "express";
+import type { Request, Response } from "express";
+import type { RouteContext } from "../types";
 
-module.exports = function adminRoutes(ctx) {
+export default function adminRoutes(ctx: RouteContext) {
   const router = express.Router();
 
-  function requireAppAdmin(req, res) {
+  function requireAppAdmin(req: Request, res: Response): boolean {
     if (req.user?.isAppAdmin) return true;
     ctx.fail(res, 403, "App admin access required.");
     return false;
   }
 
-  router.get("/api/admin/kingdoms", ctx.requireAuthMiddleware, (req, res) => {
-    if (!requireAppAdmin(req, res)) return;
-    const kingdoms = ctx.db
-      .prepare(
-        "SELECT DISTINCT kingdomId FROM alliances WHERE kingdomId IS NOT NULL ORDER BY kingdomId ASC"
-      )
-      .all()
-      .map((row) => row.kingdomId);
-    ctx.ok(res, { kingdoms });
-  });
+  router.get(
+    "/api/admin/kingdoms",
+    ctx.requireAuthMiddleware,
+    (req: Request, res: Response) => {
+      if (!requireAppAdmin(req, res)) return;
+      const kingdoms = ctx.queries.listAdminKingdoms();
+      ctx.ok(res, { kingdoms });
+    }
+  );
 
-  router.get("/api/admin/alliances", ctx.requireAuthMiddleware, (req, res) => {
-    if (!requireAppAdmin(req, res)) return;
-    const kingdomId = Number(req.query?.kingdomId);
-    const alliances = Number.isFinite(kingdomId)
-      ? ctx.db
-          .prepare(
-            "SELECT id, name, kingdomId FROM alliances WHERE kingdomId = ? ORDER BY name ASC"
-          )
-          .all(kingdomId)
-      : ctx.db
-          .prepare("SELECT id, name, kingdomId FROM alliances ORDER BY name ASC")
-          .all();
-    ctx.ok(res, { alliances });
-  });
+  router.get(
+    "/api/admin/alliances",
+    ctx.requireAuthMiddleware,
+    (req: Request, res: Response) => {
+      if (!requireAppAdmin(req, res)) return;
+      const kingdomId = Number(req.query?.kingdomId);
+      const alliances = Number.isFinite(kingdomId)
+        ? ctx.queries.listAlliancesByKingdom(kingdomId)
+        : ctx.queries.listAlliances();
+      ctx.ok(res, { alliances });
+    }
+  );
 
   router.get(
     "/api/admin/alliances/:allianceId/profiles",
     ctx.requireAuthMiddleware,
-    (req, res) => {
+    (req: Request, res: Response) => {
       if (!requireAppAdmin(req, res)) return;
       const allianceId =
         typeof req.params.allianceId === "string" ? req.params.allianceId.trim() : "";
@@ -46,32 +45,12 @@ module.exports = function adminRoutes(ctx) {
         ctx.fail(res, 400, "Alliance id is required.");
         return;
       }
-      const alliance = ctx.selectAllianceById.get(allianceId);
+      const alliance = ctx.getAllianceById(allianceId);
       if (!alliance) {
         ctx.fail(res, 404, "Alliance not found.");
         return;
       }
-      const profiles = ctx.db
-        .prepare(
-          `SELECT profiles.id,
-                  profiles.userId,
-                  profiles.playerId,
-                  profiles.playerName,
-                  profiles.playerAvatar,
-                  profiles.kingdomId,
-                  profiles.allianceId,
-                  profiles.status,
-                  profiles.role,
-                  profiles.troopCount,
-                  profiles.marchCount,
-                  profiles.power,
-                  profiles.rallySize,
-                  users.displayName AS userDisplayName
-           FROM profiles
-           LEFT JOIN users ON users.id = profiles.userId
-           WHERE profiles.allianceId = ?`
-        )
-        .all(allianceId);
+      const profiles = ctx.queries.listAllianceProfiles(allianceId);
       ctx.ok(res, { profiles });
     }
   );
@@ -80,18 +59,16 @@ module.exports = function adminRoutes(ctx) {
     "/api/admin/profiles/:profileId",
     ctx.requireAuthMiddleware,
     ctx.requireRoleMiddleware(["app_admin"]),
-    (req, res) => {
+    (req: Request, res: Response) => {
       const query =
         typeof req.params.profileId === "string" ? req.params.profileId.trim() : "";
       if (!query) {
         ctx.fail(res, 400, "Profile id is required.");
         return;
       }
-      let profile = ctx.selectProfileById.get(query);
+      let profile = ctx.getProfileById(query);
       if (!profile) {
-        profile = ctx.db
-          .prepare("SELECT * FROM profiles WHERE playerId = ?")
-          .get(query);
+        profile = ctx.getProfileByPlayerId(query);
       }
       ctx.ok(res, { profile: profile || null });
     }
@@ -101,19 +78,19 @@ module.exports = function adminRoutes(ctx) {
     "/api/admin/profiles/:profileId",
     ctx.requireAuthMiddleware,
     ctx.requireRoleMiddleware(["app_admin"]),
-    (req, res) => {
+    (req: Request, res: Response) => {
       const profileId =
         typeof req.params.profileId === "string" ? req.params.profileId.trim() : "";
       if (!profileId) {
         ctx.fail(res, 400, "Profile id is required.");
         return;
       }
-      const profile = ctx.selectProfileById.get(profileId);
+      const profile = ctx.getProfileById(profileId);
       if (!profile) {
         ctx.fail(res, 404, "Profile not found.");
         return;
       }
-      ctx.db.prepare("DELETE FROM profiles WHERE id = ?").run(profileId);
+      ctx.queries.deleteProfile(profileId);
       ctx.ok(res, { ok: true });
     }
   );
@@ -121,7 +98,7 @@ module.exports = function adminRoutes(ctx) {
   router.patch(
     "/api/admin/alliances/:allianceId/profiles/:profileId",
     ctx.requireAuthMiddleware,
-    (req, res) => {
+    (req: Request, res: Response) => {
       if (!requireAppAdmin(req, res)) return;
       const allianceId =
         typeof req.params.allianceId === "string" ? req.params.allianceId.trim() : "";
@@ -131,23 +108,28 @@ module.exports = function adminRoutes(ctx) {
         ctx.fail(res, 400, "Alliance id and profile id are required.");
         return;
       }
-      const profile = ctx.selectProfileById.get(profileId);
+      const profile = ctx.getProfileById(profileId);
       if (!profile || profile.allianceId !== allianceId) {
         ctx.fail(res, 404, "Profile not found.");
         return;
       }
 
-      const body = req.body || {};
+      const parsed = ctx.parseAllianceProfileUpdatePayload(req.body);
+      if (!parsed.ok) {
+        ctx.fail(res, 400, parsed.error);
+        return;
+      }
+      const body = parsed.data;
       if (body.action === "reject") {
         if (profile.status !== "pending") {
           ctx.fail(res, 400, "Only pending profiles can be rejected.");
           return;
         }
-        ctx.updateProfile.run(
-          profile.playerId,
+        ctx.updateProfile(
+          profile.playerId ?? null,
           profile.playerName || null,
           profile.playerAvatar || null,
-          profile.kingdomId,
+          profile.kingdomId ?? null,
           null,
           "pending",
           "member",
@@ -158,7 +140,7 @@ module.exports = function adminRoutes(ctx) {
           Date.now(),
           profile.id
         );
-        const updated = ctx.selectProfileById.get(profile.id);
+        const updated = ctx.getProfileById(profile.id);
         ctx.ok(res, { profile: updated });
         return;
       }
@@ -172,8 +154,8 @@ module.exports = function adminRoutes(ctx) {
           ? body.role
           : profile.role;
 
-      ctx.updateProfileStatus.run(status, role, Date.now(), profile.id);
-      const updated = ctx.selectProfileById.get(profile.id);
+      ctx.updateProfileStatus(status, role, Date.now(), profile.id);
+      const updated = ctx.getProfileById(profile.id);
       ctx.ok(res, { profile: updated });
     }
   );
@@ -181,7 +163,7 @@ module.exports = function adminRoutes(ctx) {
   router.delete(
     "/api/admin/alliances/:allianceId",
     ctx.requireAuthMiddleware,
-    (req, res) => {
+    (req: Request, res: Response) => {
       if (!requireAppAdmin(req, res)) return;
       const allianceId =
         typeof req.params.allianceId === "string" ? req.params.allianceId.trim() : "";
@@ -189,26 +171,21 @@ module.exports = function adminRoutes(ctx) {
         ctx.fail(res, 400, "Alliance id is required.");
         return;
       }
-      const alliance = ctx.selectAllianceById.get(allianceId);
+      const alliance = ctx.getAllianceById(allianceId);
       if (!alliance) {
         ctx.fail(res, 404, "Alliance not found.");
         return;
       }
 
-      ctx.db.exec("BEGIN");
       try {
-        ctx.db.prepare("DELETE FROM members WHERE allianceId = ?").run(allianceId);
-        ctx.db.prepare("DELETE FROM meta WHERE allianceId = ?").run(allianceId);
-        ctx.db.prepare("DELETE FROM bear WHERE allianceId = ?").run(allianceId);
-        ctx.db
-          .prepare(
-            "UPDATE profiles SET allianceId = NULL, status = 'pending', role = 'member' WHERE allianceId = ?"
-          )
-          .run(allianceId);
-        ctx.db.prepare("DELETE FROM alliances WHERE id = ?").run(allianceId);
-        ctx.db.exec("COMMIT");
+        ctx.db.transaction(() => {
+          ctx.queries.deleteMembersForAlliance(allianceId);
+          ctx.queries.deleteMetaForAlliance(allianceId);
+          ctx.queries.deleteBearForAlliance(allianceId);
+          ctx.queries.resetProfilesAlliance(allianceId);
+          ctx.queries.deleteAlliance(allianceId);
+        })();
       } catch (error) {
-        ctx.db.exec("ROLLBACK");
         ctx.fail(res, 500, "Failed to delete alliance.");
         return;
       }

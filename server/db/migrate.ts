@@ -1,7 +1,8 @@
-const fs = require("node:fs");
-const path = require("node:path");
+import * as fs from "node:fs";
+import * as path from "node:path";
+import type { Database } from "better-sqlite3";
 
-function ensureSchemaTable(db) {
+function ensureSchemaTable(db: Database): void {
   db.exec(`
     CREATE TABLE IF NOT EXISTS schema_version (
       id INTEGER PRIMARY KEY,
@@ -11,7 +12,7 @@ function ensureSchemaTable(db) {
   `);
 }
 
-function listMigrations(dir) {
+function listMigrations(dir: string): { name: string; path: string; sql: string }[] {
   if (!fs.existsSync(dir)) return [];
   return fs
     .readdirSync(dir)
@@ -24,14 +25,12 @@ function listMigrations(dir) {
     }));
 }
 
-function runMigrations(db, dir) {
+export function runMigrations(db: Database, dir: string): void {
   ensureSchemaTable(db);
-  const applied = new Set(
-    db
-      .prepare("SELECT name FROM schema_version ORDER BY id")
-      .all()
-      .map((row) => row.name)
-  );
+  const appliedRows = db
+    .prepare("SELECT name FROM schema_version ORDER BY id")
+    .all() as { name: string }[];
+  const applied = new Set(appliedRows.map((row) => row.name));
 
   const migrations = listMigrations(dir);
   for (const migration of migrations) {
@@ -44,7 +43,3 @@ function runMigrations(db, dir) {
     })();
   }
 }
-
-module.exports = { runMigrations };
-
-export {};

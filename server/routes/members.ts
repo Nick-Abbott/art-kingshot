@@ -1,15 +1,21 @@
-const express = require("express");
-import type { Member } from "../../shared/types";
+import express from "express";
+import type { Request, Response } from "express";
+import type { RouteContext } from "../types";
 
-module.exports = function membersRoutes(ctx) {
+export default function membersRoutes(ctx: RouteContext) {
   const router = express.Router();
 
   router.get(
     "/api/members",
     ctx.requireAuthMiddleware,
     ctx.requireAllianceMiddleware,
-    (req, res) => {
-      ctx.ok(res, { members: ctx.membersRepo.list(req.allianceId) });
+    (req: Request, res: Response) => {
+      const allianceId = req.allianceId;
+      if (!allianceId) {
+        ctx.fail(res, 400, "Alliance is required.");
+        return;
+      }
+      ctx.ok(res, { members: ctx.membersRepo.list(allianceId) });
     }
   );
 
@@ -17,15 +23,18 @@ module.exports = function membersRoutes(ctx) {
     "/api/signup",
     ctx.requireAuthMiddleware,
     ctx.requireAllianceMiddleware,
-    (req, res) => {
+    (req: Request, res: Response) => {
       const allianceId = req.allianceId;
-      const normalized = ctx.normalizeMemberPayload(req.body || {}) as
-        | Member
-        | { error: string };
-      if ("error" in normalized) {
-        ctx.fail(res, 400, normalized.error);
+      if (!allianceId) {
+        ctx.fail(res, 400, "Alliance is required.");
         return;
       }
+      const parsed = ctx.parseMemberPayload(req.body);
+      if (!parsed.ok) {
+        ctx.fail(res, 400, parsed.error);
+        return;
+      }
+      const normalized = parsed.data;
       const canManage = req.user?.isAppAdmin || req.profileRole === "alliance_admin";
       if (!canManage && req.profile?.playerId !== normalized.playerId) {
         ctx.fail(res, 403, "Cannot update another member.");
@@ -33,23 +42,14 @@ module.exports = function membersRoutes(ctx) {
       }
 
       const members = ctx.membersRepo.upsert(allianceId, normalized);
-      ctx.db
-        .prepare(
-          `UPDATE profiles
-           SET troopCount = ?,
-               marchCount = ?,
-               power = ?,
-               playerName = ?
-           WHERE allianceId = ? AND playerId = ?`
-        )
-        .run(
-          normalized.troopCount,
-          normalized.marchCount,
-          normalized.power,
-          normalized.playerName,
-          allianceId,
-          normalized.playerId
-        );
+      ctx.queries.updateProfileStatsForMember(
+        normalized.troopCount,
+        normalized.marchCount,
+        normalized.power,
+        normalized.playerName,
+        allianceId,
+        normalized.playerId
+      );
       ctx.ok(res, { members });
     }
   );
@@ -59,24 +59,13 @@ module.exports = function membersRoutes(ctx) {
     ctx.requireAuthMiddleware,
     ctx.requireAllianceMiddleware,
     ctx.requireRoleMiddleware(["alliance_admin"]),
-    (req, res) => {
+    (req: Request, res: Response) => {
       const allianceId = req.allianceId;
-      const members = ctx.db
-        .prepare(
-          `SELECT playerId,
-                  playerName,
-                  troopCount,
-                  marchCount,
-                  power
-           FROM profiles
-           WHERE allianceId = ?
-             AND status = 'active'
-             AND playerId NOT IN (
-               SELECT playerId FROM members WHERE allianceId = ?
-             )
-           ORDER BY COALESCE(playerName, playerId) ASC`
-        )
-        .all(allianceId, allianceId);
+      if (!allianceId) {
+        ctx.fail(res, 400, "Alliance is required.");
+        return;
+      }
+      const members = ctx.queries.listEligibleMembers(allianceId);
       ctx.ok(res, { members });
     }
   );
@@ -85,8 +74,12 @@ module.exports = function membersRoutes(ctx) {
     "/api/members/:playerId",
     ctx.requireAuthMiddleware,
     ctx.requireAllianceMiddleware,
-    (req, res) => {
+    (req: Request, res: Response) => {
       const allianceId = req.allianceId;
+      if (!allianceId) {
+        ctx.fail(res, 400, "Alliance is required.");
+        return;
+      }
       const playerId =
         typeof req.params.playerId === "string" ? req.params.playerId.trim() : "";
       if (!playerId) {

@@ -82,6 +82,7 @@ Root:
 - `npm run test:playwright` — Run all Playwright tests
 - `npm run test:e2e` — Run Playwright UI flows only (desktop + mobile, light mode)
 - `npm run test:visual` — Run Playwright snapshots only (all viewports + color schemes)
+- `npm run lint` — Run ESLint (custom Airbnb-like ruleset)
 - `npm run seed:test` — Seed test scenario data
 - `node scripts/check-auth-flow.js` — Basic auth/session check (server required)
 - `SESSION_TOKEN=your_token node scripts/check-alliance-switch.js` — Smoke check for alliance selection (server required)
