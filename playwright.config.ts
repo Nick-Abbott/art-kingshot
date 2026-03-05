@@ -6,6 +6,7 @@ const isCI = Boolean(process.env.CI);
 
 export default defineConfig({
   testDir: "playwright",
+  outputDir: "test-results",
   timeout: 30_000,
   expect: { timeout: 10_000 },
   fullyParallel: false,
@@ -15,8 +16,9 @@ export default defineConfig({
   retries: isCI ? 2 : 0,
   use: {
     baseURL,
-    trace: isCI ? "on-first-retry" : "off",
-    video: isCI ? "on-first-retry" : "off",
+    screenshot: "only-on-failure",
+    trace: "retain-on-failure",
+    video: "retain-on-failure",
     launchOptions: executablePath ? { executablePath } : undefined,
   },
   projects: [

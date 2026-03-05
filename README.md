@@ -94,6 +94,10 @@ npm run test:visual
 ```
 Outputs are saved under `snapshots/playwright/`.
 
+Playwright diagnostics on failure:
+- Artifacts (screenshots, traces, videos) are stored under `test-results/`.
+- Each failed test gets its own folder with the captured files.
+
 This script is one-shot and runs without manual setup:
 - Starts server on `http://localhost:3002` with `DB_PATH=server/data/viking.playwright.sqlite`
 - Starts client on `http://localhost:5174`

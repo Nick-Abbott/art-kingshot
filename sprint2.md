@@ -368,6 +368,7 @@ Validate PW-07 by confirming:
 
 ### PW-08: Add Playwright Diagnostics on Failure
 **Problem**: Flaky failures are hard to diagnose without consistent artifacts.
+**Status**: Complete
 
 **Scope / Requirements**
 - Ensure Playwright captures screenshots and traces on failure by default.
@@ -387,3 +388,23 @@ You are implementing PW-08. Update Playwright config to capture screenshots/trac
 Validate PW-08 by confirming:
 1) Playwright is configured to save artifacts on failures.
 2) Documentation references artifact paths.
+
+- **Engineer Update (2026-03-05)**: set Playwright to retain screenshots/traces/videos on failure with artifacts stored in `test-results/`; documented diagnostic artifact locations in README.
+- **Engineer Tests (2026-03-05)**: not run (config/docs only; no test run required).
+- **QA Validation (2026-03-05)**:
+  - [x] Playwright config retains screenshots/traces/videos on failure (`playwright.config.ts`).
+  - [x] Documentation calls out artifact location under `test-results/` (`README.md`).
+- **QA Tests (2026-03-05)**:
+  - Not run (config/docs only; no test run required).
+
+---
+
+## Sprint 2 Closeout Summary (2026-03-05)
+- Centralized Playwright helpers and fixtures to reduce drift and duplication.
+- Added deterministic test data + frozen client time for repeatable runs.
+- Isolated tests with per-worker servers/DBs and DB resets before each test.
+- Replaced brittle waits with deterministic readiness checks.
+- Adopted Playwright snapshot assertions with masking + stable output paths.
+- Added CI retries/traces/videos and wired Playwright into PR + nightly CI jobs.
+- Introduced stable `data-testid` hooks for key flows to reduce selector brittleness.
+- Documented and enabled diagnostic artifacts for failures (`test-results/`).
