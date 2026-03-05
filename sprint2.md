@@ -67,6 +67,14 @@ Validate PW-01 by confirming:
 - **QA Tests (2026-03-05)**:
   - `npm run test:e2e` — pass
   - `npm run test:visual` — pass
+- **QA Validation (2026-03-05)**:
+  - [x] Per-worker app fixtures (`playwright/fixtures.ts`) provide isolated `clientUrl`, `serverUrl`, and `dbPath`.
+  - [x] Worker DB reset runs in `test.beforeEach` using the worker `dbPath`.
+  - [x] Tests do not rely on previous state (flows + snapshots pass with per-worker DB isolation).
+  - [x] Required Playwright flows and snapshot runs passed.
+- **QA Tests (2026-03-05)**:
+  - `npm run test:e2e` — pass
+  - `npm run test:visual` — pass
 
 ---
 
@@ -100,6 +108,7 @@ Validate PW-02 by confirming:
 
 ### PW-03: Deterministic Test Data & Clock Control
 **Problem**: Random IDs/timestamps can leak into UI and snapshots, creating nondeterministic results.
+**Status**: Complete
 
 **Scope / Requirements**
 - Introduce a deterministic seed strategy for test data (fixed IDs, names, and timestamps).
@@ -122,10 +131,21 @@ Validate PW-03 by confirming:
 2) No UI-visible IDs/names change between runs.
 3) `npm run test:visual` passes reliably.
 
+- **Engineer Update (2026-03-05)**: removed randomized player IDs/kingdoms in Playwright flows + snapshots, added fixed alliance tags, and froze client-side time in `openPage` for deterministic UI output.
+- **Engineer Tests (2026-03-05)**: `npm run test:visual` (not run; not requested), `npm run test:e2e` (not run; not requested).
+- **QA Validation (2026-03-05)**:
+  - [x] Test data uses fixed IDs/kingdoms/tags in `playwright/ui-flows.spec.ts` and `playwright/ui-snapshots.spec.ts`.
+  - [x] Client-side time is frozen via `openPage` default `fixedTime` (`TEST_TIME`).
+  - [x] Snapshot data appears deterministic across repeated runs (re-ran `npm run test:visual` twice).
+  - [x] Required Playwright snapshots run passed.
+- **QA Tests (2026-03-05)**:
+  - `npm run test:visual` — pass (run twice)
+
 ---
 
 ### PW-04: Test Data Isolation & DB Reset Strategy
 **Problem**: Tests depend on a shared SQLite DB file and random data, which risks cross-test contamination.
+**Status**: Complete
 
 **Scope / Requirements**
 - Add a test DB reset/cleanup step before each Playwright test file (or test case).
@@ -148,6 +168,24 @@ Validate PW-04 by confirming:
 1) DB state is reset between suites/tests.
 2) Tests do not rely on previous state.
 3) `npm run test:e2e` and `npm run test:visual` pass.
+
+- **Engineer Update (2026-03-05)**: replaced the DB lock approach with per-worker server + client instances and per-worker SQLite DB files via `playwright/fixtures.ts`; Playwright config no longer uses a shared `webServer`, and each test still resets its worker DB in `beforeEach`.
+- **Engineer Tests (2026-03-05)**: `npm run test:e2e` (not run; not requested), `npm run test:visual` (not run; not requested).
+- **QA Validation (2026-03-05)**:
+  - [x] DB reset helper exists (`resetPlaywrightDb`) and is invoked via `test.beforeEach` in `playwright/ui-flows.spec.ts` and `playwright/ui-snapshots.spec.ts`.
+  - [ ] Tests do not rely on previous state (unable to fully confirm because `npm run test:e2e` failed on mobile bear signup flow).
+  - [ ] Required Playwright flows test run did not pass; snapshot tests passed.
+- **QA Tests (2026-03-05)**:
+  - `npm run test:e2e` — fail (flows-mobile `bear signup and reset` timed out waiting for `getByTestId("profile-switcher")` in `openPage`).
+  - `npm run test:visual` — pass
+- **QA Validation (2026-03-05)**:
+  - [x] DB reset helper exists (`resetPlaywrightDb`) and is invoked via `test.beforeEach` in `playwright/ui-flows.spec.ts` and `playwright/ui-snapshots.spec.ts`.
+  - [x] DB reset is serialized with a cross-project lock (`acquirePlaywrightDbLock`/`releasePlaywrightDbLock`) to avoid parallel test contention.
+  - [x] Tests do not rely on previous state (flows + snapshots pass with DB reset before each test).
+  - [x] Required Playwright flows and snapshot runs passed.
+- **QA Tests (2026-03-05)**:
+  - `npm run test:e2e` — pass
+  - `npm run test:visual` — pass
 
 ---
 

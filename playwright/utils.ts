@@ -11,6 +11,7 @@ export type ProfileSeed = {
 export const CLIENT_URL = process.env.SNAPSHOT_URL || "http://localhost:5173";
 export const SERVER_URL = process.env.SERVER_URL || "http://localhost:3001";
 export const DB_PATH = process.env.PLAYWRIGHT_DB_PATH || "";
+export const TEST_TIME = Date.parse("2025-01-15T12:00:00.000Z");
 
 function clientHost(clientUrl: string) {
   return new URL(clientUrl).hostname;
@@ -40,6 +41,26 @@ export function createSessionToken(options: {
   ).run(token, userId, now + 14 * 24 * 60 * 60 * 1000, now);
   db.close();
   return token;
+}
+
+export function resetPlaywrightDb(dbPath: string = DB_PATH) {
+  if (!dbPath) {
+    throw new Error("PLAYWRIGHT_DB_PATH is required to reset the test database.");
+  }
+  const db = new Database(dbPath);
+  const tables = db
+    .prepare(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name != 'schema_version'"
+    )
+    .all() as { name: string }[];
+  const clear = db.transaction(() => {
+    for (const { name } of tables) {
+      const safeName = name.replace(/"/g, '""');
+      db.prepare(`DELETE FROM "${safeName}"`).run();
+    }
+  });
+  clear();
+  db.close();
 }
 
 export async function createAuthContext(
@@ -114,14 +135,12 @@ export async function createAlliance(
   request: APIRequestContext,
   token: string,
   profileId: string,
-  serverUrl: string = SERVER_URL
+  serverUrl: string = SERVER_URL,
+  options: { tag?: string; name?: string } = {}
 ) {
   for (let attempt = 0; attempt < 30; attempt += 1) {
-    const tag = Array.from(crypto.randomBytes(3))
-      .map((byte) => String.fromCharCode(65 + (byte % 26)))
-      .join("")
-      .slice(0, 3);
-    const baseName = `Arts of War ${tag}`;
+    const tag = options.tag ?? "AOW";
+    const baseName = options.name ?? `Arts of War ${tag}`;
     const { res, json } = await apiJson(request, `${serverUrl}/api/alliances`, {
       method: "POST",
       headers: {
@@ -312,11 +331,36 @@ export async function openPage(
     readyTimeout?: number;
     readyTestId?: string;
     readyState?: "attached" | "visible";
+    fixedTime?: number | null;
   }
 ) {
   const clientUrl = options.clientUrl ?? CLIENT_URL;
   const waitForMe = options.waitForMe ?? true;
   const waitForMeTimeout = options.waitForMeTimeout ?? 5000;
+  const fixedTime = options.fixedTime ?? TEST_TIME;
+
+  if (fixedTime !== null) {
+    await page.addInitScript((time) => {
+      const OriginalDate = Date;
+      class FixedDate extends OriginalDate {
+        constructor(...args: ConstructorParameters<DateConstructor>) {
+          if (args.length === 0) {
+            super(time);
+          } else {
+            super(...args);
+          }
+        }
+        static now() {
+          return time;
+        }
+      }
+      FixedDate.UTC = OriginalDate.UTC;
+      FixedDate.parse = OriginalDate.parse;
+      FixedDate.prototype = OriginalDate.prototype;
+      // eslint-disable-next-line no-global-assign
+      Date = FixedDate;
+    }, fixedTime);
+  }
 
   await page.addInitScript(
     ({ pageKey, selectedProfileId }) => {

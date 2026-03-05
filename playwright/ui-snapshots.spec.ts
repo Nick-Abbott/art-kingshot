@@ -1,10 +1,7 @@
-import { test } from "@playwright/test";
+import { test } from "./fixtures";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import {
-  CLIENT_URL,
-  DB_PATH,
-  SERVER_URL,
   approveProfile,
   assertSession,
   createAlliance,
@@ -15,15 +12,20 @@ import {
   createVikingSignup,
   openNavMenu,
   openPage,
-  requireEnv,
+  resetPlaywrightDb,
   setPendingJoin,
 } from "./utils";
 
 let sessionToken = "";
 
+test.beforeEach(async ({ app }) => {
+  resetPlaywrightDb(app.dbPath);
+});
+
 async function snapshotPage(
   page: Parameters<typeof test>[0]["page"],
   name: string,
+  clientUrl: string,
   options: {
     pageKey?: string;
     selectedProfileId?: string;
@@ -37,7 +39,7 @@ async function snapshotPage(
   await openPage(page, {
     pageKey: options.pageKey,
     selectedProfileId: options.selectedProfileId,
-    clientUrl: CLIENT_URL,
+    clientUrl,
     waitForMe: true,
     waitForMeTimeout: 10000,
     readySelector: ".app-shell",
@@ -62,50 +64,78 @@ async function snapshotPage(
   });
 }
 
-test("ui snapshots", async ({ browser, request }, testInfo) => {
-  requireEnv("PLAYWRIGHT_DB_PATH", DB_PATH, "Playwright UI snapshots");
-  sessionToken = createSessionToken({ dbPath: DB_PATH });
-  await assertSession(request, sessionToken, SERVER_URL);
+test("ui snapshots", async ({ app, browser, request }, testInfo) => {
+  sessionToken = createSessionToken({ dbPath: app.dbPath });
+  await assertSession(request, sessionToken, app.serverUrl);
 
-  const kingdomId = 9000 + Math.floor(Math.random() * 1000);
-  const runToken = `${Date.now()}${Math.floor(Math.random() * 1000)
-    .toString()
-    .padStart(3, "0")}`;
+  const kingdomId = 9002;
+  const runToken = "PW03SNAP";
   const buildPlayerId = (suffix: number) => `FID${runToken}${suffix}`;
 
-  const profileA = await createProfile(request, sessionToken, {
-    playerId: buildPlayerId(1),
-    playerName: "Professor Muffin",
-    kingdomId,
-  });
-  const profileB = await createProfile(request, sessionToken, {
-    playerId: buildPlayerId(2),
-    playerName: "MuffinMan",
-    kingdomId,
-  });
-  const profileC = await createProfile(request, sessionToken, {
-    playerId: buildPlayerId(3),
-    playerName: "StaleMuffin",
-    kingdomId,
-  });
+  const profileA = await createProfile(
+    request,
+    sessionToken,
+    {
+      playerId: buildPlayerId(1),
+      playerName: "Professor Muffin",
+      kingdomId,
+    },
+    app.serverUrl
+  );
+  const profileB = await createProfile(
+    request,
+    sessionToken,
+    {
+      playerId: buildPlayerId(2),
+      playerName: "MuffinMan",
+      kingdomId,
+    },
+    app.serverUrl
+  );
+  const profileC = await createProfile(
+    request,
+    sessionToken,
+    {
+      playerId: buildPlayerId(3),
+      playerName: "StaleMuffin",
+      kingdomId,
+    },
+    app.serverUrl
+  );
 
-  const alliance = await createAlliance(request, sessionToken, profileA.id);
-  await setPendingJoin(request, sessionToken, profileB.id, alliance.alliance.id);
+  const alliance = await createAlliance(
+    request,
+    sessionToken,
+    profileA.id,
+    app.serverUrl,
+    { tag: "AOS" }
+  );
+  await setPendingJoin(
+    request,
+    sessionToken,
+    profileB.id,
+    alliance.alliance.id,
+    app.serverUrl
+  );
 
-  const contextWithAuth = await createAuthContext(browser, sessionToken, CLIENT_URL);
+  const contextWithAuth = await createAuthContext(
+    browser,
+    sessionToken,
+    app.clientUrl
+  );
 
   const runSnapshot = async (
     page: Parameters<typeof snapshotPage>[0],
     name: string,
-    options: Parameters<typeof snapshotPage>[2]
+    options: Parameters<typeof snapshotPage>[3]
   ) => {
     await test.step(`snapshot:${name}`, async () => {
-      await snapshotPage(page, name, options);
+      await snapshotPage(page, name, app.clientUrl, options);
     });
   };
 
   try {
-    const contextLoggedOut = await browser.newContext({ baseURL: CLIENT_URL });
+    const contextLoggedOut = await browser.newContext({ baseURL: app.clientUrl });
     const loggedOutPage = await contextLoggedOut.newPage();
     await runSnapshot(loggedOutPage, "profiles-logged-out", { pageKey: "profiles" });
     await loggedOutPage.close();
@@ -125,7 +155,7 @@ test("ui snapshots", async ({ browser, request }, testInfo) => {
     });
     await pendingPage.close();
 
-    await approveProfile(request, sessionToken, profileA.id, profileB.id);
+    await approveProfile(request, sessionToken, profileA.id, profileB.id, app.serverUrl);
 
     const activePage = await contextWithAuth.newPage();
     await runSnapshot(activePage, "profiles-active", {
@@ -184,7 +214,8 @@ test("ui snapshots", async ({ browser, request }, testInfo) => {
       sessionToken,
       profileA.id,
       profileA.playerId,
-      profileA.playerName
+      profileA.playerName,
+      app.serverUrl
     );
 
     const vikingSignup = await contextWithAuth.newPage();
@@ -199,7 +230,8 @@ test("ui snapshots", async ({ browser, request }, testInfo) => {
       sessionToken,
       profileA.id,
       profileA.playerId,
-      profileA.playerName
+      profileA.playerName,
+      app.serverUrl
     );
 
     const bearSignup = await contextWithAuth.newPage();

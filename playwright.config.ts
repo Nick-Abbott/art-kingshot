@@ -1,9 +1,6 @@
 import { defineConfig } from "@playwright/test";
-import path from "node:path";
-
 const baseURL = process.env.SNAPSHOT_URL || "http://localhost:5173";
 const executablePath = process.env.CHROME_PATH;
-const dbPath = path.join(process.cwd(), "server", "data", "viking.playwright.sqlite");
 
 export default defineConfig({
   testDir: "playwright",
@@ -17,28 +14,6 @@ export default defineConfig({
     trace: "off",
     launchOptions: executablePath ? { executablePath } : undefined,
   },
-  webServer: [
-    {
-      command: "npm run dev:server",
-      url: "http://127.0.0.1:3002/health",
-      reuseExistingServer: false,
-      timeout: 60_000,
-      env: {
-        PORT: "3002",
-        DB_PATH: dbPath,
-        APP_BASE_URL: "http://localhost:5174"
-      }
-    },
-    {
-      command: "npm run dev --workspace client -- --host localhost --port 5174 --strictPort",
-      url: "http://localhost:5174",
-      reuseExistingServer: false,
-      timeout: 60_000,
-      env: {
-        VITE_PROXY_TARGET: "http://127.0.0.1:3002"
-      }
-    }
-  ],
   projects: [
     {
       name: "flows-desktop",
