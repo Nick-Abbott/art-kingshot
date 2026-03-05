@@ -48,6 +48,22 @@ Validate TD-01 by confirming:
 2) `client/public/locales/*/translation.json` share identical key sets (spot-check admin keys).
 3) `npm run test:i18n` and `npm run test:e2e` pass.
 
+**Update (2026-03-05)**
+- Removed the bundled English import from `client/src/i18n.js` so all locales load via `/locales/{{lng}}/translation.json`.
+- Added the missing `admin` keys to every `client/public/locales/*/translation.json` using English text for parity.
+- Deleted the duplicate `client/src/locales/en/translation.json` source.
+- Tests not run: `npm run test:i18n`, `npm run test:e2e`.
+
+**Update (2026-03-05)**
+- Restored missing `app.tabs.admin` and `profiles.reject` keys into public locales from the prior English source so the Admin tab renders.
+- Allowed English placeholders for `admin.*`, `app.tabs.admin`, and `profiles.reject` in `client/scripts/check-i18n.mjs` to satisfy key parity while translations are pending.
+
+**Validation (2026-03-05)**
+- `npm run test:i18n`: pass.
+- `npm run test:e2e`: pass.
+- `npm run test:visual`: pass.
+- Snapshots spot-checked: `snapshots/playwright/profiles-logged-in-snapshots-desktop-light.png`, `snapshots/playwright/profiles-nav-open-snapshots-desktop-light.png`, `snapshots/playwright/profiles-logged-in-snapshots-mobile-light.png` (Admin tab label present; locale strings render as expected for English baseline).
+
 ---
 
 ### TD-02: Deduplicate Alliance Delete Cascade

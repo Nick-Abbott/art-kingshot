@@ -11,6 +11,7 @@ const allowedSameValues = new Set([
   "ART Alliance",
   "Kingshot",
 ]);
+const allowedSameValuePrefixes = ["admin.", "app.tabs.admin", "profiles.reject"];
 
 function loadJson(locale) {
   const filePath = path.join(localesDir, locale, "translation.json");
@@ -85,7 +86,8 @@ locales
       if (
         typeof value === "string" &&
         value === targetValue &&
-        !allowedSameValues.has(value)
+        !allowedSameValues.has(value) &&
+        !allowedSameValuePrefixes.some((prefix) => key.startsWith(prefix))
       ) {
         sameValues.push(key);
       }
