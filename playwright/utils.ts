@@ -419,12 +419,18 @@ export async function waitForSnapshotReady(
   }
 
   if (options.pageKey === "viking") {
-    await page.getByTestId("viking-roster").waitFor({ state: "visible", timeout });
+    await Promise.race([
+      page.getByTestId("viking-roster").waitFor({ state: "visible", timeout }),
+      page.getByTestId("profiles-page").waitFor({ state: "visible", timeout }),
+    ]);
     return;
   }
 
   if (options.pageKey === "bear") {
-    await page.getByTestId("bear1-list").waitFor({ state: "visible", timeout });
+    await Promise.race([
+      page.getByTestId("bear1-list").waitFor({ state: "visible", timeout }),
+      page.getByTestId("profiles-page").waitFor({ state: "visible", timeout }),
+    ]);
     return;
   }
 

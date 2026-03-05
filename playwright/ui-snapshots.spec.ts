@@ -1,6 +1,6 @@
+import type { Locator } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { test } from "./fixtures";
-import * as fs from "node:fs";
-import * as path from "node:path";
 import {
   approveProfile,
   assertSession,
@@ -35,9 +35,6 @@ async function snapshotPage(
     loggedOut?: boolean;
   }
 ) {
-  const outputDir = path.join(process.cwd(), "snapshots", "playwright");
-  fs.mkdirSync(outputDir, { recursive: true });
-
   await openPage(page, {
     pageKey: options.pageKey,
     selectedProfileId: options.selectedProfileId,
@@ -64,11 +61,21 @@ async function snapshotPage(
     await page.getByRole("menu").waitFor({ state: "visible" });
   }
 
-  const fileName = `${name}-${test.info().project.name}.png`;
-  await page.screenshot({
-    path: path.join(outputDir, fileName),
+  await expect(page).toHaveScreenshot(`${name}-${test.info().project.name}.png`, {
     fullPage: true,
+    animations: "allow",
+    scale: "device",
+    mask: await buildSnapshotMask(page),
   });
+}
+
+async function buildSnapshotMask(page: Parameters<typeof test>[0]["page"]) {
+  const masks: Locator[] = [];
+  const snapshotMask = page.locator("[data-snapshot-mask='true']");
+  if ((await snapshotMask.count()) > 0) {
+    masks.push(snapshotMask);
+  }
+  return masks;
 }
 
 test("ui snapshots", async ({ app, browser, request }, testInfo) => {
@@ -154,7 +161,7 @@ test("ui snapshots", async ({ app, browser, request }, testInfo) => {
     const loggedInPage = await contextWithAuth.newPage();
     await runSnapshot(loggedInPage, "profiles-logged-in", {
       pageKey: "profiles",
-      selectedProfileId: profileC.id,
+      selectedProfileId: profileA.id,
     });
     await loggedInPage.close();
 

@@ -7,6 +7,9 @@ export function useProfileSelection(profiles: Profile[], user: User | null) {
   );
 
   useEffect(() => {
+    if (profiles.length === 0) {
+      return;
+    }
     const allowed = profiles.map((profile) => profile.id);
     if (selectedProfileId && allowed.includes(selectedProfileId)) return;
     const fallback = allowed[0] || "";

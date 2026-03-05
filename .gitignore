@@ -1,4 +1,6 @@
-snapshots/
+snapshots/*
+!snapshots/playwright/
+!snapshots/playwright/**
 **/node_modules/
 **/*.sqlite
 **/dist

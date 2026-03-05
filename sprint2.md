@@ -211,6 +211,7 @@ Validate PW-04 by confirming:
 
 ### PW-05: Adopt Playwright Snapshot Assertions
 **Problem**: Snapshots are written manually; comparisons require manual review and are brittle.
+**Status**: Complete
 
 **Scope / Requirements**
 - Replace manual screenshot writing with `expect(page).toHaveScreenshot()`.
@@ -232,6 +233,42 @@ Validate PW-05 by confirming:
 1) Snapshot assertions use `toHaveScreenshot`.
 2) Snapshot files are generated in the expected location.
 3) `npm run test:visual` passes.
+
+- **Engineer Update (2026-03-05)**: replaced manual snapshot writes in `playwright/ui-snapshots.spec.ts` with `expect(page).toHaveScreenshot`, added snapshot masks for profile switcher avatars + optional `[data-snapshot-mask]` hooks, and configured Playwright snapshot path output to `snapshots/playwright/`.
+- **Engineer Tests (2026-03-05)**: `npm run test:visual` (not run; not requested).
+- **QA Validation (2026-03-05)**:
+  - [x] Snapshot assertions use `expect(page).toHaveScreenshot` and snapshot path template points to `snapshots/playwright/`.
+  - [ ] Snapshot output not validated due to test failure (missing `.png` extension in `toHaveScreenshot` names).
+  - [ ] Required Playwright snapshot run did not pass.
+- **QA Tests (2026-03-05)**:
+  - `npm run test:visual` — fail (requires `.png` extension in `toHaveScreenshot` name).
+
+- **Engineer Update (2026-03-05)**: added `.png` extension to `toHaveScreenshot` snapshot names so Playwright writes expected PNG files under `snapshots/playwright/`.
+- **Engineer Tests (2026-03-05)**: `npm run test:visual` (not run; not requested).
+- **QA Validation (2026-03-05)**:
+  - [x] Snapshot assertions use `toHaveScreenshot` with `.png` extension and path template targets `snapshots/playwright/`.
+  - [ ] Snapshot output does not match baselines (size/pixel diffs on multiple snapshots).
+  - [ ] Required Playwright snapshot run did not pass.
+- **QA Tests (2026-03-05)**:
+  - `npm run test:visual` — fail (diffs on `profiles-pending` desktop/light + mobile light/dark and `bear-active-signup` desktop/dark).
+
+- **Engineer Update (2026-03-05)**: aligned `toHaveScreenshot` options with prior `page.screenshot` defaults (`scale: "device"`, `animations: "allow"`) and removed automatic profile-switcher avatar masking (keeping opt-in `[data-snapshot-mask]`).
+- **Engineer Tests (2026-03-05)**: `npm run test:visual -- --update-snapshots` (pass), `npm run test:visual` (pass).
+- **QA Validation (2026-03-05)**:
+  - [x] Snapshot assertions use `toHaveScreenshot` with updated options and path template targets `snapshots/playwright/`.
+  - [ ] Snapshot output still mismatches baselines (size diffs on `profiles-active` desktop/light and `profiles-pending` mobile/light).
+  - [ ] Required Playwright snapshot run did not pass.
+- **QA Tests (2026-03-05)**:
+  - `npm run test:visual` — fail (diffs on `profiles-active` desktop/light and `profiles-pending` mobile/light).
+
+- **Engineer Update (2026-03-05)**: stabilized snapshot profile selection for logged-in state, prevented profile auto-fallback when profile data is still loading, and allowed viking/bear snapshot readiness to fall back to the profiles page for pending/no-alliance states; refreshed snapshot baselines.
+- **Engineer Tests (2026-03-05)**: `npm run test:visual -- --update-snapshots` (pass), `npm run test:visual` (pass), `npm run test:e2e` (pass).
+- **QA Validation (2026-03-05)**:
+  - [x] Snapshot assertions use `toHaveScreenshot` with updated options and path template targets `snapshots/playwright/`.
+  - [x] Snapshot output matched baselines on this run.
+  - [x] Required Playwright snapshot run passed.
+- **QA Tests (2026-03-05)**:
+  - `npm run test:visual` — pass
 
 ---
 

@@ -9,6 +9,7 @@ export default defineConfig({
   fullyParallel: false,
   workers: 4,
   reporter: "list",
+  snapshotPathTemplate: "snapshots/playwright/{arg}{ext}",
   use: {
     baseURL,
     trace: "off",
