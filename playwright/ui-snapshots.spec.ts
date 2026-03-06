@@ -33,7 +33,6 @@ async function snapshotPage(
     openProfileMenu?: boolean;
     openNav?: boolean;
     loggedOut?: boolean;
-    maxDiffPixels?: number;
   }
 ) {
   await openPage(page, {
@@ -62,25 +61,12 @@ async function snapshotPage(
     await page.getByRole("menu").waitFor({ state: "visible" });
   }
 
-  const snapshotOptions: {
-    fullPage: boolean;
-    animations: "allow";
-    scale: "device";
-    mask: Locator[];
-    maxDiffPixels?: number;
-  } = {
+  await expect(page).toHaveScreenshot(`${name}-${test.info().project.name}.png`, {
     fullPage: true,
     animations: "allow",
     scale: "device",
     mask: await buildSnapshotMask(page),
-  };
-  if (options.maxDiffPixels !== undefined) {
-    snapshotOptions.maxDiffPixels = options.maxDiffPixels;
-  }
-  await expect(page).toHaveScreenshot(
-    `${name}-${test.info().project.name}.png`,
-    snapshotOptions
-  );
+  });
 }
 
 async function buildSnapshotMask(page: Parameters<typeof test>[0]["page"]) {
@@ -168,7 +154,6 @@ test("ui snapshots", async ({ app, browser, request }, testInfo) => {
     await runSnapshot(loggedOutPage, "profiles-logged-out", {
       pageKey: "profiles",
       loggedOut: true,
-      maxDiffPixels: 10,
     });
     await loggedOutPage.close();
     await contextLoggedOut.close();
@@ -177,7 +162,6 @@ test("ui snapshots", async ({ app, browser, request }, testInfo) => {
     await runSnapshot(loggedInPage, "profiles-logged-in", {
       pageKey: "profiles",
       selectedProfileId: profileA.id,
-      maxDiffPixels: 200,
     });
     await loggedInPage.close();
 
