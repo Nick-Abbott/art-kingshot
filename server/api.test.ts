@@ -1280,6 +1280,49 @@ test("bot endpoints resolve discord user and enforce ownership", async () => {
   }
 });
 
+test("bot link creates user when discord account is missing", async () => {
+  const dbPath = tmpDbPath();
+  process.env.DB_PATH = dbPath;
+  process.env.PORT = "0";
+  process.env.DISCORD_BOT_SECRET = "bot-secret";
+  const { httpServer, port } = await startServer();
+  try {
+    global.fetch = (async () =>
+      ({
+        ok: true,
+        status: 200,
+        text: async () =>
+          JSON.stringify({
+            data: { data: { name: "Linked Player", kid: 1459, avatar: "icon" } },
+          }),
+      } as Response)) as typeof fetch;
+
+    const headers = {
+      "x-bot-secret": "bot-secret",
+      "x-discord-id": "new-discord-user",
+      "Content-Type": "application/json",
+    };
+
+    const link = await requestJson(
+      port,
+      "POST",
+      "/api/bot/profiles/link",
+      headers,
+      JSON.stringify({ playerId: "NEWPLAYER2" })
+    );
+    assert.equal(link.status, 200);
+
+    const db = new Database(dbPath);
+    const row = db
+      .prepare("SELECT id FROM users WHERE discordId = ?")
+      .get("new-discord-user") as { id: string } | undefined;
+    db.close();
+    assert.ok(row?.id);
+  } finally {
+    httpServer.close();
+  }
+});
+
 test("bot guild association enforces admin access and updates guild", async () => {
   const dbPath = tmpDbPath();
   process.env.DB_PATH = dbPath;

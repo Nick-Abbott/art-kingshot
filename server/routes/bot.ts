@@ -78,7 +78,11 @@ function getProfileForBot(
 export default function botRoutes(ctx: RouteContext) {
   const router = express.Router();
 
-  function requireBotAuth(req: Request, res: Response): BotAuth | null {
+  function requireBotAuth(
+    req: Request,
+    res: Response,
+    { allowCreate = false }: { allowCreate?: boolean } = {}
+  ): BotAuth | null {
     if (!ctx.DISCORD_BOT_SECRET) {
       ctx.fail(res, 500, "Bot auth is not configured.");
       return null;
@@ -93,7 +97,13 @@ export default function botRoutes(ctx: RouteContext) {
       ctx.fail(res, 400, "discordId is required.");
       return null;
     }
-    const user = ctx.getUserByDiscordId(discordId);
+    let user = ctx.getUserByDiscordId(discordId);
+    if (!user && allowCreate) {
+      const now = Date.now();
+      const id = ctx.crypto.randomUUID();
+      ctx.insertUser(id, discordId, "Discord User", null, 0, now);
+      user = ctx.getUserById(id);
+    }
     if (!user) {
       ctx.fail(res, 404, "Discord user not found.");
       return null;
@@ -261,7 +271,7 @@ export default function botRoutes(ctx: RouteContext) {
   router.post(
     "/api/bot/profiles/link",
     async (req: Request, res: Response) => {
-      const auth = requireBotAuth(req, res);
+      const auth = requireBotAuth(req, res, { allowCreate: true });
       if (!auth) return;
       const parsed = ctx.parseBotLinkPayload(req.body);
       if (!parsed.ok) {
