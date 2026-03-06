@@ -15,6 +15,7 @@ import {
 import { useVikingAssignmentSearch } from "./hooks/useVikingAssignmentSearch";
 import VikingAssignmentsCard from "./components/viking/VikingAssignmentsCard";
 import VikingHeader from "./components/viking/VikingHeader";
+import VikingInstructionsCard from "./components/viking/VikingInstructionsCard";
 import VikingRosterCard from "./components/viking/VikingRosterCard";
 import VikingSearchCard from "./components/viking/VikingSearchCard";
 import VikingSignupCard from "./components/viking/VikingSignupCard";
@@ -55,6 +56,7 @@ function VikingVengeance({ profileId, profile, canManage }: Props) {
   const [lastLookupId, setLastLookupId] = useState("");
   const [profileWarning, setProfileWarning] = useState("");
   const [adminTargetId, setAdminTargetId] = useState("");
+  const [showAdvancedDetails, setShowAdvancedDetails] = useState(false);
   const updateProfileMutation = useUpdateProfileMutation();
   const queryClient = useQueryClient();
   const eligibleMembersQuery = useEligibleMembersQuery(profileId, canManage);
@@ -80,8 +82,12 @@ function VikingVengeance({ profileId, profile, canManage }: Props) {
     return options;
   }, [eligibleMembers, profile]);
 
+  const defaultAssignmentQuery = profile?.playerName || profile?.playerId || "";
   const { searchQuery, setSearchQuery, filteredResults, suggestionTail, topSuggestion } =
-    useVikingAssignmentSearch(results);
+    useVikingAssignmentSearch(results, {
+      profileId,
+      defaultQuery: defaultAssignmentQuery
+    });
 
   const memberCount = members.length;
 
@@ -95,6 +101,19 @@ function VikingVengeance({ profileId, profile, canManage }: Props) {
     setAdminTargetId("");
     setLookupStatus("");
   }, [profileId]);
+
+  useEffect(() => {
+    if (!profileId) return;
+    const storageKey = `vikingAdvancedDetails:${profileId}`;
+    const stored = window.localStorage.getItem(storageKey);
+    setShowAdvancedDetails(stored === "true");
+  }, [profileId]);
+
+  useEffect(() => {
+    if (!profileId) return;
+    const storageKey = `vikingAdvancedDetails:${profileId}`;
+    window.localStorage.setItem(storageKey, String(showAdvancedDetails));
+  }, [profileId, showAdvancedDetails]);
 
   useEffect(() => {
     if (profile || editingMember) return;
@@ -378,7 +397,6 @@ function VikingVengeance({ profileId, profile, canManage }: Props) {
       });
       setForm(emptyForm);
       setLookupStatus("");
-      setSearchQuery("");
       setError("");
     } catch (err) {
       if (err instanceof ApiError && err.status === 403) {
@@ -433,6 +451,7 @@ function VikingVengeance({ profileId, profile, canManage }: Props) {
       />
 
       <main className="relative z-[1] grid gap-6">
+        <VikingInstructionsCard t={t} />
         {!results ? (
           <VikingSignupCard
             t={t}
@@ -482,6 +501,10 @@ function VikingVengeance({ profileId, profile, canManage }: Props) {
           results={results}
           members={filteredResults}
           formatNumber={formatNumber}
+          showAdvancedDetails={showAdvancedDetails}
+          onToggleAdvancedDetails={() =>
+            setShowAdvancedDetails((prev) => !prev)
+          }
         />
       </main>
     </div>

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { AssignmentResult } from "../api/assignments";
 
 type AssignmentMember = AssignmentResult["members"][number];
@@ -7,8 +7,43 @@ function normalize(value: string) {
   return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
-export function useVikingAssignmentSearch(results: AssignmentResult | null) {
-  const [searchQuery, setSearchQuery] = useState("");
+type AssignmentSearchOptions = {
+  profileId: string;
+  defaultQuery: string;
+};
+
+export function useVikingAssignmentSearch(
+  results: AssignmentResult | null,
+  { profileId, defaultQuery }: AssignmentSearchOptions
+) {
+  const [searchQuery, setSearchQueryState] = useState("");
+
+  const storageKey = profileId ? `vikingAssignmentsFilter:${profileId}` : "";
+
+  const setSearchQuery = useCallback(
+    (value: string) => {
+      setSearchQueryState(value);
+      if (storageKey) {
+        window.localStorage.setItem(storageKey, value);
+      }
+    },
+    [storageKey]
+  );
+
+  useEffect(() => {
+    if (!profileId) return;
+    const stored = window.localStorage.getItem(storageKey);
+    if (stored !== null) {
+      setSearchQueryState(stored);
+      return;
+    }
+    if (defaultQuery) {
+      setSearchQueryState(defaultQuery);
+      window.localStorage.setItem(storageKey, defaultQuery);
+      return;
+    }
+    setSearchQueryState("");
+  }, [defaultQuery, profileId, storageKey]);
 
   const fuzzyScore = useCallback((query: string, text: string) => {
     if (!query) return 0;

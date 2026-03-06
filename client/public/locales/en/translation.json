@@ -55,6 +55,18 @@
     "findAssignmentsSubtitle": "Search by player name to jump to your card.",
     "playerName": "Player name",
     "searchPlaceholder": "Start typing a name...",
+    "showAllAssignments": "Show all",
+    "instructionsTitle": "How to run your marches",
+    "instructions": {
+      "equalize": "Use Equalize on every march.",
+      "sendAll": "Send one march to each of your assigned targets.",
+      "garrison": "If you have a garrison leader active, send your main heroes to someone else—ideally someone whose garrison you are leading.",
+      "reinforceHeroes": "Use Chenko, Amane, Yeonwoo, Amadeus, or no heroes when reinforcing.",
+      "subtext": "Assignments are calculated assuming equalized marches and consistent march counts."
+    },
+    "advancedDetailsLabel": "Advanced details",
+    "showAdvancedDetails": "Show advanced",
+    "hideAdvancedDetails": "Hide advanced",
     "rosterTitle": "Roster",
     "rosterSubtitle": "Tap Run to calculate who reinforces who.",
     "noSignups": "No signups yet.",

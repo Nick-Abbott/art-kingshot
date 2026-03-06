@@ -49,6 +49,17 @@ function VikingSearchCard({
             )}
           </div>
         </label>
+        <div className="mt-3 flex items-center justify-end">
+          <button
+            className="ui-button-ghost ui-button-sm"
+            type="button"
+            onClick={() => setSearchQuery("")}
+            disabled={!searchQuery.trim()}
+            data-testid="viking-show-all"
+          >
+            {t("viking.showAllAssignments")}
+          </button>
+        </div>
       </div>
     </section>
   );

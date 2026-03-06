@@ -55,6 +55,18 @@
     "findAssignmentsSubtitle": "Pesquise pelo nome do jogador para ir ao seu cart\u00e3o.",
     "playerName": "Nome do jogador",
     "searchPlaceholder": "Comece a digitar um nome...",
+    "showAllAssignments": "Mostrar tudo",
+    "instructionsTitle": "Como executar suas marchas",
+    "instructions": {
+      "equalize": "Use Igualar em cada marcha.",
+      "sendAll": "Envie uma marcha para cada um dos seus alvos atribu\u00eddos.",
+      "garrison": "Se voc\u00ea tiver um l\u00edder de guarni\u00e7\u00e3o ativo, envie seus her\u00f3is principais para outra pessoa \u2014 de prefer\u00eancia algu\u00e9m cuja guarni\u00e7\u00e3o voc\u00ea est\u00e1 liderando.",
+      "reinforceHeroes": "Use Chenko, Amane, Yeonwoo, Amadeus ou nenhum her\u00f3i ao refor\u00e7ar.",
+      "subtext": "As atribui\u00e7\u00f5es s\u00e3o calculadas assumindo marchas equalizadas e contagens de marchas consistentes."
+    },
+    "advancedDetailsLabel": "Detalhes avançados",
+    "showAdvancedDetails": "Mostrar avançados",
+    "hideAdvancedDetails": "Ocultar avançados",
     "rosterTitle": "Lista",
     "rosterSubtitle": "Toque em Executar para calcular quem refor\u00e7a quem.",
     "noSignups": "Nenhuma inscri\u00e7\u00e3o ainda.",

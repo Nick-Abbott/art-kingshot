@@ -55,6 +55,18 @@
     "findAssignmentsSubtitle": "Recherchez par nom de joueur pour acc\u00e9der \u00e0 votre carte.",
     "playerName": "Nom du joueur",
     "searchPlaceholder": "Commencez \u00e0 taper un nom...",
+    "showAllAssignments": "Tout afficher",
+    "instructionsTitle": "Comment lancer vos marches",
+    "instructions": {
+      "equalize": "Utilisez \u00c9galiser pour chaque marche.",
+      "sendAll": "Envoyez une marche \u00e0 chacune de vos cibles assign\u00e9es.",
+      "garrison": "Si vous avez un chef de garnison actif, envoyez vos h\u00e9ros principaux \u00e0 quelqu\u2019un d\u2019autre \u2014 id\u00e9alement quelqu\u2019un dont vous dirigez la garnison.",
+      "reinforceHeroes": "Utilisez Chenko, Amane, Yeonwoo, Amadeus ou aucun h\u00e9ros pour les renforts.",
+      "subtext": "Les affectations sont calcul\u00e9es en supposant des marches \u00e9galis\u00e9es et un nombre de marches coh\u00e9rent."
+    },
+    "advancedDetailsLabel": "D\u00e9tails avanc\u00e9s",
+    "showAdvancedDetails": "Afficher les avanc\u00e9s",
+    "hideAdvancedDetails": "Masquer les avanc\u00e9s",
     "rosterTitle": "Liste",
     "rosterSubtitle": "Appuyez sur Ex\u00e9cuter pour calculer qui renforce qui.",
     "noSignups": "Aucune inscription pour le moment.",
