@@ -259,7 +259,7 @@ export async function createVikingSignup(
   playerName: string,
   serverUrl: string = SERVER_URL
 ) {
-  await apiJson(request, `${serverUrl}/api/signup`, {
+  const { res, json } = await apiJson(request, `${serverUrl}/api/signup`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -274,6 +274,9 @@ export async function createVikingSignup(
       power: 33000000,
     },
   });
+  if (!res.ok()) {
+    throw new Error(`Failed to create viking signup: ${res.status()} ${JSON.stringify(json)}`);
+  }
 }
 
 export async function createBearSignup(

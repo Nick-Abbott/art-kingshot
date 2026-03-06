@@ -90,6 +90,7 @@ function VikingRosterCard({
         type="button"
         onClick={onRunAssignments}
         disabled={busy || !canManage}
+        data-testid="viking-run-assignments"
       >
         {t("viking.runAssignments")}
       </button>

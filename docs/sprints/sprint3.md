@@ -153,6 +153,7 @@ Confirm assignment cards hide troop/power by default, toggle reveals them, signu
 
 ### VV-04: Update Playwright Flows for New Defaults
 **Problem**: E2E flows will now start in a filtered view and need explicit coverage for “Show all.”
+**Status**: Complete
 
 **Scope / Requirements**
 - Update Playwright flows to account for the default “My assignment” filter.
@@ -171,3 +172,20 @@ Adjust Playwright flows for the default filtered view and add a “Show all” c
 
 **Validation Prompt**
 Run `npm run test:e2e` and verify the “Show all” assertions.
+
+- **Engineer Update (2026-03-06)**: Updated Viking flow to add assignments list test IDs, run assignments with two members, validate default filtered view, and verify “Show all” reveals the full roster.
+- **Engineer Tests (2026-03-06)**: `npm run test:e2e` pass.
+- **QA Validation (2026-03-06)**:
+  - [x] Flows assert default filtered view hides non-matching assignments.
+  - [x] “Show all” reveals the full roster via assignment test IDs.
+  - [x] Required Playwright flows run passed.
+- **QA Tests (2026-03-06)**:
+  - `npm run test:e2e` — pass
+
+---
+
+## Sprint 3 Closeout Summary (2026-03-06)
+- Default “My assignment” filter ships with localStorage persistence and a “Show all” clear action.
+- Standard instructions panel added at the top with fixed, localized copy.
+- Assignment cards use an “Advanced details” toggle to hide troop/power by default while keeping signup fields visible; state persists per user.
+- Playwright flows updated to assert default filtered view and “Show all” behavior with stable test IDs.

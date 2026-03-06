@@ -68,7 +68,15 @@ test("profile switcher updates selected profile", async ({ app, browser, request
   test.setTimeout(30000);
   sessionToken = createSessionToken({ dbPath: app.dbPath });
   await assertSession(request, sessionToken, app.serverUrl);
-  const { profileA, profileB } = await seedProfiles(request, app.serverUrl);
+  const { profileA, profileB, allianceId } = await seedProfiles(request, app.serverUrl);
+  await joinAlliance(request, sessionToken, profileB.id, allianceId, app.serverUrl);
+  await activateAllianceProfile(
+    request,
+    sessionToken,
+    profileA.id,
+    profileB.id,
+    app.serverUrl
+  );
   const context = await createAuthContext(browser, sessionToken, app.clientUrl);
   const page = await context.newPage();
   await mockPlayerLookup(page, profileA.playerName, 9001);
@@ -85,7 +93,7 @@ test("profile switcher updates selected profile", async ({ app, browser, request
   await ensureProfileSwitcherReady(page);
 
   await page.getByTestId("profile-switcher").click({ timeout: WAIT_TIMEOUT });
-  await page.getByRole("menuitem", { name: profileB.playerName }).click();
+  await page.getByRole("menuitem", { name: profileB.playerName }).first().click();
   await expect(page.getByTestId("profile-switcher")).toContainText(profileB.playerName, {
     timeout: WAIT_TIMEOUT,
   });
@@ -97,7 +105,15 @@ test("viking signup and reset", async ({ app, browser, request }) => {
   test.setTimeout(30000);
   sessionToken = createSessionToken({ dbPath: app.dbPath });
   await assertSession(request, sessionToken, app.serverUrl);
-  const { profileA } = await seedProfiles(request, app.serverUrl);
+  const { profileA, profileB, allianceId } = await seedProfiles(request, app.serverUrl);
+  await joinAlliance(request, sessionToken, profileB.id, allianceId, app.serverUrl);
+  await activateAllianceProfile(
+    request,
+    sessionToken,
+    profileA.id,
+    profileB.id,
+    app.serverUrl
+  );
   const context = await createAuthContext(browser, sessionToken, app.clientUrl);
   const page = await context.newPage();
   await mockPlayerLookup(page, profileA.playerName, 9001);
@@ -117,10 +133,50 @@ test("viking signup and reset", async ({ app, browser, request }) => {
   await page.getByTestId("viking-troop-count").fill("450000");
   await page.getByTestId("viking-save-signup").click({ timeout: WAIT_TIMEOUT });
 
-  await expect(page.getByTestId("viking-signed-count")).toHaveText("1", {
+  await ensureProfileSwitcherReady(page);
+  await page.getByTestId("profile-switcher").click({ timeout: WAIT_TIMEOUT });
+  await page.getByRole("menuitem", { name: profileB.playerName }).first().click();
+  await expect(page.getByTestId("profile-switcher")).toContainText(profileB.playerName, {
+    timeout: WAIT_TIMEOUT,
+  });
+  await mockPlayerLookup(page, profileB.playerName, 9001);
+
+  await page.getByTestId("viking-march-count").fill("4");
+  await page.getByTestId("viking-power").fill("30000000");
+  await page.getByTestId("viking-troop-count").fill("420000");
+  await page.getByTestId("viking-save-signup").click({ timeout: WAIT_TIMEOUT });
+
+  await ensureProfileSwitcherReady(page);
+  await page.getByTestId("profile-switcher").click({ timeout: WAIT_TIMEOUT });
+  await page.getByRole("menuitem", { name: profileA.playerName }).first().click();
+  await expect(page.getByTestId("profile-switcher")).toContainText(profileA.playerName, {
+    timeout: WAIT_TIMEOUT,
+  });
+
+  await expect(page.getByTestId("viking-signed-count")).toHaveText("2", {
     timeout: WAIT_TIMEOUT,
   });
   await expect(page.getByTestId("viking-roster-list")).toContainText(profileA.playerName, {
+    timeout: WAIT_TIMEOUT,
+  });
+  await expect(page.getByTestId("viking-roster-list")).toContainText(profileB.playerName, {
+    timeout: WAIT_TIMEOUT,
+  });
+
+  await page.getByTestId("viking-run-assignments").click({ timeout: WAIT_TIMEOUT });
+  await expect(
+    page.getByTestId(`viking-assignment-${profileA.playerId}`)
+  ).toBeVisible({
+    timeout: WAIT_TIMEOUT,
+  });
+  await expect(
+    page.getByTestId(`viking-assignment-${profileB.playerId}`)
+  ).toHaveCount(0);
+
+  await page.getByTestId("viking-show-all").click({ timeout: WAIT_TIMEOUT });
+  await expect(
+    page.getByTestId(`viking-assignment-${profileB.playerId}`)
+  ).toBeVisible({
     timeout: WAIT_TIMEOUT,
   });
 

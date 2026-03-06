@@ -45,9 +45,16 @@ function VikingAssignmentsCard({
       {!results ? (
         <p className="ui-empty-state">{t("viking.noAssignments")}</p>
       ) : (
-        <div className="mt-5 grid gap-4 nav:grid-cols-[repeat(auto-fit,minmax(260px,1fr))]">
+        <div
+          className="mt-5 grid gap-4 nav:grid-cols-[repeat(auto-fit,minmax(260px,1fr))]"
+          data-testid="viking-assignments-list"
+        >
           {members.map((member) => (
-            <article key={member.playerId} className="ui-card-muted">
+            <article
+              key={member.playerId}
+              className="ui-card-muted"
+              data-testid={`viking-assignment-${member.playerId}`}
+            >
               <header className="space-y-1">
                 <h3 className="text-lg font-semibold">
                   {member.playerName ? member.playerName : member.playerId}
