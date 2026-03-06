@@ -36,6 +36,33 @@ function getGuildId(req: Request): string {
   return "";
 }
 
+function requireBotServerAuth(
+  ctx: RouteContext,
+  req: Request,
+  res: Response
+): { allianceId: string } | null {
+  if (!ctx.DISCORD_BOT_SECRET) {
+    ctx.fail(res, 500, "Bot auth is not configured.");
+    return null;
+  }
+  const secret = req.header("x-bot-secret");
+  if (!secret || secret !== ctx.DISCORD_BOT_SECRET) {
+    ctx.fail(res, 401, "Bot authentication required.");
+    return null;
+  }
+  const guildId = getGuildId(req);
+  if (!guildId) {
+    ctx.fail(res, 400, "guildId is required.");
+    return null;
+  }
+  const association = ctx.queries.getAllianceGuildByGuildId(guildId);
+  if (!association?.allianceId) {
+    ctx.fail(res, 404, "Alliance not found for guild.");
+    return null;
+  }
+  return { allianceId: association.allianceId };
+}
+
 function getProfileForBot(
   ctx: RouteContext,
   res: Response,
@@ -316,6 +343,7 @@ export default function botRoutes(ctx: RouteContext) {
             now,
             existing.id
           );
+          ctx.updateUserBotOptIn(auth.userId, 1);
           if (targetAllianceId && existing.allianceId !== targetAllianceId) {
             ctx.updateProfile(
               existing.playerId ?? null,
@@ -353,6 +381,7 @@ export default function botRoutes(ctx: RouteContext) {
           now,
           existing.id
         );
+        ctx.updateUserBotOptIn(auth.userId, 1);
         if (targetAllianceId && !existing.allianceId) {
           ctx.updateProfile(
             existing.playerId ?? null,
@@ -393,10 +422,69 @@ export default function botRoutes(ctx: RouteContext) {
         now,
         now
       );
+      ctx.updateUserBotOptIn(auth.userId, 1);
       const profile = ctx.getProfileById(id);
       ctx.ok(res, { profile });
     }
   );
+
+  router.get(
+    "/api/bot/assignments/notifications",
+    (req: Request, res: Response) => {
+      const auth = requireBotServerAuth(ctx, req, res);
+      if (!auth) return;
+      const notifications = ctx.queries.listPendingAssignmentNotificationsByAlliance(
+        auth.allianceId
+      );
+      ctx.ok(res, { notifications });
+    }
+  );
+
+  router.get(
+    "/api/bot/assignments/notifications/failed",
+    (req: Request, res: Response) => {
+      const auth = requireBotServerAuth(ctx, req, res);
+      if (!auth) return;
+      const limit = Number(req.query?.limit);
+      const safeLimit = Number.isFinite(limit) ? Math.min(Math.max(limit, 1), 50) : 20;
+      const notifications = ctx.queries.listFailedAssignmentNotificationsByAlliance(
+        auth.allianceId,
+        safeLimit
+      );
+      ctx.ok(res, { notifications });
+    }
+  );
+
+  router.post(
+    "/api/bot/assignments/notifications/:id",
+    (req: Request, res: Response) => {
+      const auth = requireBotServerAuth(ctx, req, res);
+      if (!auth) return;
+      const id =
+        typeof req.params.id === "string" ? req.params.id.trim() : "";
+      if (!id) {
+        ctx.fail(res, 400, "notification id is required.");
+        return;
+      }
+      const status =
+        typeof req.body?.status === "string" ? req.body.status.trim() : "";
+      if (status !== "sent" && status !== "failed") {
+        ctx.fail(res, 400, "Invalid status.");
+        return;
+      }
+      const error =
+        typeof req.body?.error === "string" ? req.body.error.trim() : null;
+      ctx.queries.updateAssignmentNotificationStatus(
+        id,
+        status,
+        error,
+        Date.now()
+      );
+      ctx.ok(res, { ok: true });
+    }
+  );
+
+  // Notifications polling endpoint removed; bot now sends directly on demand.
 
   router.delete(
     "/api/bot/bear/:group/:profileId",

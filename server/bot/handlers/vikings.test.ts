@@ -3,11 +3,12 @@ import assert from "node:assert/strict";
 import { handleVikingsCommand } from "./vikings";
 
 type FakeOptions = {
-  subcommand: "register" | "edit" | "remove";
+  subcommand: "register" | "edit" | "remove" | "assignments";
   profileId?: string;
   marchCount?: number;
   troopCount?: number;
   power?: number;
+  output?: "dm" | "channel";
 };
 
 function createInteraction(options: FakeOptions) {
@@ -15,7 +16,10 @@ function createInteraction(options: FakeOptions) {
     user: { id: "discord-user" },
     options: {
       getSubcommand: () => options.subcommand,
-      getString: () => options.profileId ?? null,
+      getString: (name: "profile" | "output") => {
+        if (name === "profile") return options.profileId ?? null;
+        return options.output ?? null;
+      },
       getNumber: (name: "march_count" | "troop_count" | "power") => {
         if (name === "march_count") return options.marchCount ?? null;
         if (name === "troop_count") return options.troopCount ?? null;
@@ -24,6 +28,10 @@ function createInteraction(options: FakeOptions) {
       getFocused: () => ({ name: "profile", value: "" }),
     },
     respond: async () => {},
+    channel: {
+      send: async () => {},
+    },
+    sendDm: async () => {},
   };
 }
 
@@ -72,6 +80,83 @@ test("vikings remove returns remove copy", async () => {
     { serverUrl: "http://localhost", botSecret: "secret" }
   );
   assert.equal(message, "Removed. You are no longer signed up for this event.");
+});
+
+test("vikings assignments sends dm by default", async () => {
+  let dmSent = false;
+  global.fetch = (async () =>
+    ({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        ok: true,
+        data: {
+          assignment: {
+            playerId: "P1",
+            playerName: "Player",
+            outgoing: [{ toName: "Target", troops: 1000 }],
+            incoming: [],
+            incomingTotal: 0,
+          },
+          results: { members: [] },
+        },
+      }),
+    } as Response)) as typeof fetch;
+
+  const message = await handleVikingsCommand(
+    {
+      ...createInteraction({
+        subcommand: "assignments",
+        profileId: "profile-1",
+      }),
+      sendDm: async () => {
+        dmSent = true;
+      },
+    },
+    { serverUrl: "http://localhost", botSecret: "secret" }
+  );
+  assert.equal(message, "Sent your assignments via DM.");
+  assert.equal(dmSent, true);
+});
+
+test("vikings assignments posts to channel when requested", async () => {
+  let channelSent = false;
+  global.fetch = (async () =>
+    ({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        ok: true,
+        data: {
+          assignment: {
+            playerId: "P1",
+            playerName: "Player",
+            outgoing: [{ toName: "Target", troops: 1000 }],
+            incoming: [],
+            incomingTotal: 0,
+          },
+          results: { members: [] },
+        },
+      }),
+    } as Response)) as typeof fetch;
+
+  const message = await handleVikingsCommand(
+    {
+      ...createInteraction({
+        subcommand: "assignments",
+        profileId: "profile-1",
+        output: "channel",
+      }),
+      channel: {
+        send: async () => {
+          channelSent = true;
+        },
+      },
+    },
+    { serverUrl: "http://localhost", botSecret: "secret" }
+  );
+  assert.equal(message, "Posted assignments to the channel.");
+  assert.equal(channelSent, true);
 });
 
 test("vikings register uses single active profile when missing profile option", async () => {

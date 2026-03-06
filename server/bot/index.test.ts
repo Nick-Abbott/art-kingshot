@@ -25,6 +25,11 @@ function createFakeClient() {
       }
       return "ok";
     },
+    users: {
+      async fetch() {
+        return { send: async () => {} };
+      },
+    },
     getState() {
       return { onceCalled, onCalled, loginCalled };
     },
@@ -43,6 +48,7 @@ test("bot init wires handlers and logs in", async () => {
       serverUrl: "http://localhost",
       botSecret: "secret",
       registerCommands: true,
+      assignmentsPollMs: 0,
     },
     commands: [{ name: "bear" }],
     createClient: () => fakeClient,

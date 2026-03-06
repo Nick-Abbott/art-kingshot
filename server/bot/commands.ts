@@ -171,5 +171,27 @@ export const commands = [
             .setAutocomplete(true)
         )
     )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName("assignments")
+        .setDescription("Get your viking assignments.")
+        .addStringOption((option) =>
+          option
+            .setName("output")
+            .setDescription("Where to send assignments.")
+            .setRequired(false)
+            .addChoices(
+              { name: "DM", value: "dm" },
+              { name: "Channel", value: "channel" }
+            )
+        )
+        .addStringOption((option) =>
+          option
+            .setName("profile")
+            .setDescription("Select a profile.")
+            .setRequired(false)
+            .setAutocomplete(true)
+        )
+    )
     .toJSON(),
 ];

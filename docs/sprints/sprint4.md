@@ -16,10 +16,11 @@ Use `discord.js` for bot integration (do not implement raw HTTP calls).
 7) DB-06 — /bear command set (register/edit/remove/view)
 8) DB-07 — /vikings command set (register/edit/remove)
 9) DB-08 — /vikings assignments delivery (DM + optional channel)
-10) DB-09 — Autocomplete for profiles + fixed options
-11) DB-10 — Observability + rate limits + error copy polish
-12) DB-11 — Documentation update (bot usage + admin setup)
-13) DB-99 — Release Verification (full suite)
+10) DB-08b — Assignment run notifications (opt-in DM)
+11) DB-09 — Autocomplete for profiles + fixed options
+12) DB-10 — Observability + rate limits + error copy polish
+13) DB-11 — Documentation update (bot usage + admin setup)
+14) DB-99 — Release Verification (full suite)
 
 ---
 
@@ -282,6 +283,7 @@ Verify command behavior and input validation; run `npm run test:server`.
 
 ### DB-08: /vikings assignments Delivery
 **Problem**: Users need their assignments in Discord, preferably via DM.
+**Status**: Complete
 
 **Scope / Requirements**
 - Implement `/vikings assignments` with output target `dm|channel`.
@@ -302,6 +304,48 @@ Implement assignment delivery via DM and channel; use standard copy from the des
 
 **Validation Prompt**
 Verify DM and channel paths and copy; run `npm run test:server`.
+
+- **Engineer Update (2026-03-06)**: implemented `/vikings assignments` with DM default + optional channel output, using standard header copy and assignment formatting; added unit tests for DM/channel delivery and copy handling.
+- **Engineer Tests (2026-03-06)**: `npm run test:server` (pass).
+- **QA Validation (2026-03-06)**: ✓ `/vikings assignments` implemented with DM default + optional channel output in `server/bot/commands.ts` and `server/bot/handlers/vikings.ts`; ✓ Header copy + assignment formatting present; ✓ Unit tests cover DM + channel delivery in `server/bot/handlers/vikings.test.ts`; ⚠️ No Discord UI smoke re-run in QA.
+- **QA Tests (2026-03-06)**: `npm run test:server` (pass).
+
+---
+
+### DB-08b: Assignment Run Notifications (Opt-in DM)
+**Problem**: Members want assignments delivered automatically when a run is generated, but unsolicited DMs can violate Discord policy and user expectations.
+**Status**: Complete
+
+**Scope / Requirements**
+- Add an opt-in preference for assignment DMs (default off).
+- When assignments are run, send DMs to opted-in members with their assignments.
+- If DM fails (privacy settings), record failure and rely on the existing `/vikings assignments` command for manual retrieval (no channel fallback required).
+- Ensure messaging complies with Discord policy: only message users who have opted in or previously interacted with the bot in-context.
+- Reuse the standard assignment header copy.
+
+**Success Criteria**
+- Only opted-in users receive automatic assignment DMs.
+- DM failures are handled gracefully and logged; users can still retrieve assignments via `/vikings assignments`.
+- No unsolicited DMs are sent.
+
+**Required Verification**
+- Server change: `npm run test:server`
+
+**Implementation Prompt**
+Implement opt-in assignment notifications triggered by assignment runs. Enforce opt-in and handle DM failures gracefully, relying on `/vikings assignments` for manual retrieval if DM fails. Keep copy consistent with the design doc.
+
+**Validation Prompt**
+Verify opt-in enforcement, DM failure handling (status recorded), and copy. Confirm `/vikings assignments` still returns assignments for manual retrieval. Run `npm run test:server`.
+
+- **Engineer Update (2026-03-06)**: treated account linking as opt-in; restored notifications queue table and bot polling with periodic cleanup; added server tests for opt-in flag and queueing on assignment runs.
+- **Engineer Tests (2026-03-06)**: `npm run test:server` (pass).
+- **QA Validation (2026-03-06)**: ✓ Opt-in enforced via `users.botOptInAssignments` and `listOptedInAssignmentRecipients` in `server/db/queries.ts`; ✓ Assignment run queues notifications for opted-in users (`server/routes/assignments.ts`, `server/api.test.ts`); ✓ Bot polls and sends DMs, marking status sent/failed and logging failures (`server/bot/index.ts`, `server/routes/bot.ts`); ⚠️ No explicit test for DM failure logging/fallback beyond status update; ⚠️ No Discord UI smoke re-run in QA.
+- **QA Tests (2026-03-06)**: `npm run test:server` (pass).
+- **TPM Re-check (2026-03-06)**: Accepted. DM failure status is recorded in `server/bot/index.ts`, and `/vikings assignments` supports manual retrieval via `server/bot/handlers/vikings.ts` + `server/routes/bot.ts`.
+ 
+**QA Notes**
+- Bot currently polls `/api/bot/assignments/notifications` and sends DMs, but there is no server-side test coverage for notification queueing/opt-in enforcement.
+- Verify opt-in flag behavior and queue creation on assignment runs before accepting.
 
 ---
 

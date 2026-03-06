@@ -6,9 +6,11 @@ import { commands } from "./commands";
 import { registerCommands } from "./registerCommands";
 import { handleBearAutocomplete, handleBearCommand } from "./handlers/bear";
 import {
+  buildAssignmentsMessage,
   handleVikingsAutocomplete,
   handleVikingsCommand,
 } from "./handlers/vikings";
+import { processAssignmentNotification } from "./notifications";
 import { handleLinkCommand } from "./handlers/link";
 
 type BotClient = {
@@ -20,7 +22,8 @@ type BotClient = {
     event: string,
     handler: (interaction: {
       commandName?: string;
-      user?: { id: string };
+      user?: { id: string; send?: (content: string) => Promise<unknown> };
+      channel?: { send: (content: string) => Promise<unknown> } | null;
       options?: unknown;
       isChatInputCommand: () => boolean;
       isAutocomplete: () => boolean;
@@ -30,6 +33,9 @@ type BotClient = {
     }) => void | Promise<void>
   ) => void;
   login: (token: string) => Promise<unknown>;
+  users?: {
+    fetch: (id: string) => Promise<{ send: (content: string) => Promise<unknown> }>;
+  };
 };
 
 type BotDeps = {
@@ -122,7 +128,15 @@ export function createBot(deps: BotDeps) {
       }
       if (interaction.commandName === "vikings") {
         const message = await handleVikingsCommand(
-          interaction as unknown as Parameters<typeof handleVikingsCommand>[0],
+          {
+            ...(interaction as unknown as Parameters<typeof handleVikingsCommand>[0]),
+            sendDm: interaction.user?.send
+              ? async (content: string) => {
+                  await interaction.user?.send?.(content);
+                }
+              : undefined,
+            channel: interaction.channel ?? null,
+          },
           {
             serverUrl: config.serverUrl,
             botSecret: config.botSecret,
@@ -137,6 +151,67 @@ export function createBot(deps: BotDeps) {
       logger.error("Failed to respond to interaction.", error);
     }
   });
+
+  async function pollAssignmentNotifications() {
+    if (!config.discordGuildId) return;
+    try {
+      const response = await fetch(
+        `${config.serverUrl}/api/bot/assignments/notifications?guildId=${encodeURIComponent(
+          config.discordGuildId
+        )}`,
+        {
+          headers: {
+            "x-bot-secret": config.botSecret,
+            "x-guild-id": config.discordGuildId,
+          },
+        }
+      );
+      const payload = (await response.json()) as {
+        ok: boolean;
+        data?: { notifications: Array<{ id: string; discordId: string; payload: string }> };
+      };
+      if (!response.ok || !payload.ok || !payload.data) return;
+      for (const notification of payload.data.notifications) {
+        await processAssignmentNotification(
+          {
+            id: notification.id,
+            discordId: notification.discordId,
+            payload: notification.payload,
+          },
+          {
+            sendDm: async (discordId, message) => {
+              if (!client.users?.fetch) {
+                throw new Error("Bot user fetch not available.");
+              }
+              const user = await client.users.fetch(discordId);
+              await user.send(message);
+            },
+            updateStatus: async (id, status, error) => {
+              await fetch(
+                `${config.serverUrl}/api/bot/assignments/notifications/${id}`,
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "x-bot-secret": config.botSecret,
+                    "x-guild-id": config.discordGuildId,
+                  },
+                  body: JSON.stringify({ status, error }),
+                }
+              );
+            },
+            logger,
+          }
+        );
+      }
+    } catch (error) {
+      logger.error("Failed to poll assignment notifications.", error);
+    }
+  }
+
+  if (config.assignmentsPollMs > 0) {
+    setInterval(pollAssignmentNotifications, config.assignmentsPollMs);
+  }
 
   return {
     start: () => client.login(config.discordToken),

@@ -748,6 +748,70 @@ test("eligible signup lists return active alliance members not yet signed up", a
   }
 });
 
+test("assignment run queues notifications for opted-in users", async () => {
+  const dbPath = tmpDbPath();
+  process.env.DB_PATH = dbPath;
+  process.env.PORT = "0";
+  const { httpServer, port } = await startServer();
+  try {
+    const headers = { Cookie: createSessionCookie(dbPath) };
+    const createProfile = await requestJson(
+      port,
+      "POST",
+      "/api/profiles",
+      { ...headers, "Content-Type": "application/json" },
+      JSON.stringify({ playerId: "FIDOPTIN", kingdomId: 1459 })
+    );
+    const profileId = getPayload<{ profile: { id: string } }>(createProfile).profile.id;
+
+    const createAlliance = await requestJson(
+      port,
+      "POST",
+      "/api/alliances",
+      { ...headers, "Content-Type": "application/json", "x-profile-id": profileId },
+      JSON.stringify({ tag: "OPT", name: "Opt Alliance" })
+    );
+    assert.equal(createAlliance.status, 200);
+    const allianceId = getPayload<{ alliance: { id: string } }>(createAlliance).alliance.id;
+
+    const db = new Database(dbPath);
+    db.prepare("UPDATE users SET botOptInAssignments = 1").run();
+    db.close();
+
+    const signup = await requestJson(
+      port,
+      "POST",
+      "/api/signup",
+      { ...headers, "Content-Type": "application/json", "x-profile-id": profileId },
+      JSON.stringify({
+        playerId: "FIDOPTIN",
+        troopCount: 1000,
+        playerName: "Opted",
+        marchCount: 4,
+        power: 2000000,
+      })
+    );
+    assert.equal(signup.status, 200);
+
+    const run = await requestJson(
+      port,
+      "POST",
+      "/api/run",
+      { ...headers, "x-profile-id": profileId }
+    );
+    assert.equal(run.status, 200);
+
+    const checkDb = new Database(dbPath);
+    const row = checkDb.prepare(
+      "SELECT COUNT(1) AS count FROM assignment_notifications WHERE allianceId = ? AND status = 'pending'"
+    ).get(allianceId) as { count: number };
+    checkDb.close();
+    assert.equal(row.count, 1);
+  } finally {
+    httpServer.close();
+  }
+});
+
 test("unclaimed profiles can be added by admins and claimed on login", async () => {
   const dbPath = tmpDbPath();
   process.env.DB_PATH = dbPath;
@@ -1064,6 +1128,13 @@ test("bot endpoints resolve discord user and enforce ownership", async () => {
     assert.equal(linkPayload.profile.playerId, "NEWPLAYER");
     assert.equal(linkPayload.profile.allianceId, allianceId);
     assert.equal(linkPayload.profile.status, "pending");
+
+    const dbAfterLink = new Database(dbPath);
+    const optInRow = dbAfterLink.prepare(
+      "SELECT botOptInAssignments FROM users WHERE discordId = ?"
+    ).get(discordId) as { botOptInAssignments: number };
+    assert.equal(optInRow.botOptInAssignments, 1);
+    dbAfterLink.close();
 
     const db = new Database(dbPath);
     db.prepare(

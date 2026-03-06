@@ -180,6 +180,7 @@ export type RouteContext = {
   getAllianceById: (id: string) => Alliance | null;
   insertUser: Queries["insertUser"];
   updateUser: Queries["updateUser"];
+  updateUserBotOptIn: Queries["updateUserBotOptIn"];
   insertBootstrapRow: Queries["insertBootstrapRow"];
   insertProfile: Queries["insertProfile"];
   updateProfile: Queries["updateProfile"];

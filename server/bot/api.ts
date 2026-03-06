@@ -1,7 +1,7 @@
 type BotApiOptions = {
   serverUrl: string;
   botSecret: string;
-  discordId: string;
+  discordId?: string;
   guildId?: string | null;
 };
 
@@ -12,7 +12,9 @@ export async function botApiRequest<T>(
 ): Promise<{ ok: true; data: T } | { ok: false; error: { message: string; code?: string } ; status: number }> {
   const headers = new Headers(init?.headers);
   headers.set("x-bot-secret", options.botSecret);
-  headers.set("x-discord-id", options.discordId);
+  if (options.discordId) {
+    headers.set("x-discord-id", options.discordId);
+  }
   if (options.guildId) {
     headers.set("x-guild-id", options.guildId);
   }
