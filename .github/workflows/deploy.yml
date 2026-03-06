@@ -46,3 +46,4 @@ jobs:
             npm ci
             npm run build
             sudo systemctl restart art-kingshot
+            sudo systemctl restart art-kingshot-bot

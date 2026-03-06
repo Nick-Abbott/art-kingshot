@@ -43,6 +43,7 @@ export type RouteContext = {
   DISCORD_CLIENT_ID: string;
   DISCORD_CLIENT_SECRET: string;
   DISCORD_REDIRECT_URI: string;
+  DISCORD_BOT_SECRET: string;
   SESSION_TTL_MS: number;
   isProduction: boolean;
   parseMemberPayload: (
@@ -102,6 +103,38 @@ export type RouteContext = {
   ) =>
     | { ok: true; data: { action?: string; status?: string; role?: string } }
     | { ok: false; error: string; code?: string };
+  parseBotMemberPayload: (
+    body: unknown
+  ) =>
+    | {
+        ok: true;
+        data: {
+          profileId: string;
+          troopCount?: number;
+          marchCount: number;
+          power?: number;
+          playerName?: string;
+        };
+      }
+    | { ok: false; error: string; code?: string };
+  parseBotBearPayload: (
+    body: unknown
+  ) =>
+    | {
+        ok: true;
+        data: { profileId: string; rallySize: number; playerName?: string };
+      }
+    | { ok: false; error: string; code?: string };
+  parseBotLinkPayload: (
+    body: unknown
+  ) =>
+    | { ok: true; data: { playerId: string } }
+    | { ok: false; error: string; code?: string };
+  parseBotGuildAssociatePayload: (
+    body: unknown
+  ) =>
+    | { ok: true; data: { allianceId: string } }
+    | { ok: false; error: string; code?: string };
   generateAssignments: (members: Member[]) => AssignmentResult;
   buildPlayerLookupPayload: (fid: string | number, now?: number) => {
     fid: string;
@@ -152,6 +185,7 @@ export type RouteContext = {
   getAllianceById: (id: string) => Alliance | null;
   insertUser: Queries["insertUser"];
   updateUser: Queries["updateUser"];
+  updateUserBotOptIn: Queries["updateUserBotOptIn"];
   insertBootstrapRow: Queries["insertBootstrapRow"];
   insertProfile: Queries["insertProfile"];
   updateProfile: Queries["updateProfile"];

@@ -45,6 +45,31 @@ Create a Discord application and configure:
 
 Set the server environment variables listed below before starting the server.
 
+## Discord Bot Usage
+
+Members can use these slash commands inside the linked guild:
+- `/link player_id` — link a Kingshot profile to your Discord account (also opts you into assignment DMs).
+- `/guild associate alliance_id` — admins only; associate this guild to an alliance.
+- `/bear register|edit|remove|view` — manage Bear Rally signup.
+  - `group` is required; `rally_size` is optional if a default exists for the selected profile.
+  - `profile` is optional; when omitted, the bot uses your first linked profile.
+- `/vikings register|edit|remove` — manage Viking Vengeance signup.
+  - `march_count` is required; `troop_count`/`power` are optional if defaults exist for the selected profile.
+  - `profile` is optional; when omitted, the bot uses your first linked profile.
+- `/vikings assignments` — receive Viking assignments (DM by default; `output=channel` posts to the current channel).
+
+## Discord Guild Association (Admin)
+
+Preferred: run `/guild associate alliance_id` inside the target Discord server.
+
+Manual fallback:
+- Determine the guild ID in Discord (enable Developer Mode and copy the server ID).
+- Update the DB:
+  ```sql
+  UPDATE alliances SET guildId = 'YOUR_GUILD_ID' WHERE id = 'your-alliance-id';
+  ```
+- Restart the bot so it registers commands to the correct guild.
+
 ## Environment Variables
 
 Server:
@@ -66,6 +91,16 @@ Scripts:
 - `SNAPSHOT_URL`: Base URL for snapshot script (default `http://localhost:5173`)
 - `PLAYWRIGHT_DB_PATH`: DB path used by Playwright to seed sessions (default set by snapshot runner)
 - `CHROME_PATH` / `GOOGLE_CHROME_BIN`: Chrome executable for Puppeteer
+
+Bot (server/bot):
+- `DISCORD_APP_ID`: Discord application ID (required)
+- `DISCORD_BOT_TOKEN`: Discord bot token (required)
+- `DISCORD_BOT_SECRET`: Shared secret for bot-authenticated API calls (required)
+- `SERVER_URL`: Base server URL for bot API calls (required, e.g. `http://localhost:3001`)
+- `DISCORD_GUILD_ID`: Register commands in a single guild (optional; omit for global commands)
+- `DISCORD_GUILD_ID` is not required for assignment polling; polling reads all pending notifications.
+- `DISCORD_REGISTER_COMMANDS`: Set `true` to register commands on bot start (optional)
+- `DISCORD_ASSIGNMENTS_POLL_MS`: Poll interval for assignment notifications (default `30000`)
 
 ## Scripts
 

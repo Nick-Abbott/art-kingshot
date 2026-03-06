@@ -19,6 +19,30 @@ export default function assignmentsRoutes(ctx: RouteContext) {
       try {
         const run = ctx.generateAssignments(ctx.membersRepo.list(allianceId));
         ctx.metaRepo.setLastRun(allianceId, run);
+        const recipients = ctx.queries.listOptedInAssignmentRecipients(allianceId);
+        if (recipients.length > 0) {
+          ctx.queries.deletePendingAssignmentNotificationsForAlliance(allianceId);
+          const byPlayerId = new Map(
+            run.members.map((member) => [member.playerId, member])
+          );
+          const now = Date.now();
+          for (const recipient of recipients) {
+            const assignment = byPlayerId.get(recipient.playerId);
+            if (!assignment) continue;
+            ctx.queries.insertAssignmentNotification(
+              ctx.crypto.randomUUID(),
+              allianceId,
+              recipient.playerId,
+              recipient.discordId,
+              JSON.stringify(assignment),
+              "pending",
+              now,
+              now
+            );
+          }
+          const cutoff = now - 7 * 24 * 60 * 60 * 1000;
+          ctx.queries.deleteAssignmentNotificationsBeforeTimestamp(cutoff);
+        }
         ctx.ok(res, run);
       } catch (error) {
         const message = error instanceof Error ? error.message : "Run failed.";

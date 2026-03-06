@@ -141,6 +141,14 @@ export type BearPayload = {
   members: BearMember[];
 };
 
+export type BotProfilesPayload = {
+  profiles: Profile[];
+};
+
+export type BotBearViewPayload = {
+  member: (BearMember & { bearGroup: string }) | null;
+};
+
 export type AssignmentTransfer = {
   toId?: string;
   toName?: string;
@@ -175,6 +183,11 @@ export type AssignmentResult = {
 
 export type ResultsPayload = {
   results: AssignmentResult | null;
+};
+
+export type BotAssignmentsPayload = {
+  results: AssignmentResult | null;
+  assignment: AssignmentMember | null;
 };
 
 export type LookupPayload = {

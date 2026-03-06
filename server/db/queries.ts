@@ -13,6 +13,11 @@ type SessionRow = {
   expiresAt: number;
 };
 
+type AllianceGuildRow = {
+  allianceId: string;
+  guildId: string;
+};
+
 export function createQueries(db: Database) {
   const selectUserByDiscordId = db.prepare(
     "SELECT id, discordId, displayName, avatar, isAppAdmin FROM users WHERE discordId = ?"
@@ -25,6 +30,9 @@ export function createQueries(db: Database) {
   );
   const selectUserById = db.prepare(
     "SELECT id, discordId, displayName, avatar, isAppAdmin FROM users WHERE id = ?"
+  );
+  const updateUserBotOptIn = db.prepare(
+    "UPDATE users SET botOptInAssignments = ? WHERE id = ?"
   );
   const selectProfilesByUser = db.prepare(
     `SELECT profiles.id,
@@ -197,6 +205,9 @@ export function createQueries(db: Database) {
   const selectBearGroupMembers = db.prepare(
     "SELECT playerId, playerName, rallySize FROM bear WHERE allianceId = ? AND bearGroup = ?"
   );
+  const selectBearMemberByPlayer = db.prepare(
+    "SELECT playerId, playerName, rallySize, bearGroup FROM bear WHERE allianceId = ? AND playerId = ?"
+  );
   const upsertBearMember = db.prepare(
     `INSERT INTO bear (allianceId, playerId, playerName, rallySize, bearGroup)
      VALUES (?, ?, ?, ?, ?)
@@ -261,6 +272,78 @@ export function createQueries(db: Database) {
     "SELECT token, userId, expiresAt FROM sessions WHERE token = ?"
   );
   const deleteSession = db.prepare("DELETE FROM sessions WHERE token = ?");
+  const selectAllianceGuildByAllianceId = db.prepare(
+    "SELECT id AS allianceId, guildId FROM alliances WHERE id = ?"
+  );
+  const selectAllianceGuildByGuildId = db.prepare(
+    "SELECT id AS allianceId, guildId FROM alliances WHERE guildId = ?"
+  );
+  const updateAllianceGuild = db.prepare(
+    "UPDATE alliances SET guildId = ? WHERE id = ?"
+  );
+
+  const selectOptedInAssignmentRecipients = db.prepare(
+    `SELECT profiles.id AS profileId,
+            profiles.playerId AS playerId,
+            users.discordId AS discordId
+     FROM profiles
+     JOIN users ON users.id = profiles.userId
+     WHERE profiles.allianceId = ?
+       AND profiles.status = 'active'
+       AND users.botOptInAssignments = 1
+       AND users.discordId IS NOT NULL`
+  );
+  const insertAssignmentNotification = db.prepare(
+    `INSERT INTO assignment_notifications (
+       id,
+       allianceId,
+       playerId,
+       discordId,
+       payload,
+       status,
+       createdAt,
+       updatedAt
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+  );
+  const listPendingAssignmentNotifications = db.prepare(
+    `SELECT id, allianceId, playerId, discordId, payload, status, error, createdAt, updatedAt
+     FROM assignment_notifications
+     WHERE allianceId = ?
+       AND status = 'pending'
+     ORDER BY createdAt ASC`
+  );
+  const listPendingAssignmentNotificationsAllQuery = db.prepare(
+    `SELECT id, allianceId, playerId, discordId, payload, status, error, createdAt, updatedAt
+     FROM assignment_notifications
+     WHERE status = 'pending'
+     ORDER BY createdAt ASC`
+  );
+  const listFailedAssignmentNotifications = db.prepare(
+    `SELECT id, allianceId, playerId, discordId, payload, status, error, createdAt, updatedAt
+     FROM assignment_notifications
+     WHERE allianceId = ?
+       AND status = 'failed'
+     ORDER BY updatedAt DESC
+     LIMIT ?`
+  );
+  const listFailedAssignmentNotificationsAllQuery = db.prepare(
+    `SELECT id, allianceId, playerId, discordId, payload, status, error, createdAt, updatedAt
+     FROM assignment_notifications
+     WHERE status = 'failed'
+     ORDER BY updatedAt DESC
+     LIMIT ?`
+  );
+  const updateAssignmentNotificationStatus = db.prepare(
+    `UPDATE assignment_notifications
+     SET status = ?, error = ?, updatedAt = ?
+     WHERE id = ?`
+  );
+  const deletePendingAssignmentNotifications = db.prepare(
+    "DELETE FROM assignment_notifications WHERE allianceId = ? AND status = 'pending'"
+  );
+  const deleteAssignmentNotificationsBefore = db.prepare(
+    "DELETE FROM assignment_notifications WHERE updatedAt < ?"
+  );
 
   function getUserByDiscordId(discordId: string): User | null {
     return (selectUserByDiscordId.get(discordId) as User | undefined) ?? null;
@@ -318,6 +401,17 @@ export function createQueries(db: Database) {
     group: string
   ): BearMember[] {
     return (selectBearGroupMembers.all(allianceId, group) as BearMember[]) || [];
+  }
+
+  function getBearMemberByPlayer(
+    allianceId: string,
+    playerId: string
+  ): (BearMember & { bearGroup: string }) | null {
+    return (
+      (selectBearMemberByPlayer.get(allianceId, playerId) as
+        | (BearMember & { bearGroup: string })
+        | undefined) ?? null
+    );
   }
 
   function upsertBearMemberRow(
@@ -468,6 +562,13 @@ export function createQueries(db: Database) {
     return updateUser.run(displayName, avatar, id);
   }
 
+  function updateUserBotOptInRow(
+    id: string,
+    enabled: number
+  ): RunResult {
+    return updateUserBotOptIn.run(enabled, id);
+  }
+
   function insertBootstrapRowOnce(createdAt: number): RunResult {
     return insertBootstrapRow.run(createdAt);
   }
@@ -487,6 +588,159 @@ export function createQueries(db: Database) {
 
   function deleteSessionRow(token: string): RunResult {
     return deleteSession.run(token);
+  }
+
+  function listOptedInAssignmentRecipients(
+    allianceId: string
+  ): Array<{ profileId: string; playerId: string; discordId: string }> {
+    return (
+      (selectOptedInAssignmentRecipients.all(allianceId) as Array<{
+        profileId: string;
+        playerId: string;
+        discordId: string;
+      }>) || []
+    );
+  }
+
+  function insertAssignmentNotificationRow(
+    id: string,
+    allianceId: string,
+    playerId: string,
+    discordId: string,
+    payload: string,
+    status: "pending" | "sent" | "failed",
+    createdAt: number,
+    updatedAt: number
+  ): RunResult {
+    return insertAssignmentNotification.run(
+      id,
+      allianceId,
+      playerId,
+      discordId,
+      payload,
+      status,
+      createdAt,
+      updatedAt
+    );
+  }
+
+  function listPendingAssignmentNotificationsByAlliance(allianceId: string) {
+    return (
+      listPendingAssignmentNotifications.all(allianceId) as Array<{
+        id: string;
+        allianceId: string;
+        playerId: string;
+        discordId: string;
+        payload: string;
+        status: string;
+        error: string | null;
+        createdAt: number;
+        updatedAt: number;
+      }>
+    );
+  }
+
+  function listPendingAssignmentNotificationsAll() {
+    return (
+      listPendingAssignmentNotificationsAllQuery.all() as Array<{
+        id: string;
+        allianceId: string;
+        playerId: string;
+        discordId: string;
+        payload: string;
+        status: string;
+        error: string | null;
+        createdAt: number;
+        updatedAt: number;
+      }>
+    );
+  }
+
+  function listFailedAssignmentNotificationsByAlliance(
+    allianceId: string,
+    limit: number
+  ) {
+    return (
+      listFailedAssignmentNotifications.all(allianceId, limit) as Array<{
+        id: string;
+        allianceId: string;
+        playerId: string;
+        discordId: string;
+        payload: string;
+        status: string;
+        error: string | null;
+        createdAt: number;
+        updatedAt: number;
+      }>
+    );
+  }
+
+  function listFailedAssignmentNotificationsAll(limit: number) {
+    return (
+      listFailedAssignmentNotificationsAllQuery.all(limit) as Array<{
+        id: string;
+        allianceId: string;
+        playerId: string;
+        discordId: string;
+        payload: string;
+        status: string;
+        error: string | null;
+        createdAt: number;
+        updatedAt: number;
+      }>
+    );
+  }
+
+  function updateAssignmentNotificationStatusRow(
+    id: string,
+    status: "sent" | "failed",
+    error: string | null,
+    updatedAt: number
+  ): RunResult {
+    return updateAssignmentNotificationStatus.run(status, error, updatedAt, id);
+  }
+
+  function deletePendingAssignmentNotificationsForAlliance(
+    allianceId: string
+  ): RunResult {
+    return deletePendingAssignmentNotifications.run(allianceId);
+  }
+
+  function deleteAssignmentNotificationsBeforeTimestamp(
+    timestamp: number
+  ): RunResult {
+    return deleteAssignmentNotificationsBefore.run(timestamp);
+  }
+
+  function getAllianceGuildByAllianceId(
+    allianceId: string
+  ): AllianceGuildRow | null {
+    const row = selectAllianceGuildByAllianceId.get(allianceId) as
+      | AllianceGuildRow
+      | undefined;
+    if (!row?.guildId) return null;
+    return row;
+  }
+
+  function getAllianceGuildByGuildId(guildId: string): AllianceGuildRow | null {
+    return (
+      (selectAllianceGuildByGuildId.get(guildId) as
+        | AllianceGuildRow
+        | undefined) ?? null
+    );
+  }
+
+  function upsertAllianceGuildRow(
+    allianceId: string,
+    guildId: string
+  ): RunResult {
+    return updateAllianceGuild.run(guildId, allianceId);
+  }
+
+  function deleteAllianceGuildByAlliance(
+    allianceId: string
+  ): RunResult {
+    return updateAllianceGuild.run(null, allianceId);
   }
 
   function insertProfileRow(
@@ -632,6 +886,7 @@ export function createQueries(db: Database) {
     listEligibleMembers,
     listEligibleBearMembers,
     listBearGroupMembers,
+    getBearMemberByPlayer,
     upsertBearMember: upsertBearMemberRow,
     updateProfileRallySize: updateProfileRallySizeRow,
     deleteBearGroup,
@@ -650,10 +905,24 @@ export function createQueries(db: Database) {
     countActiveProfiles,
     insertUser: insertUserRow,
     updateUser: updateUserRow,
+    updateUserBotOptIn: updateUserBotOptInRow,
     insertBootstrapRow: insertBootstrapRowOnce,
     insertSession: insertSessionRow,
     getSession,
     deleteSession: deleteSessionRow,
+    getAllianceGuildByAllianceId,
+    getAllianceGuildByGuildId,
+    upsertAllianceGuild: upsertAllianceGuildRow,
+    deleteAllianceGuildByAlliance: deleteAllianceGuildByAlliance,
+    listOptedInAssignmentRecipients,
+    insertAssignmentNotification: insertAssignmentNotificationRow,
+    listPendingAssignmentNotificationsByAlliance,
+    listPendingAssignmentNotificationsAll,
+    listFailedAssignmentNotificationsByAlliance,
+    listFailedAssignmentNotificationsAll,
+    updateAssignmentNotificationStatus: updateAssignmentNotificationStatusRow,
+    deletePendingAssignmentNotificationsForAlliance,
+    deleteAssignmentNotificationsBeforeTimestamp,
     insertProfile: insertProfileRow,
     updateProfile: updateProfileRow,
     updateProfileClaim: updateProfileClaimRow,

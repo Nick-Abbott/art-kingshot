@@ -111,6 +111,82 @@ function createSessionCookie(
   return `ak_session=${token}`;
 }
 
+function createBotUser(
+  dbPath: string,
+  {
+    discordId,
+    allianceId,
+    profileId,
+    playerId,
+    kingdomId = 1459,
+    troopCount = null,
+    marchCount = null,
+    power = null,
+    guildId = null,
+    role = "member",
+    isAppAdmin = false,
+  }: {
+    discordId: string;
+    allianceId: string;
+    profileId: string;
+    playerId: string;
+    kingdomId?: number;
+    troopCount?: number | null;
+    marchCount?: number | null;
+    power?: number | null;
+    guildId?: string | null;
+    role?: "member" | "alliance_admin";
+    isAppAdmin?: boolean;
+  }
+) {
+  const db = new Database(dbPath);
+  const now = Date.now();
+  const userId = crypto.randomUUID();
+  db.prepare(
+    "INSERT INTO users (id, discordId, displayName, avatar, isAppAdmin, createdAt) VALUES (?, ?, ?, ?, ?, ?)"
+  ).run(userId, discordId, "Bot User", null, isAppAdmin ? 1 : 0, now);
+  db.prepare(
+    "INSERT INTO alliances (id, name, kingdomId, guildId, createdAt) VALUES (?, ?, ?, ?, ?)"
+  ).run(allianceId, "Bot Alliance", kingdomId, guildId, now);
+  db.prepare(
+    `INSERT INTO profiles (
+       id,
+       userId,
+       playerId,
+       playerName,
+       playerAvatar,
+       kingdomId,
+       allianceId,
+       status,
+       role,
+       troopCount,
+       marchCount,
+       power,
+       rallySize,
+       createdAt,
+       updatedAt
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  ).run(
+    profileId,
+    userId,
+    playerId,
+    "Bot Player",
+    null,
+    kingdomId,
+    allianceId,
+    "active",
+    role,
+    troopCount,
+    marchCount,
+    power,
+    null,
+    now,
+    now
+  );
+  db.close();
+  return { userId };
+}
+
 test("unauthenticated access returns 401", async () => {
   process.env.DB_PATH = tmpDbPath();
   process.env.PORT = "0";
@@ -676,6 +752,143 @@ test("eligible signup lists return active alliance members not yet signed up", a
   }
 });
 
+test("assignment run queues notifications for opted-in users", async () => {
+  const dbPath = tmpDbPath();
+  process.env.DB_PATH = dbPath;
+  process.env.PORT = "0";
+  const { httpServer, port } = await startServer();
+  try {
+    const headers = { Cookie: createSessionCookie(dbPath) };
+    const createProfile = await requestJson(
+      port,
+      "POST",
+      "/api/profiles",
+      { ...headers, "Content-Type": "application/json" },
+      JSON.stringify({ playerId: "FIDOPTIN", kingdomId: 1459 })
+    );
+    const profileId = getPayload<{ profile: { id: string } }>(createProfile).profile.id;
+
+    const createAlliance = await requestJson(
+      port,
+      "POST",
+      "/api/alliances",
+      { ...headers, "Content-Type": "application/json", "x-profile-id": profileId },
+      JSON.stringify({ tag: "OPT", name: "Opt Alliance" })
+    );
+    assert.equal(createAlliance.status, 200);
+    const allianceId = getPayload<{ alliance: { id: string } }>(createAlliance).alliance.id;
+
+    const db = new Database(dbPath);
+    db.prepare("UPDATE users SET botOptInAssignments = 1").run();
+    db.close();
+
+    const signup = await requestJson(
+      port,
+      "POST",
+      "/api/signup",
+      { ...headers, "Content-Type": "application/json", "x-profile-id": profileId },
+      JSON.stringify({
+        playerId: "FIDOPTIN",
+        troopCount: 1000,
+        playerName: "Opted",
+        marchCount: 4,
+        power: 2000000,
+      })
+    );
+    assert.equal(signup.status, 200);
+
+    const run = await requestJson(
+      port,
+      "POST",
+      "/api/run",
+      { ...headers, "x-profile-id": profileId }
+    );
+    assert.equal(run.status, 200);
+
+    const checkDb = new Database(dbPath);
+    const row = checkDb.prepare(
+      "SELECT COUNT(1) AS count FROM assignment_notifications WHERE allianceId = ? AND status = 'pending'"
+    ).get(allianceId) as { count: number };
+    checkDb.close();
+    assert.equal(row.count, 1);
+  } finally {
+    httpServer.close();
+  }
+});
+
+test("bot notifications endpoint returns pending for all alliances", async () => {
+  const dbPath = tmpDbPath();
+  process.env.DB_PATH = dbPath;
+  process.env.PORT = "0";
+  process.env.DISCORD_BOT_SECRET = "bot-secret";
+  const { httpServer, port } = await startServer();
+  try {
+    const db = new Database(dbPath);
+    const now = Date.now();
+    db.prepare(
+      `INSERT INTO assignment_notifications (
+        id,
+        allianceId,
+        playerId,
+        discordId,
+        payload,
+        status,
+        error,
+        createdAt,
+        updatedAt
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).run(
+      crypto.randomUUID(),
+      "alpha",
+      "P1",
+      "D1",
+      JSON.stringify({ assignment: "one" }),
+      "pending",
+      null,
+      now,
+      now
+    );
+    db.prepare(
+      `INSERT INTO assignment_notifications (
+        id,
+        allianceId,
+        playerId,
+        discordId,
+        payload,
+        status,
+        error,
+        createdAt,
+        updatedAt
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).run(
+      crypto.randomUUID(),
+      "beta",
+      "P2",
+      "D2",
+      JSON.stringify({ assignment: "two" }),
+      "pending",
+      null,
+      now,
+      now
+    );
+    db.close();
+
+    const res = await requestJson(
+      port,
+      "GET",
+      "/api/bot/assignments/notifications",
+      { "x-bot-secret": "bot-secret" }
+    );
+    assert.equal(res.status, 200);
+    const payload = getPayload<{ notifications: Array<{ allianceId: string }> }>(res);
+    const alliances = payload.notifications.map((item) => item.allianceId);
+    assert.ok(alliances.includes("alpha"));
+    assert.ok(alliances.includes("beta"));
+  } finally {
+    httpServer.close();
+  }
+});
+
 test("unclaimed profiles can be added by admins and claimed on login", async () => {
   const dbPath = tmpDbPath();
   process.env.DB_PATH = dbPath;
@@ -877,6 +1090,249 @@ test("app admin can manage alliances across kingdoms", async () => {
       headers
     );
     assert.equal(deleteAlliance.status, 200);
+  } finally {
+    httpServer.close();
+  }
+});
+
+test("bot endpoints resolve discord user and enforce ownership", async () => {
+  const dbPath = tmpDbPath();
+  process.env.DB_PATH = dbPath;
+  process.env.PORT = "0";
+  process.env.DISCORD_BOT_SECRET = "bot-secret";
+  const { httpServer, port } = await startServer();
+  try {
+    const discordId = "discord-bot-user";
+    const allianceId = "bot";
+    const profileId = crypto.randomUUID();
+    const playerId = "BOTPLAYER1";
+    createBotUser(dbPath, {
+      discordId,
+      allianceId,
+      profileId,
+      playerId,
+      troopCount: 1200,
+      marchCount: 4,
+      power: 2000000,
+      guildId: "guild-1",
+    });
+
+    const headers = {
+      "x-bot-secret": "bot-secret",
+      "x-discord-id": discordId,
+      "Content-Type": "application/json",
+    };
+
+    const signup = await requestJson(
+      port,
+      "POST",
+      "/api/bot/vikings",
+      headers,
+      JSON.stringify({
+        profileId,
+        troopCount: 1000,
+        marchCount: 4,
+        power: 2000000,
+        playerName: "Bot Player",
+      })
+    );
+    assert.equal(signup.status, 200);
+
+    const optionalSignup = await requestJson(
+      port,
+      "POST",
+      "/api/bot/vikings",
+      headers,
+      JSON.stringify({
+        profileId,
+        marchCount: 4,
+      })
+    );
+    assert.equal(optionalSignup.status, 200);
+
+    const bear = await requestJson(
+      port,
+      "POST",
+      "/api/bot/bear/bear1",
+      headers,
+      JSON.stringify({ profileId, rallySize: 500000, playerName: "Bot Player" })
+    );
+    assert.equal(bear.status, 200);
+
+    const profiles = await requestJson(
+      port,
+      "GET",
+      "/api/bot/profiles",
+      { "x-bot-secret": "bot-secret", "x-discord-id": discordId }
+    );
+    assert.equal(profiles.status, 200);
+    const profilesPayload = getPayload<{ profiles: Array<{ id: string }> }>(
+      profiles
+    );
+    assert.ok(profilesPayload.profiles.some((p) => p.id === profileId));
+
+    const bearView = await requestJson(
+      port,
+      "GET",
+      `/api/bot/bear?profileId=${profileId}`,
+      { "x-bot-secret": "bot-secret", "x-discord-id": discordId }
+    );
+    assert.equal(bearView.status, 200);
+    const bearViewPayload = getPayload<{ member: { bearGroup: string } | null }>(
+      bearView
+    );
+    assert.equal(bearViewPayload.member?.bearGroup, "bear1");
+
+    global.fetch = (async () =>
+      ({
+        ok: true,
+        status: 200,
+        text: async () =>
+          JSON.stringify({
+            data: { data: { name: "Linked Player", kid: 1459, avatar: "icon" } },
+          }),
+      } as Response)) as typeof fetch;
+
+    const link = await requestJson(
+      port,
+      "POST",
+      "/api/bot/profiles/link",
+      { ...headers, "Content-Type": "application/json", "x-guild-id": "guild-1" },
+      JSON.stringify({ playerId: "NEWPLAYER" })
+    );
+    assert.equal(link.status, 200);
+    const linkPayload = getPayload<{ profile: { playerId: string; allianceId: string | null; status: string } }>(link);
+    assert.equal(linkPayload.profile.playerId, "NEWPLAYER");
+    assert.equal(linkPayload.profile.allianceId, allianceId);
+    assert.equal(linkPayload.profile.status, "pending");
+
+    const dbAfterLink = new Database(dbPath);
+    const optInRow = dbAfterLink.prepare(
+      "SELECT botOptInAssignments FROM users WHERE discordId = ?"
+    ).get(discordId) as { botOptInAssignments: number };
+    assert.equal(optInRow.botOptInAssignments, 1);
+    dbAfterLink.close();
+
+    const db = new Database(dbPath);
+    db.prepare(
+      "INSERT INTO meta (allianceId, key, value) VALUES (?, 'lastRun', ?)"
+    ).run(
+      allianceId,
+      JSON.stringify({
+        members: [
+          {
+            playerId,
+            playerName: "Bot Player",
+            troopCount: 1000,
+            outgoing: [],
+            incoming: [],
+            incomingTotal: 0,
+          },
+        ],
+        warnings: [],
+      })
+    );
+    db.close();
+
+    const assignments = await requestJson(
+      port,
+      "GET",
+      `/api/bot/vikings/assignments?profileId=${profileId}`,
+      {
+        "x-bot-secret": "bot-secret",
+        "x-discord-id": discordId,
+      }
+    );
+    assert.equal(assignments.status, 200);
+    const assignmentsPayload = getPayload<{
+      assignment: { playerId: string } | null;
+    }>(assignments);
+    assert.equal(assignmentsPayload.assignment?.playerId, playerId);
+
+    const remove = await requestJson(
+      port,
+      "DELETE",
+      `/api/bot/vikings/${profileId}`,
+      { "x-bot-secret": "bot-secret", "x-discord-id": discordId }
+    );
+    assert.equal(remove.status, 200);
+
+    const otherHeaders = {
+      "x-bot-secret": "bot-secret",
+      "x-discord-id": "other-discord",
+      "Content-Type": "application/json",
+    };
+    const otherUser = await requestJson(
+      port,
+      "POST",
+      "/api/bot/vikings",
+      otherHeaders,
+      JSON.stringify({
+        profileId,
+        troopCount: 1000,
+        marchCount: 4,
+        power: 2000000,
+      })
+    );
+    assert.equal(otherUser.status, 404);
+  } finally {
+    httpServer.close();
+  }
+});
+
+test("bot guild association enforces admin access and updates guild", async () => {
+  const dbPath = tmpDbPath();
+  process.env.DB_PATH = dbPath;
+  process.env.PORT = "0";
+  process.env.DISCORD_BOT_SECRET = "bot-secret";
+  const { httpServer, port } = await startServer();
+  const discordId = "guild-admin";
+  const allianceId = "alpha";
+  const profileId = crypto.randomUUID();
+  createBotUser(dbPath, {
+    discordId,
+    allianceId,
+    profileId,
+    playerId: "ALPHA1",
+  });
+  try {
+    const headers = {
+      "x-bot-secret": "bot-secret",
+      "x-discord-id": discordId,
+      "x-guild-id": "guild-123",
+      "Content-Type": "application/json",
+    };
+
+    const denied = await requestJson(
+      port,
+      "POST",
+      "/api/bot/guild/associate",
+      headers,
+      JSON.stringify({ allianceId })
+    );
+    assert.equal(denied.status, 403);
+
+    const db = new Database(dbPath);
+    db.prepare("UPDATE profiles SET role = 'alliance_admin' WHERE id = ?").run(
+      profileId
+    );
+    db.close();
+
+    const linked = await requestJson(
+      port,
+      "POST",
+      "/api/bot/guild/associate",
+      headers,
+      JSON.stringify({ allianceId })
+    );
+    assert.equal(linked.status, 200);
+
+    const dbAfter = new Database(dbPath);
+    const row = dbAfter
+      .prepare("SELECT guildId FROM alliances WHERE id = ?")
+      .get(allianceId) as { guildId: string | null };
+    dbAfter.close();
+    assert.equal(row.guildId, "guild-123");
   } finally {
     httpServer.close();
   }

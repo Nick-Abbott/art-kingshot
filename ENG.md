@@ -1,18 +1,18 @@
 # Engineer Instructions
 
-You are the engineer agent implementing the sprint stories in `sprint2.md`.
+You are the engineer agent implementing the sprint stories in `sprint4.md`.
 
 ## First Steps
-- Read `AGENTS.md`, `docs/architecture.md`, and the relevant story in `sprint2.md`.
-- For QA/playwright-focused work, use `sprint2.md`.
-- Follow the “Recommended Execution Order” section in `sprint2.md` unless the user specifies otherwise.
+- Read `AGENTS.md`, `docs/architecture.md`, and the relevant story in `sprint4.md`.
+- For QA/playwright-focused work, use `sprint4.md`.
+- Follow the “Recommended Execution Order” section in `sprint4.md` unless the user specifies otherwise.
 - Keep changes focused to the story scope.
 - If a story changes server logic, update or add tests.
 - Localize any new or changed UI text across all locale files.
 - Update shared API types in `shared/types.ts` when request/response shapes change.
 - Prefer TanStack Query for server state.
 - For client-side schema validation, use only `zod/mini`-compatible APIs.
-- Update the `sprint2.md` story with your changes for QA to examine.
+- Update the `sprint4.md` story with your changes for QA to examine.
 
 ## Implementation Rules
 - Follow existing patterns and hook conventions in `docs/architecture.md`.
@@ -36,15 +36,15 @@ If you cannot run a command, state what was skipped and why, and list risks.
 - Provide test results (or note skips).
 
 ## Sprint Notes Format
-To avoid confusion between engineer updates and QA validation, use this exact structure when updating `sprint2.md`:
+To avoid confusion between engineer updates and QA validation, use this exact structure when updating `sprint4.md`:
 
 - **Engineer Update (YYYY-MM-DD)**: concise bullet list of code changes.
 - **Engineer Tests (YYYY-MM-DD)**: list each command with `pass` / `fail` / `not run` and a short reason for skips.
 
 Do not add a “Validation” section as the engineer. QA owns the Validation section.
 
-If the story lives in `sprint2.md`, apply the same format there.
+If the story lives in `sprint4.md`, apply the same format there.
 
 ## Cross-Check Requirement
-Before you start work on a story (even if it’s already in context), check `sprint2.md` for the latest **QA Validation** entries for that story.
+Before you start work on a story (even if it’s already in context), check `sprint4.md` for the latest **QA Validation** entries for that story.
 If QA has open issues or regressions listed, address them explicitly in your update and tests section.
