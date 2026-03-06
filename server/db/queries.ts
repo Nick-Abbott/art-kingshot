@@ -202,6 +202,9 @@ export function createQueries(db: Database) {
   const selectBearGroupMembers = db.prepare(
     "SELECT playerId, playerName, rallySize FROM bear WHERE allianceId = ? AND bearGroup = ?"
   );
+  const selectBearMemberByPlayer = db.prepare(
+    "SELECT playerId, playerName, rallySize, bearGroup FROM bear WHERE allianceId = ? AND playerId = ?"
+  );
   const upsertBearMember = db.prepare(
     `INSERT INTO bear (allianceId, playerId, playerName, rallySize, bearGroup)
      VALUES (?, ?, ?, ?, ?)
@@ -332,6 +335,17 @@ export function createQueries(db: Database) {
     group: string
   ): BearMember[] {
     return (selectBearGroupMembers.all(allianceId, group) as BearMember[]) || [];
+  }
+
+  function getBearMemberByPlayer(
+    allianceId: string,
+    playerId: string
+  ): (BearMember & { bearGroup: string }) | null {
+    return (
+      (selectBearMemberByPlayer.get(allianceId, playerId) as
+        | (BearMember & { bearGroup: string })
+        | undefined) ?? null
+    );
   }
 
   function upsertBearMemberRow(
@@ -677,6 +691,7 @@ export function createQueries(db: Database) {
     listEligibleMembers,
     listEligibleBearMembers,
     listBearGroupMembers,
+    getBearMemberByPlayer,
     upsertBearMember: upsertBearMemberRow,
     updateProfileRallySize: updateProfileRallySizeRow,
     deleteBearGroup,

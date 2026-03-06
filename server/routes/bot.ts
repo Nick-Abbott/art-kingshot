@@ -189,6 +189,37 @@ export default function botRoutes(ctx: RouteContext) {
     }
   );
 
+  router.get(
+    "/api/bot/bear",
+    (req: Request, res: Response) => {
+      const auth = requireBotAuth(req, res);
+      if (!auth) return;
+      const profileId =
+        typeof req.query.profileId === "string" ? req.query.profileId.trim() : "";
+      if (!profileId) {
+        ctx.fail(res, 400, "profileId is required.");
+        return;
+      }
+      const profile = getProfileForBot(ctx, res, auth.profiles, profileId);
+      if (!profile) return;
+
+      const member = ctx.queries.getBearMemberByPlayer(
+        profile.allianceId,
+        profile.playerId
+      );
+      ctx.ok(res, { member });
+    }
+  );
+
+  router.get(
+    "/api/bot/profiles",
+    (req: Request, res: Response) => {
+      const auth = requireBotAuth(req, res);
+      if (!auth) return;
+      ctx.ok(res, { profiles: auth.profiles });
+    }
+  );
+
   router.delete(
     "/api/bot/bear/:group/:profileId",
     (req: Request, res: Response) => {

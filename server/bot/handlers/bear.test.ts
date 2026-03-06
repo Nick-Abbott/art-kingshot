@@ -1,0 +1,144 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { handleBearCommand } from "./bear";
+
+type FakeOptions = {
+  subcommand: "register" | "edit" | "remove" | "view";
+  profileId?: string;
+  group?: string;
+  rallySize?: number;
+};
+
+function createInteraction(options: FakeOptions) {
+  return {
+    user: { id: "discord-user" },
+    options: {
+      getSubcommand: () => options.subcommand,
+      getString: (name: "profile" | "group") => {
+        if (name === "profile") return options.profileId ?? null;
+        return options.group ?? null;
+      },
+      getNumber: () => options.rallySize ?? null,
+      getFocused: () => ({ name: "profile", value: "" }),
+    },
+    respond: async () => {},
+  };
+}
+
+function mockFetchOnce(payload: unknown, status = 200) {
+  global.fetch = (async () =>
+    ({
+      ok: status >= 200 && status < 300,
+      status,
+      json: async () => payload,
+    } as Response)) as typeof fetch;
+}
+
+test("bear register returns success copy", async () => {
+  mockFetchOnce({ ok: true, data: { members: [] } });
+  const message = await handleBearCommand(
+    createInteraction({
+      subcommand: "register",
+      profileId: "profile-1",
+      group: "bear1",
+      rallySize: 500000,
+    }),
+    { serverUrl: "http://localhost", botSecret: "secret" }
+  );
+  assert.equal(
+    message,
+    "Registered! You’re signed up for Bear 1 with rally size 500000."
+  );
+});
+
+test("bear register uses single active profile when missing profile option", async () => {
+  let callCount = 0;
+  global.fetch = (async (_url: string) => {
+    callCount += 1;
+    if (callCount === 1) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          ok: true,
+          data: {
+            profiles: [
+              {
+                id: "profile-1",
+                playerId: "P1",
+                playerName: "Player",
+                allianceId: "alliance",
+                status: "active",
+              },
+            ],
+          },
+        }),
+      } as Response;
+    }
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({ ok: true, data: { members: [] } }),
+    } as Response;
+  }) as typeof fetch;
+
+  const message = await handleBearCommand(
+    createInteraction({
+      subcommand: "register",
+      group: "bear1",
+      rallySize: 1000,
+    }),
+    { serverUrl: "http://localhost", botSecret: "secret" }
+  );
+  assert.equal(
+    message,
+    "Registered! You’re signed up for Bear 1 with rally size 1000."
+  );
+});
+
+test("bear edit returns update copy", async () => {
+  mockFetchOnce({ ok: true, data: { members: [] } });
+  const message = await handleBearCommand(
+    createInteraction({
+      subcommand: "edit",
+      profileId: "profile-1",
+      group: "bear2",
+      rallySize: 400000,
+    }),
+    { serverUrl: "http://localhost", botSecret: "secret" }
+  );
+  assert.equal(message, "Updated. Your registration details have been saved.");
+});
+
+test("bear remove returns remove copy", async () => {
+  mockFetchOnce({ ok: true, data: { members: [] } });
+  const message = await handleBearCommand(
+    createInteraction({
+      subcommand: "remove",
+      profileId: "profile-1",
+      group: "bear1",
+    }),
+    { serverUrl: "http://localhost", botSecret: "secret" }
+  );
+  assert.equal(message, "Removed. You are no longer signed up for this event.");
+});
+
+test("bear view returns signup copy", async () => {
+  mockFetchOnce({
+    ok: true,
+    data: {
+      member: { playerId: "P1", playerName: "Player", rallySize: 123, bearGroup: "bear2" },
+    },
+  });
+  const message = await handleBearCommand(
+    createInteraction({
+      subcommand: "view",
+      profileId: "profile-1",
+    }),
+    { serverUrl: "http://localhost", botSecret: "secret" }
+  );
+  assert.equal(
+    message,
+    "Registered! You’re signed up for Bear 2 with rally size 123."
+  );
+});

@@ -989,6 +989,30 @@ test("bot endpoints resolve discord user and enforce ownership", async () => {
     );
     assert.equal(bear.status, 200);
 
+    const profiles = await requestJson(
+      port,
+      "GET",
+      "/api/bot/profiles",
+      { "x-bot-secret": "bot-secret", "x-discord-id": discordId }
+    );
+    assert.equal(profiles.status, 200);
+    const profilesPayload = getPayload<{ profiles: Array<{ id: string }> }>(
+      profiles
+    );
+    assert.ok(profilesPayload.profiles.some((p) => p.id === profileId));
+
+    const bearView = await requestJson(
+      port,
+      "GET",
+      `/api/bot/bear?profileId=${profileId}`,
+      { "x-bot-secret": "bot-secret", "x-discord-id": discordId }
+    );
+    assert.equal(bearView.status, 200);
+    const bearViewPayload = getPayload<{ member: { bearGroup: string } | null }>(
+      bearView
+    );
+    assert.equal(bearViewPayload.member?.bearGroup, "bear1");
+
     const db = new Database(dbPath);
     db.prepare(
       "INSERT INTO meta (allianceId, key, value) VALUES (?, 'lastRun', ?)"

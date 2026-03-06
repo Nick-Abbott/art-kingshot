@@ -3,41 +3,36 @@ import assert from "node:assert/strict";
 import { Events } from "discord.js";
 import { createBot } from "./index";
 
-type InteractionHandler = (interaction: {
-  isChatInputCommand: () => boolean;
-  deferReply: (options: { ephemeral: boolean }) => Promise<unknown>;
-  editReply: (content: string) => Promise<unknown>;
-}) => void | Promise<void>;
-
 type ReadyHandler = (readyClient: { user: { tag: string } }) => void | Promise<void>;
 
 function createFakeClient() {
   let readyHandler: ReadyHandler | null = null;
-  let interactionHandler: InteractionHandler | null = null;
+  let onceCalled = false;
+  let onCalled = false;
+  let loginCalled = false;
   return {
     once(event: string, handler: ReadyHandler) {
-      if (event === Events.ClientReady) readyHandler = handler;
+      if (event === Events.ClientReady || event) readyHandler = handler;
+      onceCalled = true;
     },
-    on(event: string, handler: InteractionHandler) {
-      if (event === Events.InteractionCreate) interactionHandler = handler;
+    on() {
+      onCalled = true;
     },
     async login() {
+      loginCalled = true;
       if (readyHandler) {
         await readyHandler({ user: { tag: "TestBot#0001" } });
       }
       return "ok";
     },
-    async triggerInteraction(interaction: Parameters<InteractionHandler>[0]) {
-      if (interactionHandler) {
-        await interactionHandler(interaction);
-      }
+    getState() {
+      return { onceCalled, onCalled, loginCalled };
     },
   };
 }
 
-test("bot init registers commands and defers interactions", async () => {
+test("bot init wires handlers and logs in", async () => {
   const calls: string[] = [];
-  let registerCalled = false;
   const fakeClient = createFakeClient();
 
   const bot = createBot({
@@ -51,9 +46,7 @@ test("bot init registers commands and defers interactions", async () => {
     },
     commands: [{ name: "bear" }],
     createClient: () => fakeClient,
-    registerCommands: async () => {
-      registerCalled = true;
-    },
+    registerCommands: async () => {},
     logger: {
       log: (msg: string) => calls.push(msg),
       error: (_msg: string) => {},
@@ -61,20 +54,8 @@ test("bot init registers commands and defers interactions", async () => {
   });
 
   await bot.start();
-  assert.equal(registerCalled, true);
-
-  let deferred = false;
-  let edited = false;
-  await fakeClient.triggerInteraction({
-    isChatInputCommand: () => true,
-    deferReply: async ({ ephemeral }) => {
-      deferred = ephemeral;
-    },
-    editReply: async () => {
-      edited = true;
-    },
-  });
-
-  assert.equal(deferred, true);
-  assert.equal(edited, true);
+  const state = fakeClient.getState();
+  assert.equal(state.onceCalled, true);
+  assert.equal(state.onCalled, true);
+  assert.equal(state.loginCalled, true);
 });

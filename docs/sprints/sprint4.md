@@ -219,6 +219,7 @@ Confirm service boots and commands register in a test guild.
 
 ### DB-06: /bear Commands
 **Problem**: Members need Bear signup actions in Discord.
+**Status**: Complete
 
 **Scope / Requirements**
 - Implement `/bear register`, `/bear edit`, `/bear remove`, `/bear view`.
@@ -239,6 +240,12 @@ Implement `/bear` subcommands using bot endpoints. Use standardized response cop
 
 **Validation Prompt**
 Verify each subcommand end-to-end and check response copy.
+
+- **Engineer Update (2026-03-06)**: implemented `/bear` register/edit/remove/view command handling with autocomplete, wired to bot endpoints, added bot profiles/bear view endpoints, and added unit tests for bear command copy per DB-01b.
+- **Engineer Tests (2026-03-06)**: `npm run test:server` (pass).
+- **Engineer Update (2026-03-06)**: adjusted `/bear` option ordering so required args precede optional profile; confirmed manual smoke in test guild is passing.
+- **QA Validation (2026-03-06)**: ✓ `/bear` register/edit/remove/view implemented with autocomplete in `server/bot/commands.ts`, `server/bot/handlers/bear.ts`, and routed in `server/bot/index.ts`; ✓ Bot endpoints exist for bear register/remove/view + profiles (`server/routes/bot.ts`); ✓ Copy coverage via unit tests in `server/bot/handlers/bear.test.ts`; ⚠️ No Discord UI smoke re-run in QA.
+- **QA Tests (2026-03-06)**: `npm run test:server` (pass).
 
 ---
 
