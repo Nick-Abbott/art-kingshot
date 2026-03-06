@@ -426,6 +426,7 @@ Confirm docs are clear and complete.
 ---
 
 ### DB-99: Release Verification (Full Suite)
+**Status**: Complete
 **Problem**: Ensure sprint is deployment-ready.
 
 **Scope / Requirements**
@@ -447,3 +448,14 @@ Run the full validation suite and record results in the sprint doc.
 
 **Validation Prompt**
 Confirm all results are recorded and passing; if not, ensure follow-up is created.
+
+- **Engineer Update (2026-03-06)**: completed full release verification suite for Sprint 4.
+- **Engineer Tests (2026-03-06)**: `npm run lint` (pass); `npm run typecheck` (pass); `npm run test` (pass); `npm run test:e2e` (pass); `npm run test:visual` (pass).
+- **TPM Re-check (2026-03-06)**: Accepted based on recorded full-suite run. If any failures surface in CI, create a follow-up story.
+
+---
+
+## Sprint 4 Closeout (2026-03-06)
+- Scope delivered: Discord bot support shipped with discord.js runtime, guild association command, member signup/assignment commands, opt-in assignment notifications, and documentation updates.
+- Quality gates: Full validation suite recorded as passing; server test coverage added for bot endpoints and core command handling.
+- Risks/deferrals: Observability + rate limiting moved to `docs/backlog.md` (DB-10). Manual Discord UI smoke remains a per-release checklist item.

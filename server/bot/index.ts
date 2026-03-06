@@ -5,11 +5,7 @@ import { loadBotConfig } from "./config";
 import { commands } from "./commands";
 import { registerCommands } from "./registerCommands";
 import { handleBearAutocomplete, handleBearCommand } from "./handlers/bear";
-import {
-  buildAssignmentsMessage,
-  handleVikingsAutocomplete,
-  handleVikingsCommand,
-} from "./handlers/vikings";
+import { handleVikingsAutocomplete, handleVikingsCommand } from "./handlers/vikings";
 import { processAssignmentNotification } from "./notifications";
 import { handleLinkCommand } from "./handlers/link";
 import { handleGuildCommand } from "./handlers/guild";
