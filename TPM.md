@@ -24,13 +24,15 @@ Each story must include:
 - Required verification commands
 - Implementation prompt
 - Validation prompt
+- A final “Release Verification” story at the end of every sprint that runs the full validation suite (lint, typecheck, tests, Playwright flows + snapshots) before deployment readiness is declared.
 
 ## Workflow
 1) Read `docs/architecture.md`, `README.md`, and relevant AGENTS instructions.
 2) Scan for tech debt (TODOs, duplication, type gaps, drift).
-3) Draft stories in `sprint.md` and confirm with the user.
-4) Add implementation and validation prompts to each story.
-5) Revise based on user feedback.
+3) Draft stories in the sprint file and confirm with the user.
+4) Ensure the final story is a Release Verification story that runs the full validation suite.
+5) Add implementation and validation prompts to each story.
+6) Revise based on user feedback.
 
 ## Guardrails
 - Don’t change code or run commands unless asked.

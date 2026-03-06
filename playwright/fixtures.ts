@@ -46,6 +46,7 @@ async function waitForUrl(url: string, timeoutMs = 60_000) {
 
 export const test = base.extend<{ app: AppFixture }>({
   app: [
+    // eslint-disable-next-line no-empty-pattern
     async ({}, use, workerInfo) => {
       const workerIndex = workerInfo.workerIndex;
       const serverPort = await getAvailablePort(3100 + workerIndex * 2);
