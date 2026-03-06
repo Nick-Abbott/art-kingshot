@@ -18,6 +18,8 @@ import {
   parseProfileCreatePayload,
   parseProfileUpdatePayload,
   parseAllianceProfileUpdatePayload,
+  parseBotMemberPayload,
+  parseBotBearPayload,
 } from "./validation";
 import authRoutes from "./routes/auth";
 import membersRoutes from "./routes/members";
@@ -25,6 +27,7 @@ import assignmentsRoutes from "./routes/assignments";
 import bearRoutes from "./routes/bear";
 import profileRoutes from "./routes/profile";
 import adminRoutes from "./routes/admin";
+import botRoutes from "./routes/bot";
 import { createMembersRepo } from "./repos/membersRepo";
 import { createMetaRepo } from "./repos/metaRepo";
 import type {
@@ -40,6 +43,8 @@ export function createApp({ dbPath: dbPathOverride }: { dbPath?: string } = {}) 
   const DISCORD_CLIENT_ID = config.discordClientId;
   const DISCORD_CLIENT_SECRET = config.discordClientSecret;
   const DISCORD_REDIRECT_URI = config.discordRedirectUri;
+  const DISCORD_BOT_SECRET =
+    (process.env.DISCORD_BOT_SECRET || "").trim() || config.discordBotSecret;
   const SESSION_TTL_MS = config.sessionTtlDays * 24 * 60 * 60 * 1000;
   const isProduction = config.nodeEnv === "production";
 
@@ -339,6 +344,7 @@ export function createApp({ dbPath: dbPathOverride }: { dbPath?: string } = {}) 
     DISCORD_CLIENT_ID,
     DISCORD_CLIENT_SECRET,
     DISCORD_REDIRECT_URI,
+    DISCORD_BOT_SECRET,
     SESSION_TTL_MS,
     isProduction,
     parseMemberPayload,
@@ -348,6 +354,8 @@ export function createApp({ dbPath: dbPathOverride }: { dbPath?: string } = {}) 
     parseProfileCreatePayload,
     parseProfileUpdatePayload,
     parseAllianceProfileUpdatePayload,
+    parseBotMemberPayload,
+    parseBotBearPayload,
     generateAssignments,
     buildPlayerLookupPayload,
     parseCookies,
@@ -391,6 +399,7 @@ export function createApp({ dbPath: dbPathOverride }: { dbPath?: string } = {}) 
   app.use(profileRoutes(routeContext));
   app.use(bearRoutes(routeContext));
   app.use(adminRoutes(routeContext));
+  app.use(botRoutes(routeContext));
 
   return app;
 }

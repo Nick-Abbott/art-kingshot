@@ -1,10 +1,10 @@
 # QA Instructions
 
-You are the QA agent validating sprint stories defined in `sprint2.md`.
+You are the QA agent validating sprint stories defined in `sprint4.md`.
 
 ## First Steps
-- Read `AGENTS.md` and the relevant story in `sprint2.md`.
-- For QA/playwright-focused work, use `sprint2.md`.
+- Read `AGENTS.md` and the relevant story in `sprint4.md`.
+- For QA/playwright-focused work, use `sprint4.md`.
 - Use the story’s success criteria and required verification commands as your checklist.
 
 ## Validation Rules
@@ -27,16 +27,16 @@ Run the exact commands specified in the story, for example:
 - Note any regressions or risks.
 
 ## Sprint Notes Format
-To avoid confusion with engineer updates, use this exact structure when updating `sprint2.md`:
+To avoid confusion with engineer updates, use this exact structure when updating `sprint4.md`:
 
 - **QA Validation (YYYY-MM-DD)**: checklist-style confirmation against the story’s success criteria.
 - **QA Tests (YYYY-MM-DD)**: list each command with `pass` / `fail` / `not run` and a short reason for skips.
 
 Do not add an “Update” section as QA. Engineers own the Update section.
 
-If the story lives in `sprint2.md`, apply the same format there.
+If the story lives in `sprint4.md`, apply the same format there.
 
 ## Cross-Check Requirement
-Before you start validation on a story (even if it’s already in context), check `sprint2.md` for the latest **Engineer Update** entries for that story.
+Before you start validation on a story (even if it’s already in context), check `sprint4.md` for the latest **Engineer Update** entries for that story.
 If there are new updates since the last QA pass, re-validate the affected areas and note it in your QA Validation section.
-- Update the `sprint2.md` story with your findings whether successful or failing
+- Update the `sprint4.md` story with your findings whether successful or failing

@@ -111,6 +111,70 @@ function createSessionCookie(
   return `ak_session=${token}`;
 }
 
+function createBotUser(
+  dbPath: string,
+  {
+    discordId,
+    allianceId,
+    profileId,
+    playerId,
+    kingdomId = 1459,
+  }: {
+    discordId: string;
+    allianceId: string;
+    profileId: string;
+    playerId: string;
+    kingdomId?: number;
+  }
+) {
+  const db = new Database(dbPath);
+  const now = Date.now();
+  const userId = crypto.randomUUID();
+  db.prepare(
+    "INSERT INTO users (id, discordId, displayName, avatar, isAppAdmin, createdAt) VALUES (?, ?, ?, ?, ?, ?)"
+  ).run(userId, discordId, "Bot User", null, 0, now);
+  db.prepare(
+    "INSERT INTO alliances (id, name, kingdomId, createdAt) VALUES (?, ?, ?, ?)"
+  ).run(allianceId, "Bot Alliance", kingdomId, now);
+  db.prepare(
+    `INSERT INTO profiles (
+       id,
+       userId,
+       playerId,
+       playerName,
+       playerAvatar,
+       kingdomId,
+       allianceId,
+       status,
+       role,
+       troopCount,
+       marchCount,
+       power,
+       rallySize,
+       createdAt,
+       updatedAt
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  ).run(
+    profileId,
+    userId,
+    playerId,
+    "Bot Player",
+    null,
+    kingdomId,
+    allianceId,
+    "active",
+    "member",
+    null,
+    null,
+    null,
+    null,
+    now,
+    now
+  );
+  db.close();
+  return { userId };
+}
+
 test("unauthenticated access returns 401", async () => {
   process.env.DB_PATH = tmpDbPath();
   process.env.PORT = "0";
@@ -877,6 +941,116 @@ test("app admin can manage alliances across kingdoms", async () => {
       headers
     );
     assert.equal(deleteAlliance.status, 200);
+  } finally {
+    httpServer.close();
+  }
+});
+
+test("bot endpoints resolve discord user and enforce ownership", async () => {
+  const dbPath = tmpDbPath();
+  process.env.DB_PATH = dbPath;
+  process.env.PORT = "0";
+  process.env.DISCORD_BOT_SECRET = "bot-secret";
+  const { httpServer, port } = await startServer();
+  try {
+    const discordId = "discord-bot-user";
+    const allianceId = "bot";
+    const profileId = crypto.randomUUID();
+    const playerId = "BOTPLAYER1";
+    createBotUser(dbPath, { discordId, allianceId, profileId, playerId });
+
+    const headers = {
+      "x-bot-secret": "bot-secret",
+      "x-discord-id": discordId,
+      "Content-Type": "application/json",
+    };
+
+    const signup = await requestJson(
+      port,
+      "POST",
+      "/api/bot/vikings",
+      headers,
+      JSON.stringify({
+        profileId,
+        troopCount: 1000,
+        marchCount: 4,
+        power: 2000000,
+        playerName: "Bot Player",
+      })
+    );
+    assert.equal(signup.status, 200);
+
+    const bear = await requestJson(
+      port,
+      "POST",
+      "/api/bot/bear/bear1",
+      headers,
+      JSON.stringify({ profileId, rallySize: 500000, playerName: "Bot Player" })
+    );
+    assert.equal(bear.status, 200);
+
+    const db = new Database(dbPath);
+    db.prepare(
+      "INSERT INTO meta (allianceId, key, value) VALUES (?, 'lastRun', ?)"
+    ).run(
+      allianceId,
+      JSON.stringify({
+        members: [
+          {
+            playerId,
+            playerName: "Bot Player",
+            troopCount: 1000,
+            outgoing: [],
+            incoming: [],
+            incomingTotal: 0,
+          },
+        ],
+        warnings: [],
+      })
+    );
+    db.close();
+
+    const assignments = await requestJson(
+      port,
+      "GET",
+      `/api/bot/vikings/assignments?profileId=${profileId}`,
+      {
+        "x-bot-secret": "bot-secret",
+        "x-discord-id": discordId,
+      }
+    );
+    assert.equal(assignments.status, 200);
+    const assignmentsPayload = getPayload<{
+      assignment: { playerId: string } | null;
+    }>(assignments);
+    assert.equal(assignmentsPayload.assignment?.playerId, playerId);
+
+    const remove = await requestJson(
+      port,
+      "DELETE",
+      `/api/bot/vikings/${profileId}`,
+      { "x-bot-secret": "bot-secret", "x-discord-id": discordId }
+    );
+    assert.equal(remove.status, 200);
+
+    const otherHeaders = {
+      "x-bot-secret": "bot-secret",
+      "x-discord-id": "other-discord",
+      "Content-Type": "application/json",
+    };
+    const otherUser = await requestJson(
+      port,
+      "POST",
+      "/api/bot/vikings",
+      otherHeaders,
+      JSON.stringify({
+        profileId,
+        troopCount: 1000,
+        marchCount: 4,
+        power: 2000000,
+      })
+    );
+    assert.equal(otherUser.status, 404);
   } finally {
     httpServer.close();
   }

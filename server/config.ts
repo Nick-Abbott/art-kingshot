@@ -37,6 +37,7 @@ export const config = {
   discordClientId: getEnv("DISCORD_CLIENT_ID", { fallback: "" }),
   discordClientSecret: getEnv("DISCORD_CLIENT_SECRET", { fallback: "" }),
   discordRedirectUri: getEnv("DISCORD_REDIRECT_URI", { fallback: "" }),
+  discordBotSecret: getEnv("DISCORD_BOT_SECRET", { fallback: "" }),
   sessionTtlDays: getNumberEnv("SESSION_TTL_DAYS", { fallback: 14 }),
   nodeEnv: getEnv("NODE_ENV", { fallback: "" }),
 };

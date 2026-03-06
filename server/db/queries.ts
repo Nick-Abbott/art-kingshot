@@ -13,6 +13,11 @@ type SessionRow = {
   expiresAt: number;
 };
 
+type AllianceGuildRow = {
+  allianceId: string;
+  guildId: string;
+};
+
 export function createQueries(db: Database) {
   const selectUserByDiscordId = db.prepare(
     "SELECT id, discordId, displayName, avatar, isAppAdmin FROM users WHERE discordId = ?"
@@ -261,6 +266,15 @@ export function createQueries(db: Database) {
     "SELECT token, userId, expiresAt FROM sessions WHERE token = ?"
   );
   const deleteSession = db.prepare("DELETE FROM sessions WHERE token = ?");
+  const selectAllianceGuildByAllianceId = db.prepare(
+    "SELECT id AS allianceId, guildId FROM alliances WHERE id = ?"
+  );
+  const selectAllianceGuildByGuildId = db.prepare(
+    "SELECT id AS allianceId, guildId FROM alliances WHERE guildId = ?"
+  );
+  const updateAllianceGuild = db.prepare(
+    "UPDATE alliances SET guildId = ? WHERE id = ?"
+  );
 
   function getUserByDiscordId(discordId: string): User | null {
     return (selectUserByDiscordId.get(discordId) as User | undefined) ?? null;
@@ -489,6 +503,37 @@ export function createQueries(db: Database) {
     return deleteSession.run(token);
   }
 
+  function getAllianceGuildByAllianceId(
+    allianceId: string
+  ): AllianceGuildRow | null {
+    const row = selectAllianceGuildByAllianceId.get(allianceId) as
+      | AllianceGuildRow
+      | undefined;
+    if (!row?.guildId) return null;
+    return row;
+  }
+
+  function getAllianceGuildByGuildId(guildId: string): AllianceGuildRow | null {
+    return (
+      (selectAllianceGuildByGuildId.get(guildId) as
+        | AllianceGuildRow
+        | undefined) ?? null
+    );
+  }
+
+  function upsertAllianceGuildRow(
+    allianceId: string,
+    guildId: string
+  ): RunResult {
+    return updateAllianceGuild.run(guildId, allianceId);
+  }
+
+  function deleteAllianceGuildByAlliance(
+    allianceId: string
+  ): RunResult {
+    return updateAllianceGuild.run(null, allianceId);
+  }
+
   function insertProfileRow(
     id: string,
     userId: string | null,
@@ -654,6 +699,10 @@ export function createQueries(db: Database) {
     insertSession: insertSessionRow,
     getSession,
     deleteSession: deleteSessionRow,
+    getAllianceGuildByAllianceId,
+    getAllianceGuildByGuildId,
+    upsertAllianceGuild: upsertAllianceGuildRow,
+    deleteAllianceGuildByAlliance: deleteAllianceGuildByAlliance,
     insertProfile: insertProfileRow,
     updateProfile: updateProfileRow,
     updateProfileClaim: updateProfileClaimRow,

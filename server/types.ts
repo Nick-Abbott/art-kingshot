@@ -43,6 +43,7 @@ export type RouteContext = {
   DISCORD_CLIENT_ID: string;
   DISCORD_CLIENT_SECRET: string;
   DISCORD_REDIRECT_URI: string;
+  DISCORD_BOT_SECRET: string;
   SESSION_TTL_MS: number;
   isProduction: boolean;
   parseMemberPayload: (
@@ -101,6 +102,28 @@ export type RouteContext = {
     body: unknown
   ) =>
     | { ok: true; data: { action?: string; status?: string; role?: string } }
+    | { ok: false; error: string; code?: string };
+  parseBotMemberPayload: (
+    body: unknown
+  ) =>
+    | {
+        ok: true;
+        data: {
+          profileId: string;
+          troopCount: number;
+          marchCount: number;
+          power: number;
+          playerName?: string;
+        };
+      }
+    | { ok: false; error: string; code?: string };
+  parseBotBearPayload: (
+    body: unknown
+  ) =>
+    | {
+        ok: true;
+        data: { profileId: string; rallySize: number; playerName?: string };
+      }
     | { ok: false; error: string; code?: string };
   generateAssignments: (members: Member[]) => AssignmentResult;
   buildPlayerLookupPayload: (fid: string | number, now?: number) => {

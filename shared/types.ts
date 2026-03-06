@@ -177,6 +177,11 @@ export type ResultsPayload = {
   results: AssignmentResult | null;
 };
 
+export type BotAssignmentsPayload = {
+  results: AssignmentResult | null;
+  assignment: AssignmentMember | null;
+};
+
 export type LookupPayload = {
   ok?: boolean;
   status?: number;

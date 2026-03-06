@@ -243,3 +243,71 @@ export function parseAllianceProfileUpdatePayload(payload: unknown): ParseResult
     },
   };
 }
+
+const BotMemberSchema = z.object({
+  profileId: z.string(),
+  troopCount: z.coerce.number(),
+  marchCount: z.coerce.number(),
+  power: z.coerce.number(),
+  playerName: z.optional(z.string()),
+});
+
+export function parseBotMemberPayload(payload: unknown): ParseResult<{
+  profileId: string;
+  troopCount: number;
+  marchCount: number;
+  power: number;
+  playerName?: string;
+}> {
+  const parsed = BotMemberSchema.safeParse(payload);
+  if (!parsed.success) {
+    return { ok: false, error: "Invalid bot member payload." };
+  }
+
+  const profileId = parsed.data.profileId.trim();
+  if (!profileId) {
+    return { ok: false, error: "profileId is required.", code: "profile_id_required" };
+  }
+
+  return {
+    ok: true,
+    data: {
+      profileId,
+      troopCount: parsed.data.troopCount,
+      marchCount: parsed.data.marchCount,
+      power: parsed.data.power,
+      playerName: parsed.data.playerName?.trim() || undefined,
+    },
+  };
+}
+
+const BotBearSchema = z.object({
+  profileId: z.string(),
+  rallySize: z.coerce.number(),
+  playerName: z.optional(z.string()),
+});
+
+export function parseBotBearPayload(payload: unknown): ParseResult<{
+  profileId: string;
+  rallySize: number;
+  playerName?: string;
+}> {
+  const parsed = BotBearSchema.safeParse(payload);
+  if (!parsed.success) {
+    return { ok: false, error: "Invalid bot bear payload." };
+  }
+
+  const profileId = parsed.data.profileId.trim();
+  if (!profileId) {
+    return { ok: false, error: "profileId is required.", code: "profile_id_required" };
+  }
+
+  return {
+    ok: true,
+    data: {
+      profileId,
+      rallySize: parsed.data.rallySize,
+      playerName: parsed.data.playerName?.trim() || undefined,
+    },
+  };
+}
