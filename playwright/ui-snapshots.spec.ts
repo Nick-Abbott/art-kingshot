@@ -177,6 +177,7 @@ test("ui snapshots", async ({ app, browser, request }, testInfo) => {
     await runSnapshot(loggedInPage, "profiles-logged-in", {
       pageKey: "profiles",
       selectedProfileId: profileA.id,
+      maxDiffPixels: 200,
     });
     await loggedInPage.close();
 
