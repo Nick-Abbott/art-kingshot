@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { handleBearCommand } from "./bear";
+import { handleBearAutocomplete, handleBearCommand } from "./bear";
 
 type FakeOptions = {
   subcommand: "register" | "edit" | "remove" | "view";
@@ -177,6 +177,55 @@ test("bear register fails when rally size missing and no default exists", async 
     { serverUrl: "http://localhost", botSecret: "secret" }
   );
   assert.equal(message, "Please enter a rally size.");
+});
+
+test("bear autocomplete excludes non-active profiles", async () => {
+  global.fetch = (async () =>
+    ({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        ok: true,
+        data: {
+          profiles: [
+            {
+              id: "active-1",
+              playerId: "ACTIVE1",
+              playerName: "Active One",
+              allianceId: "alliance",
+              status: "active",
+            },
+            {
+              id: "pending-1",
+              playerId: "PENDING1",
+              playerName: "Pending One",
+              allianceId: "alliance",
+              status: "pending",
+            },
+          ],
+        },
+      }),
+    } as Response)) as typeof fetch;
+
+  const choices: Array<{ name: string; value: string }> = [];
+  await handleBearAutocomplete(
+    {
+      user: { id: "discord-user" },
+      options: {
+        getSubcommand: () => "register",
+        getString: () => null,
+        getNumber: () => null,
+        getFocused: () => ({ name: "profile", value: "" }),
+      },
+      respond: async (list: Array<{ name: string; value: string }>) => {
+        choices.push(...list);
+      },
+    },
+    { serverUrl: "http://localhost", botSecret: "secret" }
+  );
+
+  assert.equal(choices.length, 1);
+  assert.equal(choices[0].value, "active-1");
 });
 test("bear edit returns update copy", async () => {
   mockFetchOnce({ ok: true, data: { members: [] } });

@@ -351,6 +351,7 @@ Verify opt-in enforcement, DM failure handling (status recorded), and copy. Conf
 
 ### DB-09: Autocomplete for Profiles and Fixed Options
 **Problem**: Slash commands must be fast and unambiguous.
+**Status**: Complete
 
 **Scope / Requirements**
 - Implement autocomplete for profile selection (Discord ID → profiles).
@@ -370,6 +371,12 @@ Add autocomplete handlers for profiles and fixed options; enforce ownership.
 
 **Validation Prompt**
 Verify autocomplete behavior and ownership rules.
+
+- **Engineer Update (2026-03-06)**: filtered profile autocomplete to active profiles only and added unit tests for bear/vikings autocomplete filtering; fixed options remain static choices for bear group and assignments output.
+- **Engineer Tests (2026-03-06)**: `npm run test:server` (pass).
+- **QA Validation (2026-03-06)**: ✓ Profile autocomplete filters to active profiles only in `server/bot/handlers/bear.ts` and `server/bot/handlers/vikings.ts`; ✓ Fixed options remain static for bear groups and assignment output in `server/bot/commands.ts`; ✓ Unit tests cover active-only filtering in `server/bot/handlers/bear.test.ts` and `server/bot/handlers/vikings.test.ts`; ⚠️ No Discord UI smoke re-run in QA.
+- **QA Tests (2026-03-06)**: `npm run test:server` (pass).
+- **TPM Re-check (2026-03-06)**: Accepted. Autocomplete lists user-owned active profiles via `/api/bot/profiles`, bear group options are fixed via autocomplete list, and assignments output uses fixed choices in `server/bot/commands.ts`.
 
 ---
 

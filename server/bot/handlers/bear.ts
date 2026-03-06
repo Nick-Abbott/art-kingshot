@@ -189,6 +189,7 @@ export async function handleBearAutocomplete(
 
     const query = focused.value.toLowerCase();
     const choices = result.data.profiles
+      .filter((profile) => profile.status === "active")
       .filter((profile) => {
         const name = profile.playerName || "";
         return (

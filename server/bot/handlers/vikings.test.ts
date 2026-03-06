@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { handleVikingsCommand } from "./vikings";
+import { handleVikingsAutocomplete, handleVikingsCommand } from "./vikings";
 
 type FakeOptions = {
   subcommand: "register" | "edit" | "remove" | "assignments";
@@ -244,4 +244,53 @@ test("vikings register fails when optional stats missing and no defaults exist",
     { serverUrl: "http://localhost", botSecret: "secret" }
   );
   assert.equal(message, "troopCount is required.");
+});
+
+test("vikings autocomplete excludes non-active profiles", async () => {
+  global.fetch = (async () =>
+    ({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        ok: true,
+        data: {
+          profiles: [
+            {
+              id: "active-1",
+              playerId: "ACTIVE1",
+              playerName: "Active One",
+              allianceId: "alliance",
+              status: "active",
+            },
+            {
+              id: "pending-1",
+              playerId: "PENDING1",
+              playerName: "Pending One",
+              allianceId: "alliance",
+              status: "pending",
+            },
+          ],
+        },
+      }),
+    } as Response)) as typeof fetch;
+
+  const choices: Array<{ name: string; value: string }> = [];
+  await handleVikingsAutocomplete(
+    {
+      user: { id: "discord-user" },
+      options: {
+        getSubcommand: () => "register",
+        getString: () => null,
+        getNumber: () => null,
+        getFocused: () => ({ name: "profile", value: "" }),
+      },
+      respond: async (list: Array<{ name: string; value: string }>) => {
+        choices.push(...list);
+      },
+    },
+    { serverUrl: "http://localhost", botSecret: "secret" }
+  );
+
+  assert.equal(choices.length, 1);
+  assert.equal(choices[0].value, "active-1");
 });
