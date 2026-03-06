@@ -122,6 +122,7 @@ function createBotUser(
     troopCount = null,
     marchCount = null,
     power = null,
+    guildId = null,
   }: {
     discordId: string;
     allianceId: string;
@@ -131,6 +132,7 @@ function createBotUser(
     troopCount?: number | null;
     marchCount?: number | null;
     power?: number | null;
+    guildId?: string | null;
   }
 ) {
   const db = new Database(dbPath);
@@ -140,8 +142,8 @@ function createBotUser(
     "INSERT INTO users (id, discordId, displayName, avatar, isAppAdmin, createdAt) VALUES (?, ?, ?, ?, ?, ?)"
   ).run(userId, discordId, "Bot User", null, 0, now);
   db.prepare(
-    "INSERT INTO alliances (id, name, kingdomId, createdAt) VALUES (?, ?, ?, ?)"
-  ).run(allianceId, "Bot Alliance", kingdomId, now);
+    "INSERT INTO alliances (id, name, kingdomId, guildId, createdAt) VALUES (?, ?, ?, ?, ?)"
+  ).run(allianceId, "Bot Alliance", kingdomId, guildId, now);
   db.prepare(
     `INSERT INTO profiles (
        id,
@@ -971,6 +973,7 @@ test("bot endpoints resolve discord user and enforce ownership", async () => {
       troopCount: 1200,
       marchCount: 4,
       power: 2000000,
+      guildId: "guild-1",
     });
 
     const headers = {
@@ -1038,6 +1041,29 @@ test("bot endpoints resolve discord user and enforce ownership", async () => {
       bearView
     );
     assert.equal(bearViewPayload.member?.bearGroup, "bear1");
+
+    global.fetch = (async () =>
+      ({
+        ok: true,
+        status: 200,
+        text: async () =>
+          JSON.stringify({
+            data: { data: { name: "Linked Player", kid: 1459, avatar: "icon" } },
+          }),
+      } as Response)) as typeof fetch;
+
+    const link = await requestJson(
+      port,
+      "POST",
+      "/api/bot/profiles/link",
+      { ...headers, "Content-Type": "application/json", "x-guild-id": "guild-1" },
+      JSON.stringify({ playerId: "NEWPLAYER" })
+    );
+    assert.equal(link.status, 200);
+    const linkPayload = getPayload<{ profile: { playerId: string; allianceId: string | null; status: string } }>(link);
+    assert.equal(linkPayload.profile.playerId, "NEWPLAYER");
+    assert.equal(linkPayload.profile.allianceId, allianceId);
+    assert.equal(linkPayload.profile.status, "pending");
 
     const db = new Database(dbPath);
     db.prepare(

@@ -20,6 +20,7 @@ import {
   parseAllianceProfileUpdatePayload,
   parseBotMemberPayload,
   parseBotBearPayload,
+  parseBotLinkPayload,
 } from "./validation";
 import authRoutes from "./routes/auth";
 import membersRoutes from "./routes/members";
@@ -356,6 +357,7 @@ export function createApp({ dbPath: dbPathOverride }: { dbPath?: string } = {}) 
     parseAllianceProfileUpdatePayload,
     parseBotMemberPayload,
     parseBotBearPayload,
+    parseBotLinkPayload,
     generateAssignments,
     buildPlayerLookupPayload,
     parseCookies,

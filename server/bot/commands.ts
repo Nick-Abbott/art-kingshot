@@ -2,6 +2,16 @@ import { SlashCommandBuilder } from "discord.js";
 
 export const commands = [
   new SlashCommandBuilder()
+    .setName("link")
+    .setDescription("Link a Kingshot profile.")
+    .addStringOption((option) =>
+      option
+        .setName("player_id")
+        .setDescription("Kingshot player ID.")
+        .setRequired(true)
+    )
+    .toJSON(),
+  new SlashCommandBuilder()
     .setName("bear")
     .setDescription("Bear signup commands.")
     .addSubcommand((subcommand) =>

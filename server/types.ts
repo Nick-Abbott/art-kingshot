@@ -125,6 +125,11 @@ export type RouteContext = {
         data: { profileId: string; rallySize: number; playerName?: string };
       }
     | { ok: false; error: string; code?: string };
+  parseBotLinkPayload: (
+    body: unknown
+  ) =>
+    | { ok: true; data: { playerId: string } }
+    | { ok: false; error: string; code?: string };
   generateAssignments: (members: Member[]) => AssignmentResult;
   buildPlayerLookupPayload: (fid: string | number, now?: number) => {
     fid: string;

@@ -7,6 +7,7 @@ import type {
   Profile,
 } from "../../shared/types";
 import type { RouteContext } from "../types";
+import { parsePlayerLookup } from "../utils/playerLookup";
 
 type BotAuth = {
   userId: string;
@@ -21,6 +22,16 @@ function getDiscordId(req: Request): string {
   const body = req.body as { discordId?: unknown } | undefined;
   if (body && typeof body.discordId === "string") {
     return body.discordId.trim();
+  }
+  return "";
+}
+
+function getGuildId(req: Request): string {
+  const header = req.header("x-guild-id");
+  if (typeof header === "string" && header.trim()) return header.trim();
+  const body = req.body as { guildId?: unknown } | undefined;
+  if (body && typeof body.guildId === "string") {
+    return body.guildId.trim();
   }
   return "";
 }
@@ -227,6 +238,163 @@ export default function botRoutes(ctx: RouteContext) {
       const auth = requireBotAuth(req, res);
       if (!auth) return;
       ctx.ok(res, { profiles: auth.profiles });
+    }
+  );
+
+  router.post(
+    "/api/bot/profiles/link",
+    async (req: Request, res: Response) => {
+      const auth = requireBotAuth(req, res);
+      if (!auth) return;
+      const parsed = ctx.parseBotLinkPayload(req.body);
+      if (!parsed.ok) {
+        ctx.fail(res, 400, parsed.error, parsed.code);
+        return;
+      }
+      const { playerId } = parsed.data;
+      const guildId = getGuildId(req);
+      const guildAssociation = guildId
+        ? ctx.queries.getAllianceGuildByGuildId(guildId)
+        : null;
+      const targetAllianceId = guildAssociation?.allianceId || null;
+
+      const payload = ctx.buildPlayerLookupPayload(playerId);
+      const body = new URLSearchParams({
+        fid: payload.fid,
+        time: String(payload.time),
+        sign: payload.sign,
+      }).toString();
+
+      let lookupData: unknown = null;
+      try {
+        const response = await fetch(
+          "https://kingshot-giftcode.centurygame.com/api/player",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body,
+          }
+        );
+        const text = await response.text();
+        lookupData = JSON.parse(text);
+      } catch {
+        ctx.fail(res, 502, "Lookup request failed.");
+        return;
+      }
+
+      const parsedLookup = parsePlayerLookup(lookupData);
+      if (!parsedLookup) {
+        ctx.fail(res, 404, "Player not found.");
+        return;
+      }
+
+      const existing = ctx.getProfileByPlayerId(playerId);
+      const now = Date.now();
+      if (existing) {
+        if (existing.userId && existing.userId !== auth.userId) {
+          ctx.fail(res, 409, "Profile already exists for this player ID.");
+          return;
+        }
+        if (
+          targetAllianceId &&
+          existing.allianceId &&
+          existing.allianceId !== targetAllianceId
+        ) {
+          ctx.fail(res, 409, "Profile already belongs to another alliance.");
+          return;
+        }
+        if (!existing.userId) {
+          ctx.updateProfileClaim(
+            auth.userId,
+            parsedLookup.playerName,
+            parsedLookup.avatar,
+            parsedLookup.kingdomId,
+            existing.troopCount ?? null,
+            existing.marchCount ?? null,
+            existing.power ?? null,
+            existing.rallySize ?? null,
+            now,
+            existing.id
+          );
+          if (targetAllianceId && existing.allianceId !== targetAllianceId) {
+            ctx.updateProfile(
+              existing.playerId ?? null,
+              parsedLookup.playerName,
+              parsedLookup.avatar,
+              parsedLookup.kingdomId,
+              targetAllianceId,
+              "pending",
+              "member",
+              existing.troopCount ?? null,
+              existing.marchCount ?? null,
+              existing.power ?? null,
+              existing.rallySize ?? null,
+              now,
+              existing.id
+            );
+          }
+          if (existing.allianceId) {
+            ctx.queries.deleteMemberForPlayer(existing.allianceId, playerId);
+            ctx.queries.deleteBearForPlayer(existing.allianceId, playerId);
+          }
+          const claimed = ctx.getProfileById(existing.id);
+          ctx.ok(res, { profile: claimed });
+          return;
+        }
+        ctx.updateProfileFields(
+          playerId,
+          parsedLookup.playerName,
+          parsedLookup.avatar,
+          parsedLookup.kingdomId,
+          existing.troopCount ?? null,
+          existing.marchCount ?? null,
+          existing.power ?? null,
+          existing.rallySize ?? null,
+          now,
+          existing.id
+        );
+        if (targetAllianceId && !existing.allianceId) {
+          ctx.updateProfile(
+            existing.playerId ?? null,
+            parsedLookup.playerName,
+            parsedLookup.avatar,
+            parsedLookup.kingdomId,
+            targetAllianceId,
+            "pending",
+            "member",
+            existing.troopCount ?? null,
+            existing.marchCount ?? null,
+            existing.power ?? null,
+            existing.rallySize ?? null,
+            now,
+            existing.id
+          );
+        }
+        const updated = ctx.getProfileById(existing.id);
+        ctx.ok(res, { profile: updated });
+        return;
+      }
+
+      const id = ctx.crypto.randomUUID();
+      ctx.insertProfile(
+        id,
+        auth.userId,
+        playerId,
+        parsedLookup.playerName,
+        parsedLookup.avatar,
+        parsedLookup.kingdomId,
+        targetAllianceId,
+        "pending",
+        "member",
+        null,
+        null,
+        null,
+        null,
+        now,
+        now
+      );
+      const profile = ctx.getProfileById(id);
+      ctx.ok(res, { profile });
     }
   );
 

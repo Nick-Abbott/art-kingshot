@@ -9,6 +9,7 @@ import {
   handleVikingsAutocomplete,
   handleVikingsCommand,
 } from "./handlers/vikings";
+import { handleLinkCommand } from "./handlers/link";
 
 type BotClient = {
   once: (
@@ -105,6 +106,17 @@ export function createBot(deps: BotDeps) {
           serverUrl: config.serverUrl,
           botSecret: config.botSecret,
         });
+        await interaction.editReply(message);
+        return;
+      }
+      if (interaction.commandName === "link") {
+        const message = await handleLinkCommand(
+          interaction as unknown as Parameters<typeof handleLinkCommand>[0],
+          {
+            serverUrl: config.serverUrl,
+            botSecret: config.botSecret,
+          }
+        );
         await interaction.editReply(message);
         return;
       }

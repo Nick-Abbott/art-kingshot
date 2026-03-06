@@ -311,3 +311,23 @@ export function parseBotBearPayload(payload: unknown): ParseResult<{
     },
   };
 }
+
+const BotLinkSchema = z.object({
+  playerId: z.string(),
+});
+
+export function parseBotLinkPayload(payload: unknown): ParseResult<{
+  playerId: string;
+}> {
+  const parsed = BotLinkSchema.safeParse(payload);
+  if (!parsed.success) {
+    return { ok: false, error: "Invalid link payload." };
+  }
+
+  const playerId = parsed.data.playerId.trim();
+  if (!playerId) {
+    return { ok: false, error: "playerId is required.", code: "player_id_required" };
+  }
+
+  return { ok: true, data: { playerId } };
+}
