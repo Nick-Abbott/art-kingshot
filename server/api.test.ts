@@ -119,12 +119,18 @@ function createBotUser(
     profileId,
     playerId,
     kingdomId = 1459,
+    troopCount = null,
+    marchCount = null,
+    power = null,
   }: {
     discordId: string;
     allianceId: string;
     profileId: string;
     playerId: string;
     kingdomId?: number;
+    troopCount?: number | null;
+    marchCount?: number | null;
+    power?: number | null;
   }
 ) {
   const db = new Database(dbPath);
@@ -164,9 +170,9 @@ function createBotUser(
     allianceId,
     "active",
     "member",
-    null,
-    null,
-    null,
+    troopCount,
+    marchCount,
+    power,
     null,
     now,
     now
@@ -957,7 +963,15 @@ test("bot endpoints resolve discord user and enforce ownership", async () => {
     const allianceId = "bot";
     const profileId = crypto.randomUUID();
     const playerId = "BOTPLAYER1";
-    createBotUser(dbPath, { discordId, allianceId, profileId, playerId });
+    createBotUser(dbPath, {
+      discordId,
+      allianceId,
+      profileId,
+      playerId,
+      troopCount: 1200,
+      marchCount: 4,
+      power: 2000000,
+    });
 
     const headers = {
       "x-bot-secret": "bot-secret",
@@ -979,6 +993,18 @@ test("bot endpoints resolve discord user and enforce ownership", async () => {
       })
     );
     assert.equal(signup.status, 200);
+
+    const optionalSignup = await requestJson(
+      port,
+      "POST",
+      "/api/bot/vikings",
+      headers,
+      JSON.stringify({
+        profileId,
+        marchCount: 4,
+      })
+    );
+    assert.equal(optionalSignup.status, 200);
 
     const bear = await requestJson(
       port,

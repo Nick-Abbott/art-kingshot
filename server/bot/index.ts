@@ -1,10 +1,14 @@
-import { Client, Events, GatewayIntentBits } from "discord.js";
+import { Client, Events, GatewayIntentBits, MessageFlags } from "discord.js";
 import type { REST } from "discord.js";
 import type { BotConfig } from "./config";
 import { loadBotConfig } from "./config";
 import { commands } from "./commands";
 import { registerCommands } from "./registerCommands";
 import { handleBearAutocomplete, handleBearCommand } from "./handlers/bear";
+import {
+  handleVikingsAutocomplete,
+  handleVikingsCommand,
+} from "./handlers/vikings";
 
 type BotClient = {
   once: (
@@ -19,7 +23,7 @@ type BotClient = {
       options?: unknown;
       isChatInputCommand: () => boolean;
       isAutocomplete: () => boolean;
-      deferReply: (options: { ephemeral: boolean }) => Promise<unknown>;
+      deferReply: (options: { ephemeral?: boolean; flags?: number }) => Promise<unknown>;
       editReply: (content: string) => Promise<unknown>;
       respond: (choices: Array<{ name: string; value: string }>) => Promise<void>;
     }) => void | Promise<void>
@@ -79,6 +83,14 @@ export function createBot(deps: BotDeps) {
             serverUrl: config.serverUrl,
             botSecret: config.botSecret,
           });
+        } else if (interaction.commandName === "vikings") {
+          await handleVikingsAutocomplete(
+            interaction as unknown as Parameters<typeof handleVikingsAutocomplete>[0],
+            {
+              serverUrl: config.serverUrl,
+              botSecret: config.botSecret,
+            }
+          );
         } else {
           await interaction.respond([]);
         }
@@ -86,13 +98,24 @@ export function createBot(deps: BotDeps) {
       }
 
       if (!interaction.isChatInputCommand()) return;
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
       if (interaction.commandName === "bear") {
         const message = await handleBearCommand(interaction as unknown as Parameters<typeof handleBearCommand>[0], {
           serverUrl: config.serverUrl,
           botSecret: config.botSecret,
         });
+        await interaction.editReply(message);
+        return;
+      }
+      if (interaction.commandName === "vikings") {
+        const message = await handleVikingsCommand(
+          interaction as unknown as Parameters<typeof handleVikingsCommand>[0],
+          {
+            serverUrl: config.serverUrl,
+            botSecret: config.botSecret,
+          }
+        );
         await interaction.editReply(message);
         return;
       }

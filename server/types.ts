@@ -110,9 +110,9 @@ export type RouteContext = {
         ok: true;
         data: {
           profileId: string;
-          troopCount: number;
+          troopCount?: number;
           marchCount: number;
-          power: number;
+          power?: number;
           playerName?: string;
         };
       }

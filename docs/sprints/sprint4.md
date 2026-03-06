@@ -251,6 +251,7 @@ Verify each subcommand end-to-end and check response copy.
 
 ### DB-07: /vikings Commands (Register/Edit/Remove)
 **Problem**: Members need Viking signup actions in Discord.
+**Status**: Complete
 
 **Scope / Requirements**
 - Implement `/vikings register`, `/vikings edit`, `/vikings remove`.
@@ -271,6 +272,11 @@ Implement `/vikings` signup subcommands with correct validation and copy.
 
 **Validation Prompt**
 Verify command behavior and input validation; run `npm run test:server`.
+
+- **Engineer Update (2026-03-06)**: implemented `/vikings` register/edit/remove with optional profile resolution, autocomplete, and optional troop/power handling (defaults to profile stats); added unit tests for copy and server tests for optional payload handling.
+- **Engineer Tests (2026-03-06)**: `npm run test:server` (pass).
+- **QA Validation (2026-03-06)**: ✓ `/vikings` register/edit/remove implemented with autocomplete in `server/bot/commands.ts`, `server/bot/handlers/vikings.ts`, and routed in `server/bot/index.ts`; ✓ March count required, troop/power optional via command options + handler validation; ✓ Copy coverage via unit tests in `server/bot/handlers/vikings.test.ts`; ⚠️ No Discord UI smoke re-run in QA.
+- **QA Tests (2026-03-06)**: `npm run test:server` (pass).
 
 ---
 

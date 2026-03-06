@@ -75,6 +75,27 @@ test("bear register uses single active profile when missing profile option", asy
         }),
       } as Response;
     }
+    if (callCount === 2) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          ok: true,
+          data: {
+            profiles: [
+              {
+                id: "profile-1",
+                playerId: "P1",
+                playerName: "Player",
+                allianceId: "alliance",
+                status: "active",
+                rallySize: 900,
+              },
+            ],
+          },
+        }),
+      } as Response;
+    }
     return {
       ok: true,
       status: 200,
@@ -86,16 +107,77 @@ test("bear register uses single active profile when missing profile option", asy
     createInteraction({
       subcommand: "register",
       group: "bear1",
-      rallySize: 1000,
     }),
     { serverUrl: "http://localhost", botSecret: "secret" }
   );
   assert.equal(
     message,
-    "Registered! You’re signed up for Bear 1 with rally size 1000."
+    "Registered! You’re signed up for Bear 1 with rally size 900."
   );
 });
 
+test("bear register fails when rally size missing and no default exists", async () => {
+  let callCount = 0;
+  global.fetch = (async (_url: string) => {
+    callCount += 1;
+    if (callCount === 1) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          ok: true,
+          data: {
+            profiles: [
+              {
+                id: "profile-1",
+                playerId: "P1",
+                playerName: "Player",
+                allianceId: "alliance",
+                status: "active",
+                rallySize: null,
+              },
+            ],
+          },
+        }),
+      } as Response;
+    }
+    if (callCount === 2) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          ok: true,
+          data: {
+            profiles: [
+              {
+                id: "profile-1",
+                playerId: "P1",
+                playerName: "Player",
+                allianceId: "alliance",
+                status: "active",
+                rallySize: null,
+              },
+            ],
+          },
+        }),
+      } as Response;
+    }
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({ ok: true, data: { members: [] } }),
+    } as Response;
+  }) as typeof fetch;
+
+  const message = await handleBearCommand(
+    createInteraction({
+      subcommand: "register",
+      group: "bear1",
+    }),
+    { serverUrl: "http://localhost", botSecret: "secret" }
+  );
+  assert.equal(message, "Please enter a rally size.");
+});
 test("bear edit returns update copy", async () => {
   mockFetchOnce({ ok: true, data: { members: [] } });
   const message = await handleBearCommand(

@@ -14,7 +14,7 @@ type BearCommandOptions = {
   getSubcommand: () => "register" | "edit" | "remove" | "view";
   getString: (name: "profile" | "group") => string | null;
   getNumber: (name: "rally_size") => number | null;
-  getFocused: () => { name: string; value: string } | string;
+  getFocused: (required?: boolean) => { name: string; value: string } | string;
 };
 
 type BearInteraction = {
@@ -118,10 +118,24 @@ export async function handleBearCommand(
 
   const profileId = await resolveProfileId(interaction, config);
   const group = parseGroup(interaction);
-  const rallySize = interaction.options.getNumber("rally_size");
+  const rallySizeInput = interaction.options.getNumber("rally_size");
   if (!profileId) return "Please select a profile.";
   if (!group) return "Please select a bear group.";
-  if (!rallySize) return "Please enter a rally size.";
+
+  let rallySize = rallySizeInput ?? null;
+  if (rallySize == null) {
+    const profileResult = await botApiRequest<BotProfilesPayload>(
+      apiOptions,
+      "/api/bot/profiles"
+    );
+    if (profileResult.ok) {
+      const profile = profileResult.data.profiles.find(
+        (item) => item.id === profileId
+      );
+      rallySize = profile?.rallySize ?? null;
+    }
+  }
+  if (rallySize == null) return "Please enter a rally size.";
 
   const result = await botApiRequest<{ members: BearMember[] }>(
     apiOptions,
@@ -149,7 +163,7 @@ export async function handleBearAutocomplete(
   interaction: BearInteraction,
   config: BotConfig
 ): Promise<void> {
-  const rawFocused = interaction.options.getFocused();
+  const rawFocused = interaction.options.getFocused(true);
   const focused =
     typeof rawFocused === "string"
       ? { name: "profile", value: rawFocused }

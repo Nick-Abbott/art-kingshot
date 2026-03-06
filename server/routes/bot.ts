@@ -91,13 +91,23 @@ export default function botRoutes(ctx: RouteContext) {
         parsed.data.profileId
       );
       if (!profile) return;
+      const troopCount = parsed.data.troopCount ?? profile.troopCount ?? null;
+      const power = parsed.data.power ?? profile.power ?? null;
+      if (troopCount == null) {
+        ctx.fail(res, 400, "troopCount is required.");
+        return;
+      }
+      if (power == null) {
+        ctx.fail(res, 400, "power is required.");
+        return;
+      }
       const memberPayload = {
         playerId: profile.playerId,
         playerName:
           parsed.data.playerName ?? profile.playerName ?? "Unknown",
-        troopCount: parsed.data.troopCount,
+        troopCount,
         marchCount: parsed.data.marchCount,
-        power: parsed.data.power,
+        power,
       };
       const normalized = ctx.parseMemberPayload(memberPayload);
       if (!normalized.ok) {

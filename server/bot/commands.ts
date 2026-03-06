@@ -8,18 +8,18 @@ export const commands = [
       subcommand
         .setName("register")
         .setDescription("Register for bear.")
-        .addNumberOption((option) =>
-          option
-            .setName("rally_size")
-            .setDescription("Rally size.")
-            .setRequired(true)
-        )
         .addStringOption((option) =>
           option
             .setName("group")
             .setDescription("Bear group.")
             .setRequired(true)
             .setAutocomplete(true)
+        )
+        .addNumberOption((option) =>
+          option
+            .setName("rally_size")
+            .setDescription("Rally size.")
+            .setRequired(false)
         )
         .addStringOption((option) =>
           option
@@ -33,18 +33,18 @@ export const commands = [
       subcommand
         .setName("edit")
         .setDescription("Edit bear signup.")
-        .addNumberOption((option) =>
-          option
-            .setName("rally_size")
-            .setDescription("Rally size.")
-            .setRequired(true)
-        )
         .addStringOption((option) =>
           option
             .setName("group")
             .setDescription("Bear group.")
             .setRequired(true)
             .setAutocomplete(true)
+        )
+        .addNumberOption((option) =>
+          option
+            .setName("rally_size")
+            .setDescription("Rally size.")
+            .setRequired(false)
         )
         .addStringOption((option) =>
           option
@@ -89,5 +89,77 @@ export const commands = [
   new SlashCommandBuilder()
     .setName("vikings")
     .setDescription("Viking signup commands.")
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName("register")
+        .setDescription("Register for vikings.")
+        .addNumberOption((option) =>
+          option
+            .setName("march_count")
+            .setDescription("March count.")
+            .setRequired(true)
+        )
+        .addNumberOption((option) =>
+          option
+            .setName("troop_count")
+            .setDescription("Troop count.")
+            .setRequired(false)
+        )
+        .addNumberOption((option) =>
+          option
+            .setName("power")
+            .setDescription("Power.")
+            .setRequired(false)
+        )
+        .addStringOption((option) =>
+          option
+            .setName("profile")
+            .setDescription("Select a profile.")
+            .setRequired(false)
+            .setAutocomplete(true)
+        )
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName("edit")
+        .setDescription("Edit viking signup.")
+        .addNumberOption((option) =>
+          option
+            .setName("march_count")
+            .setDescription("March count.")
+            .setRequired(true)
+        )
+        .addNumberOption((option) =>
+          option
+            .setName("troop_count")
+            .setDescription("Troop count.")
+            .setRequired(false)
+        )
+        .addNumberOption((option) =>
+          option
+            .setName("power")
+            .setDescription("Power.")
+            .setRequired(false)
+        )
+        .addStringOption((option) =>
+          option
+            .setName("profile")
+            .setDescription("Select a profile.")
+            .setRequired(false)
+            .setAutocomplete(true)
+        )
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName("remove")
+        .setDescription("Remove viking signup.")
+        .addStringOption((option) =>
+          option
+            .setName("profile")
+            .setDescription("Select a profile.")
+            .setRequired(false)
+            .setAutocomplete(true)
+        )
+    )
     .toJSON(),
 ];
