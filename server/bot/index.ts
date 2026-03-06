@@ -12,6 +12,7 @@ import {
 } from "./handlers/vikings";
 import { processAssignmentNotification } from "./notifications";
 import { handleLinkCommand } from "./handlers/link";
+import { handleGuildCommand } from "./handlers/guild";
 
 type BotClient = {
   once: (
@@ -118,6 +119,17 @@ export function createBot(deps: BotDeps) {
       if (interaction.commandName === "link") {
         const message = await handleLinkCommand(
           interaction as unknown as Parameters<typeof handleLinkCommand>[0],
+          {
+            serverUrl: config.serverUrl,
+            botSecret: config.botSecret,
+          }
+        );
+        await interaction.editReply(message);
+        return;
+      }
+      if (interaction.commandName === "guild") {
+        const message = await handleGuildCommand(
+          interaction as unknown as Parameters<typeof handleGuildCommand>[0],
           {
             serverUrl: config.serverUrl,
             botSecret: config.botSecret,

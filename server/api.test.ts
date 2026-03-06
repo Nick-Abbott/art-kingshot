@@ -123,6 +123,8 @@ function createBotUser(
     marchCount = null,
     power = null,
     guildId = null,
+    role = "member",
+    isAppAdmin = false,
   }: {
     discordId: string;
     allianceId: string;
@@ -133,6 +135,8 @@ function createBotUser(
     marchCount?: number | null;
     power?: number | null;
     guildId?: string | null;
+    role?: "member" | "alliance_admin";
+    isAppAdmin?: boolean;
   }
 ) {
   const db = new Database(dbPath);
@@ -140,7 +144,7 @@ function createBotUser(
   const userId = crypto.randomUUID();
   db.prepare(
     "INSERT INTO users (id, discordId, displayName, avatar, isAppAdmin, createdAt) VALUES (?, ?, ?, ?, ?, ?)"
-  ).run(userId, discordId, "Bot User", null, 0, now);
+  ).run(userId, discordId, "Bot User", null, isAppAdmin ? 1 : 0, now);
   db.prepare(
     "INSERT INTO alliances (id, name, kingdomId, guildId, createdAt) VALUES (?, ?, ?, ?, ?)"
   ).run(allianceId, "Bot Alliance", kingdomId, guildId, now);
@@ -171,7 +175,7 @@ function createBotUser(
     kingdomId,
     allianceId,
     "active",
-    "member",
+    role,
     troopCount,
     marchCount,
     power,
@@ -1198,6 +1202,64 @@ test("bot endpoints resolve discord user and enforce ownership", async () => {
       })
     );
     assert.equal(otherUser.status, 404);
+  } finally {
+    httpServer.close();
+  }
+});
+
+test("bot guild association enforces admin access and updates guild", async () => {
+  const dbPath = tmpDbPath();
+  process.env.DB_PATH = dbPath;
+  process.env.PORT = "0";
+  process.env.DISCORD_BOT_SECRET = "bot-secret";
+  const { httpServer, port } = await startServer();
+  const discordId = "guild-admin";
+  const allianceId = "alpha";
+  const profileId = crypto.randomUUID();
+  createBotUser(dbPath, {
+    discordId,
+    allianceId,
+    profileId,
+    playerId: "ALPHA1",
+  });
+  try {
+    const headers = {
+      "x-bot-secret": "bot-secret",
+      "x-discord-id": discordId,
+      "x-guild-id": "guild-123",
+      "Content-Type": "application/json",
+    };
+
+    const denied = await requestJson(
+      port,
+      "POST",
+      "/api/bot/guild/associate",
+      headers,
+      JSON.stringify({ allianceId })
+    );
+    assert.equal(denied.status, 403);
+
+    const db = new Database(dbPath);
+    db.prepare("UPDATE profiles SET role = 'alliance_admin' WHERE id = ?").run(
+      profileId
+    );
+    db.close();
+
+    const linked = await requestJson(
+      port,
+      "POST",
+      "/api/bot/guild/associate",
+      headers,
+      JSON.stringify({ allianceId })
+    );
+    assert.equal(linked.status, 200);
+
+    const dbAfter = new Database(dbPath);
+    const row = dbAfter
+      .prepare("SELECT guildId FROM alliances WHERE id = ?")
+      .get(allianceId) as { guildId: string | null };
+    dbAfter.close();
+    assert.equal(row.guildId, "guild-123");
   } finally {
     httpServer.close();
   }

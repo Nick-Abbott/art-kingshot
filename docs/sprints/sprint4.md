@@ -120,6 +120,7 @@ Verify migration and queries; run `npm run test:server`.
 
 ### DB-03: Admin Discord Command — Associate Guild
 **Problem**: Admins need to link a Discord guild to their alliance from within Discord.
+**Status**: Complete
 
 **Scope / Requirements**
 - Add an admin-only slash command to associate the current guild to an alliance.
@@ -141,6 +142,12 @@ Implement an admin-only slash command to associate the current guild to an allia
 
 **Validation Prompt**
 Verify admin-only behavior and DB updates; run `npm run test:server`.
+
+- **Engineer Update (2026-03-06)**: added `/guild associate` admin slash command wired to `/api/bot/guild/associate`, with server-side admin checks and guild/alliance conflict validation; added bot handler + unit tests and server integration test coverage for admin enforcement and DB update.
+- **Engineer Tests (2026-03-06)**: `npm run test:server` (pass).
+- **QA Validation (2026-03-06)**: ✓ Admin-only `/guild associate` command defined in `server/bot/commands.ts` and handled in `server/bot/handlers/guild.ts`; ✓ Server endpoint enforces admin access and updates `alliances.guildId` with conflict checks in `server/routes/bot.ts`; ✓ Unit tests cover guild command copy and server integration test covers admin enforcement + DB update (`server/bot/handlers/guild.test.ts`, `server/api.test.ts`); ⚠️ No Discord UI smoke re-run in QA.
+- **QA Tests (2026-03-06)**: `npm run test:server` (pass).
+- **TPM Re-check (2026-03-06)**: Accepted. `/guild associate` command and server endpoint enforce admin checks, validate conflicts, and update `alliances.guildId`.
 
 ---
 
@@ -382,30 +389,13 @@ Verify autocomplete behavior and ownership rules.
 
 ### DB-10: Observability + Rate Limits + Error Copy
 **Problem**: Bot failures must be diagnosable and user-friendly.
-
-**Scope / Requirements**
-- Add structured logging for bot requests + responses.
-- Rate limit bot endpoints to prevent spam.
-- Normalize user-facing error copy (use design doc text).
-
-**Success Criteria**
-- Logs identify command, user, and outcome.
-- Rate limits enforce sensible defaults.
-- Errors are consistent and friendly.
-
-**Required Verification**
-- Server change: `npm run test:server`
-
-**Implementation Prompt**
-Add logging + rate limiting and align error copy with the design doc.
-
-**Validation Prompt**
-Verify logging output format and rate limit behavior.
+**Status**: Backlog (moved to `docs/backlog.md`)
 
 ---
 
 ### DB-11: Documentation Update
 **Problem**: Members and admins need clear setup/use guidance.
+**Status**: Complete
 
 **Scope / Requirements**
 - Add usage docs for `/bear` and `/vikings` commands.
@@ -424,6 +414,14 @@ Update README or `docs/` with bot usage + setup.
 
 **Validation Prompt**
 Confirm docs are clear and complete.
+
+- **Engineer Update (2026-03-06)**: documented bot usage (`/link`, `/bear`, `/vikings`), manual guild association steps, and bot env vars in `README.md`.
+- **Engineer Tests (2026-03-06)**: not run (documentation-only change).
+- **Engineer Update (2026-03-06)**: added `/guild associate` to bot usage docs and updated guild association section to prefer the command with manual DB fallback in `README.md`.
+- **Engineer Tests (2026-03-06)**: not run (documentation-only change).
+- **QA Validation (2026-03-06)**: ✓ Bot usage documented in `README.md` (slash commands + argument notes); ✓ Admin guild association steps documented in `README.md`; ✓ Bot env vars listed in `README.md`.
+- **QA Tests (2026-03-06)**: not run (documentation-only change).
+- **TPM Re-check (2026-03-06)**: Accepted. README covers bot usage, admin guild association steps, and bot env vars.
 
 ---
 

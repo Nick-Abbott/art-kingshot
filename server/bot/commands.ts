@@ -12,6 +12,21 @@ export const commands = [
     )
     .toJSON(),
   new SlashCommandBuilder()
+    .setName("guild")
+    .setDescription("Guild admin commands.")
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName("associate")
+        .setDescription("Associate this guild with an alliance.")
+        .addStringOption((option) =>
+          option
+            .setName("alliance_id")
+            .setDescription("Alliance ID or tag.")
+            .setRequired(true)
+        )
+    )
+    .toJSON(),
+  new SlashCommandBuilder()
     .setName("bear")
     .setDescription("Bear signup commands.")
     .addSubcommand((subcommand) =>

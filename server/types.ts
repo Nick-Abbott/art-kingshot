@@ -130,6 +130,11 @@ export type RouteContext = {
   ) =>
     | { ok: true; data: { playerId: string } }
     | { ok: false; error: string; code?: string };
+  parseBotGuildAssociatePayload: (
+    body: unknown
+  ) =>
+    | { ok: true; data: { allianceId: string } }
+    | { ok: false; error: string; code?: string };
   generateAssignments: (members: Member[]) => AssignmentResult;
   buildPlayerLookupPayload: (fid: string | number, now?: number) => {
     fid: string;

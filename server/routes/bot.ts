@@ -537,6 +537,60 @@ export default function botRoutes(ctx: RouteContext) {
     }
   );
 
+  router.post(
+    "/api/bot/guild/associate",
+    (req: Request, res: Response) => {
+      const auth = requireBotAuth(req, res);
+      if (!auth) return;
+      const guildId = getGuildId(req);
+      if (!guildId) {
+        ctx.fail(res, 400, "guildId is required.");
+        return;
+      }
+      const parsed = ctx.parseBotGuildAssociatePayload(req.body);
+      if (!parsed.ok) {
+        ctx.fail(res, 400, parsed.error, parsed.code);
+        return;
+      }
+      const allianceId = parsed.data.allianceId.trim().toLowerCase();
+      const alliance = ctx.getAllianceById(allianceId);
+      if (!alliance) {
+        ctx.fail(res, 404, "Alliance not found.");
+        return;
+      }
+      const user = ctx.getUserById(auth.userId);
+      if (!user) {
+        ctx.fail(res, 404, "Discord user not found.");
+        return;
+      }
+
+      const isAllianceAdmin = auth.profiles.some(
+        (profile) =>
+          profile.allianceId === allianceId &&
+          profile.status === "active" &&
+          profile.role === "alliance_admin"
+      );
+      if (!user.isAppAdmin && !isAllianceAdmin) {
+        ctx.fail(res, 403, "Alliance admin access required.");
+        return;
+      }
+
+      const existingGuild = ctx.queries.getAllianceGuildByGuildId(guildId);
+      if (existingGuild && existingGuild.allianceId !== allianceId) {
+        ctx.fail(res, 409, "Guild already linked to another alliance.");
+        return;
+      }
+      const existingAlliance = ctx.queries.getAllianceGuildByAllianceId(allianceId);
+      if (existingAlliance && existingAlliance.guildId !== guildId) {
+        ctx.fail(res, 409, "Alliance already linked to another guild.");
+        return;
+      }
+
+      ctx.queries.upsertAllianceGuild(allianceId, guildId);
+      ctx.ok(res, { allianceId, guildId });
+    }
+  );
+
   return router;
 }
 

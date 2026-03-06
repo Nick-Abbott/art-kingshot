@@ -21,6 +21,7 @@ import {
   parseBotMemberPayload,
   parseBotBearPayload,
   parseBotLinkPayload,
+  parseBotGuildAssociatePayload,
 } from "./validation";
 import authRoutes from "./routes/auth";
 import membersRoutes from "./routes/members";
@@ -359,6 +360,7 @@ export function createApp({ dbPath: dbPathOverride }: { dbPath?: string } = {}) 
     parseBotMemberPayload,
     parseBotBearPayload,
     parseBotLinkPayload,
+    parseBotGuildAssociatePayload,
     generateAssignments,
     buildPlayerLookupPayload,
     parseCookies,

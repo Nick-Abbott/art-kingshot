@@ -331,3 +331,27 @@ export function parseBotLinkPayload(payload: unknown): ParseResult<{
 
   return { ok: true, data: { playerId } };
 }
+
+const BotGuildAssociateSchema = z.object({
+  allianceId: z.string(),
+});
+
+export function parseBotGuildAssociatePayload(payload: unknown): ParseResult<{
+  allianceId: string;
+}> {
+  const parsed = BotGuildAssociateSchema.safeParse(payload);
+  if (!parsed.success) {
+    return { ok: false, error: "Invalid guild association payload." };
+  }
+
+  const allianceId = parsed.data.allianceId.trim();
+  if (!allianceId) {
+    return {
+      ok: false,
+      error: "allianceId is required.",
+      code: "alliance_id_required",
+    };
+  }
+
+  return { ok: true, data: { allianceId } };
+}
