@@ -816,6 +816,79 @@ test("assignment run queues notifications for opted-in users", async () => {
   }
 });
 
+test("bot notifications endpoint returns pending for all alliances", async () => {
+  const dbPath = tmpDbPath();
+  process.env.DB_PATH = dbPath;
+  process.env.PORT = "0";
+  process.env.DISCORD_BOT_SECRET = "bot-secret";
+  const { httpServer, port } = await startServer();
+  try {
+    const db = new Database(dbPath);
+    const now = Date.now();
+    db.prepare(
+      `INSERT INTO assignment_notifications (
+        id,
+        allianceId,
+        playerId,
+        discordId,
+        payload,
+        status,
+        error,
+        createdAt,
+        updatedAt
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).run(
+      crypto.randomUUID(),
+      "alpha",
+      "P1",
+      "D1",
+      JSON.stringify({ assignment: "one" }),
+      "pending",
+      null,
+      now,
+      now
+    );
+    db.prepare(
+      `INSERT INTO assignment_notifications (
+        id,
+        allianceId,
+        playerId,
+        discordId,
+        payload,
+        status,
+        error,
+        createdAt,
+        updatedAt
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).run(
+      crypto.randomUUID(),
+      "beta",
+      "P2",
+      "D2",
+      JSON.stringify({ assignment: "two" }),
+      "pending",
+      null,
+      now,
+      now
+    );
+    db.close();
+
+    const res = await requestJson(
+      port,
+      "GET",
+      "/api/bot/assignments/notifications",
+      { "x-bot-secret": "bot-secret" }
+    );
+    assert.equal(res.status, 200);
+    const payload = getPayload<{ notifications: Array<{ allianceId: string }> }>(res);
+    const alliances = payload.notifications.map((item) => item.allianceId);
+    assert.ok(alliances.includes("alpha"));
+    assert.ok(alliances.includes("beta"));
+  } finally {
+    httpServer.close();
+  }
+});
+
 test("unclaimed profiles can be added by admins and claimed on login", async () => {
   const dbPath = tmpDbPath();
   process.env.DB_PATH = dbPath;

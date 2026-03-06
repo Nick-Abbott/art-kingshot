@@ -98,6 +98,7 @@ Bot (server/bot):
 - `DISCORD_BOT_SECRET`: Shared secret for bot-authenticated API calls (required)
 - `SERVER_URL`: Base server URL for bot API calls (required, e.g. `http://localhost:3001`)
 - `DISCORD_GUILD_ID`: Register commands in a single guild (optional; omit for global commands)
+- `DISCORD_GUILD_ID` is not required for assignment polling; polling reads all pending notifications.
 - `DISCORD_REGISTER_COMMANDS`: Set `true` to register commands on bot start (optional)
 - `DISCORD_ASSIGNMENTS_POLL_MS`: Poll interval for assignment notifications (default `30000`)
 

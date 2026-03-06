@@ -354,6 +354,9 @@ Verify opt-in enforcement, DM failure handling (status recorded), and copy. Conf
 - Bot currently polls `/api/bot/assignments/notifications` and sends DMs, but there is no server-side test coverage for notification queueing/opt-in enforcement.
 - Verify opt-in flag behavior and queue creation on assignment runs before accepting.
 
+- **Engineer Update (2026-03-06)**: updated bot notifications polling to fetch pending notifications across all alliances (no guild filter), and added server test coverage for the global notifications endpoint.
+- **Engineer Tests (2026-03-06)**: `npm run test:server` (pass).
+
 ---
 
 ### DB-09: Autocomplete for Profiles and Fixed Options

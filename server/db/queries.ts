@@ -312,11 +312,24 @@ export function createQueries(db: Database) {
        AND status = 'pending'
      ORDER BY createdAt ASC`
   );
+  const listPendingAssignmentNotificationsAllQuery = db.prepare(
+    `SELECT id, allianceId, playerId, discordId, payload, status, error, createdAt, updatedAt
+     FROM assignment_notifications
+     WHERE status = 'pending'
+     ORDER BY createdAt ASC`
+  );
   const listFailedAssignmentNotifications = db.prepare(
     `SELECT id, allianceId, playerId, discordId, payload, status, error, createdAt, updatedAt
      FROM assignment_notifications
      WHERE allianceId = ?
        AND status = 'failed'
+     ORDER BY updatedAt DESC
+     LIMIT ?`
+  );
+  const listFailedAssignmentNotificationsAllQuery = db.prepare(
+    `SELECT id, allianceId, playerId, discordId, payload, status, error, createdAt, updatedAt
+     FROM assignment_notifications
+     WHERE status = 'failed'
      ORDER BY updatedAt DESC
      LIMIT ?`
   );
@@ -627,12 +640,44 @@ export function createQueries(db: Database) {
     );
   }
 
+  function listPendingAssignmentNotificationsAll() {
+    return (
+      listPendingAssignmentNotificationsAllQuery.all() as Array<{
+        id: string;
+        allianceId: string;
+        playerId: string;
+        discordId: string;
+        payload: string;
+        status: string;
+        error: string | null;
+        createdAt: number;
+        updatedAt: number;
+      }>
+    );
+  }
+
   function listFailedAssignmentNotificationsByAlliance(
     allianceId: string,
     limit: number
   ) {
     return (
       listFailedAssignmentNotifications.all(allianceId, limit) as Array<{
+        id: string;
+        allianceId: string;
+        playerId: string;
+        discordId: string;
+        payload: string;
+        status: string;
+        error: string | null;
+        createdAt: number;
+        updatedAt: number;
+      }>
+    );
+  }
+
+  function listFailedAssignmentNotificationsAll(limit: number) {
+    return (
+      listFailedAssignmentNotificationsAllQuery.all(limit) as Array<{
         id: string;
         allianceId: string;
         playerId: string;
@@ -872,7 +917,9 @@ export function createQueries(db: Database) {
     listOptedInAssignmentRecipients,
     insertAssignmentNotification: insertAssignmentNotificationRow,
     listPendingAssignmentNotificationsByAlliance,
+    listPendingAssignmentNotificationsAll,
     listFailedAssignmentNotificationsByAlliance,
+    listFailedAssignmentNotificationsAll,
     updateAssignmentNotificationStatus: updateAssignmentNotificationStatusRow,
     deletePendingAssignmentNotificationsForAlliance,
     deleteAssignmentNotificationsBeforeTimestamp,

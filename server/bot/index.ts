@@ -161,18 +161,10 @@ export function createBot(deps: BotDeps) {
   });
 
   async function pollAssignmentNotifications() {
-    if (!config.discordGuildId) return;
     try {
       const response = await fetch(
-        `${config.serverUrl}/api/bot/assignments/notifications?guildId=${encodeURIComponent(
-          config.discordGuildId
-        )}`,
-        {
-          headers: {
-            "x-bot-secret": config.botSecret,
-            "x-guild-id": config.discordGuildId,
-          },
-        }
+        `${config.serverUrl}/api/bot/assignments/notifications`,
+        { headers: { "x-bot-secret": config.botSecret } }
       );
       const payload = (await response.json()) as {
         ok: boolean;
@@ -202,7 +194,6 @@ export function createBot(deps: BotDeps) {
                   headers: {
                     "Content-Type": "application/json",
                     "x-bot-secret": config.botSecret,
-                    "x-guild-id": config.discordGuildId,
                   },
                   body: JSON.stringify({ status, error }),
                 }

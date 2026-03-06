@@ -40,7 +40,7 @@ function requireBotServerAuth(
   ctx: RouteContext,
   req: Request,
   res: Response
-): { allianceId: string } | null {
+): { ok: true } | null {
   if (!ctx.DISCORD_BOT_SECRET) {
     ctx.fail(res, 500, "Bot auth is not configured.");
     return null;
@@ -50,17 +50,7 @@ function requireBotServerAuth(
     ctx.fail(res, 401, "Bot authentication required.");
     return null;
   }
-  const guildId = getGuildId(req);
-  if (!guildId) {
-    ctx.fail(res, 400, "guildId is required.");
-    return null;
-  }
-  const association = ctx.queries.getAllianceGuildByGuildId(guildId);
-  if (!association?.allianceId) {
-    ctx.fail(res, 404, "Alliance not found for guild.");
-    return null;
-  }
-  return { allianceId: association.allianceId };
+  return { ok: true };
 }
 
 function getProfileForBot(
@@ -433,9 +423,7 @@ export default function botRoutes(ctx: RouteContext) {
     (req: Request, res: Response) => {
       const auth = requireBotServerAuth(ctx, req, res);
       if (!auth) return;
-      const notifications = ctx.queries.listPendingAssignmentNotificationsByAlliance(
-        auth.allianceId
-      );
+      const notifications = ctx.queries.listPendingAssignmentNotificationsAll();
       ctx.ok(res, { notifications });
     }
   );
@@ -447,10 +435,7 @@ export default function botRoutes(ctx: RouteContext) {
       if (!auth) return;
       const limit = Number(req.query?.limit);
       const safeLimit = Number.isFinite(limit) ? Math.min(Math.max(limit, 1), 50) : 20;
-      const notifications = ctx.queries.listFailedAssignmentNotificationsByAlliance(
-        auth.allianceId,
-        safeLimit
-      );
+      const notifications = ctx.queries.listFailedAssignmentNotificationsAll(safeLimit);
       ctx.ok(res, { notifications });
     }
   );
