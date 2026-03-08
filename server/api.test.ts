@@ -1351,7 +1351,7 @@ test("bot guild association enforces admin access and updates guild", async () =
       "POST",
       "/api/bot/guild/associate",
       headers,
-      JSON.stringify({ allianceId })
+      JSON.stringify({ allianceId, kingdomId: 1459 })
     );
     assert.equal(denied.status, 403);
 
@@ -1366,7 +1366,7 @@ test("bot guild association enforces admin access and updates guild", async () =
       "POST",
       "/api/bot/guild/associate",
       headers,
-      JSON.stringify({ allianceId })
+      JSON.stringify({ allianceId, kingdomId: 1459 })
     );
     assert.equal(linked.status, 200);
 

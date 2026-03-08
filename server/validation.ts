@@ -334,10 +334,12 @@ export function parseBotLinkPayload(payload: unknown): ParseResult<{
 
 const BotGuildAssociateSchema = z.object({
   allianceId: z.string(),
+  kingdomId: z.coerce.number(),
 });
 
 export function parseBotGuildAssociatePayload(payload: unknown): ParseResult<{
   allianceId: string;
+  kingdomId: number;
 }> {
   const parsed = BotGuildAssociateSchema.safeParse(payload);
   if (!parsed.success) {
@@ -353,5 +355,13 @@ export function parseBotGuildAssociatePayload(payload: unknown): ParseResult<{
     };
   }
 
-  return { ok: true, data: { allianceId } };
+  if (!Number.isFinite(parsed.data.kingdomId)) {
+    return {
+      ok: false,
+      error: "kingdomId is required.",
+      code: "kingdom_id_required",
+    };
+  }
+
+  return { ok: true, data: { allianceId, kingdomId: parsed.data.kingdomId } };
 }

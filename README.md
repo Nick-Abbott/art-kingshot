@@ -49,7 +49,7 @@ Set the server environment variables listed below before starting the server.
 
 Members can use these slash commands inside the linked guild:
 - `/link player_id` — link a Kingshot profile to your Discord account (also opts you into assignment DMs).
-- `/guild associate alliance_id` — admins only; associate this guild to an alliance.
+- `/guild associate alliance_id kingdom_id` — admins only; associate this guild to an alliance.
 - `/bear register|edit|remove|view` — manage Bear Rally signup.
   - `group` is required; `rally_size` is optional if a default exists for the selected profile.
   - `profile` is optional; when omitted, the bot uses your first linked profile.
@@ -60,7 +60,7 @@ Members can use these slash commands inside the linked guild:
 
 ## Discord Guild Association (Admin)
 
-Preferred: run `/guild associate alliance_id` inside the target Discord server.
+Preferred: run `/guild associate alliance_id kingdom_id` inside the target Discord server.
 
 Manual fallback:
 - Determine the guild ID in Discord (enable Developer Mode and copy the server ID).

@@ -148,6 +148,9 @@ export function createQueries(db: Database) {
   const selectAllianceById = db.prepare(
     "SELECT id, name, kingdomId FROM alliances WHERE id = ?"
   );
+  const selectAllianceByIdAndKingdom = db.prepare(
+    "SELECT id, name, kingdomId FROM alliances WHERE id = ? AND kingdomId = ?"
+  );
   const selectAlliances = db.prepare(
     "SELECT id, name, kingdomId FROM alliances ORDER BY name ASC"
   );
@@ -369,6 +372,17 @@ export function createQueries(db: Database) {
 
   function getAllianceById(id: string): Alliance | null {
     return (selectAllianceById.get(id) as Alliance | undefined) ?? null;
+  }
+
+  function getAllianceByIdAndKingdom(
+    id: string,
+    kingdomId: number
+  ): Alliance | null {
+    return (
+      (selectAllianceByIdAndKingdom.get(id, kingdomId) as
+        | Alliance
+        | undefined) ?? null
+    );
   }
 
   function listAlliances(): Alliance[] {
@@ -879,6 +893,7 @@ export function createQueries(db: Database) {
     getProfileByPlayerId,
     getProfilesByUser,
     getAllianceById,
+    getAllianceByIdAndKingdom,
     listAlliances,
     listAlliancesByKingdom,
     listAdminKingdoms,

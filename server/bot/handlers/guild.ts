@@ -8,6 +8,7 @@ type BotConfig = {
 type GuildCommandOptions = {
   getSubcommand: () => string;
   getString: (name: "alliance_id") => string | null;
+  getNumber: (name: "kingdom_id") => number | null;
 };
 
 type GuildInteraction = {
@@ -28,6 +29,8 @@ export async function handleGuildCommand(
 
   const allianceId = interaction.options.getString("alliance_id")?.trim();
   if (!allianceId) return "Please provide an alliance ID.";
+  const kingdomId = interaction.options.getNumber("kingdom_id");
+  if (!Number.isFinite(kingdomId)) return "Please provide a kingdom ID.";
 
   const result = await botApiRequest<{ allianceId: string; guildId: string }>(
     {
@@ -39,7 +42,7 @@ export async function handleGuildCommand(
     "/api/bot/guild/associate",
     {
       method: "POST",
-      body: JSON.stringify({ allianceId }),
+      body: JSON.stringify({ allianceId, kingdomId }),
     }
   );
 

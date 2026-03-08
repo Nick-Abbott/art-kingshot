@@ -145,6 +145,8 @@ Verify admin-only behavior and DB updates; run `npm run test:server`.
 
 - **Engineer Update (2026-03-06)**: added `/guild associate` admin slash command wired to `/api/bot/guild/associate`, with server-side admin checks and guild/alliance conflict validation; added bot handler + unit tests and server integration test coverage for admin enforcement and DB update.
 - **Engineer Tests (2026-03-06)**: `npm run test:server` (pass).
+- **Engineer Update (2026-03-06)**: updated `/guild associate` to require `kingdom_id` and resolve the alliance by tag + kingdom to support duplicate tags across kingdoms; added handler and server test updates.
+- **Engineer Tests (2026-03-06)**: `npm run test:server` (pass).
 - **QA Validation (2026-03-06)**: ✓ Admin-only `/guild associate` command defined in `server/bot/commands.ts` and handled in `server/bot/handlers/guild.ts`; ✓ Server endpoint enforces admin access and updates `alliances.guildId` with conflict checks in `server/routes/bot.ts`; ✓ Unit tests cover guild command copy and server integration test covers admin enforcement + DB update (`server/bot/handlers/guild.test.ts`, `server/api.test.ts`); ⚠️ No Discord UI smoke re-run in QA.
 - **QA Tests (2026-03-06)**: `npm run test:server` (pass).
 - **TPM Re-check (2026-03-06)**: Accepted. `/guild associate` command and server endpoint enforce admin checks, validate conflicts, and update `alliances.guildId`.

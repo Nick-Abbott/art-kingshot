@@ -133,7 +133,7 @@ export type RouteContext = {
   parseBotGuildAssociatePayload: (
     body: unknown
   ) =>
-    | { ok: true; data: { allianceId: string } }
+    | { ok: true; data: { allianceId: string; kingdomId: number } }
     | { ok: false; error: string; code?: string };
   generateAssignments: (members: Member[]) => AssignmentResult;
   buildPlayerLookupPayload: (fid: string | number, now?: number) => {

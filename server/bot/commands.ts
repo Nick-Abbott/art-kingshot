@@ -24,6 +24,12 @@ export const commands = [
             .setDescription("Alliance ID or tag.")
             .setRequired(true)
         )
+        .addNumberOption((option) =>
+          option
+            .setName("kingdom_id")
+            .setDescription("Alliance kingdom ID.")
+            .setRequired(true)
+        )
     )
     .toJSON(),
   new SlashCommandBuilder()

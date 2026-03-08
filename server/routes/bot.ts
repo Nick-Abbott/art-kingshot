@@ -548,7 +548,10 @@ export default function botRoutes(ctx: RouteContext) {
         return;
       }
       const allianceId = parsed.data.allianceId.trim().toLowerCase();
-      const alliance = ctx.getAllianceById(allianceId);
+      const alliance = ctx.queries.getAllianceByIdAndKingdom(
+        allianceId,
+        parsed.data.kingdomId
+      );
       if (!alliance) {
         ctx.fail(res, 404, "Alliance not found.");
         return;

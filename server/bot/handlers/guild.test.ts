@@ -6,10 +6,12 @@ function createInteraction({
   allianceId,
   guildId = "guild-1",
   subcommand = "associate",
+  kingdomId = 1459,
 }: {
   allianceId?: string;
   guildId?: string | null;
   subcommand?: string;
+  kingdomId?: number | null;
 }) {
   return {
     user: { id: "discord-user" },
@@ -17,6 +19,7 @@ function createInteraction({
     options: {
       getSubcommand: () => subcommand,
       getString: () => allianceId ?? null,
+      getNumber: () => kingdomId ?? null,
     },
   };
 }
@@ -57,4 +60,20 @@ test("guild associate returns API error message", async () => {
     { serverUrl: "http://localhost", botSecret: "secret" }
   );
   assert.equal(message, "Alliance admin access required.");
+});
+
+test("guild associate requires kingdom id", async () => {
+  const message = await handleGuildCommand(
+    {
+      user: { id: "discord-user" },
+      guildId: "guild-1",
+      options: {
+        getSubcommand: () => "associate",
+        getString: () => "art",
+        getNumber: () => null,
+      },
+    },
+    { serverUrl: "http://localhost", botSecret: "secret" }
+  );
+  assert.equal(message, "Please provide a kingdom ID.");
 });
