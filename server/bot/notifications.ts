@@ -1,4 +1,4 @@
-import { buildAssignmentsMessage } from "./handlers/vikings";
+import { buildAssignmentsHeader, buildAssignmentsMessage } from "./handlers/vikings";
 
 type Notification = {
   id: string;
@@ -16,8 +16,7 @@ export async function processAssignmentNotification(
   notification: Notification,
   sender: NotificationSender
 ): Promise<void> {
-  const header =
-    "Here are your Viking assignments. Use Equalize on every march and send all marches to the listed target(s).";
+  const header = buildAssignmentsHeader();
   try {
     const assignment = JSON.parse(notification.payload) as Parameters<typeof buildAssignmentsMessage>[0];
     const message = buildAssignmentsMessage(assignment, header);

@@ -76,7 +76,7 @@ export default function assignmentsRoutes(ctx: RouteContext) {
         ctx.fail(res, 400, "Alliance is required.");
         return;
       }
-      ctx.metaRepo.clearAll(allianceId, ctx.membersRepo);
+      ctx.metaRepo.clearLastRun(allianceId);
       ctx.ok(res, { ok: true });
     }
   );

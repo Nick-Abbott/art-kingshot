@@ -816,6 +816,94 @@ test("assignment run queues notifications for opted-in users", async () => {
   }
 });
 
+test("reset keeps viking signups but clears last run", async () => {
+  const dbPath = tmpDbPath();
+  process.env.DB_PATH = dbPath;
+  process.env.PORT = "0";
+  const { httpServer, port } = await startServer();
+  try {
+    const headers = { Cookie: createSessionCookie(dbPath) };
+    const createProfile = await requestJson(
+      port,
+      "POST",
+      "/api/profiles",
+      { ...headers, "Content-Type": "application/json" },
+      JSON.stringify({ playerId: "FIDRESET", kingdomId: 1459 })
+    );
+    const profileId = getPayload<{ profile: { id: string } }>(createProfile).profile.id;
+
+    const createAlliance = await requestJson(
+      port,
+      "POST",
+      "/api/alliances",
+      { ...headers, "Content-Type": "application/json", "x-profile-id": profileId },
+      JSON.stringify({ tag: "RST", name: "Reset Alliance" })
+    );
+    assert.equal(createAlliance.status, 200);
+    const allianceId = getPayload<{ alliance: { id: string } }>(createAlliance).alliance.id;
+
+    const signupOne = await requestJson(
+      port,
+      "POST",
+      "/api/signup",
+      { ...headers, "Content-Type": "application/json", "x-profile-id": profileId },
+      JSON.stringify({
+        playerId: "RESET1",
+        troopCount: 1000,
+        playerName: "Reset One",
+        marchCount: 4,
+        power: 2000000
+      })
+    );
+    assert.equal(signupOne.status, 200);
+
+    const signupTwo = await requestJson(
+      port,
+      "POST",
+      "/api/signup",
+      { ...headers, "Content-Type": "application/json", "x-profile-id": profileId },
+      JSON.stringify({
+        playerId: "RESET2",
+        troopCount: 1000,
+        playerName: "Reset Two",
+        marchCount: 4,
+        power: 1900000
+      })
+    );
+    assert.equal(signupTwo.status, 200);
+
+    const run = await requestJson(
+      port,
+      "POST",
+      "/api/run",
+      { ...headers, "x-profile-id": profileId }
+    );
+    assert.equal(run.status, 200);
+
+    const reset = await requestJson(
+      port,
+      "POST",
+      "/api/reset",
+      { ...headers, "x-profile-id": profileId }
+    );
+    assert.equal(reset.status, 200);
+
+    const db = new Database(dbPath);
+    const membersCount = db.prepare(
+      "SELECT COUNT(1) AS count FROM members WHERE allianceId = ?"
+    ).get(allianceId) as { count: number };
+    const lastRunCount = db.prepare(
+      "SELECT COUNT(1) AS count FROM meta WHERE allianceId = ? AND key = 'lastRun'"
+    ).get(allianceId) as { count: number };
+    db.close();
+
+    assert.equal(membersCount.count, 2);
+    assert.equal(lastRunCount.count, 0);
+  } finally {
+    httpServer.close();
+  }
+});
+
 test("bot notifications endpoint returns pending for all alliances", async () => {
   const dbPath = tmpDbPath();
   process.env.DB_PATH = dbPath;

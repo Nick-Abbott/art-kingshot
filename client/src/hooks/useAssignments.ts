@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchResults, resetEvent, runAssignments } from "../api/assignments";
 import type { AssignmentResult } from "../api/assignments";
-import { vikingMembersQueryKey } from "./useVikingMembersQuery";
 
 export function useAssignments(profileId: string) {
   const queryClient = useQueryClient();
@@ -31,17 +30,13 @@ export function useAssignments(profileId: string) {
     },
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: ["assignments", profileId] });
-      await queryClient.cancelQueries({ queryKey: vikingMembersQueryKey(profileId) });
       queryClient.setQueryData(["assignments", profileId], null);
-      queryClient.setQueryData(vikingMembersQueryKey(profileId), []);
     },
     onSuccess: () => {
       queryClient.setQueryData(["assignments", profileId], null);
-      queryClient.setQueryData(vikingMembersQueryKey(profileId), []);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["assignments", profileId] });
-      queryClient.invalidateQueries({ queryKey: vikingMembersQueryKey(profileId) });
     }
   });
 

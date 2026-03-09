@@ -29,6 +29,23 @@ export type AssignmentPayload = {
   incomingTotal: number;
 };
 
+const instructionsLines = [
+  "If you will be offline for the event, please send out your reinforcements before you leave. You WILL receive reinforcement troops for the event to protect your city.",
+  "How to run your marches",
+  "- Use Equalize on every march.",
+  "- Send one march to each of your assigned targets.",
+  "- If you have a garrison leader incoming, send your main heroes to someone else - ideally someone whose garrison you are leading.",
+  "- Use Chenko, Amane, Yeonwoo, Amadeus, or no heroes when reinforcing.",
+  "Assignments are calculated assuming equalized marches and consistent march counts.",
+];
+
+export function buildAssignmentsHeader(mention?: string): string {
+  const intro = mention
+    ? `${mention}, here are your Viking assignments:`
+    : "Here are your Viking assignments:";
+  return [intro, ...instructionsLines].join("\n");
+}
+
 export function buildAssignmentsMessage(
   assignment: AssignmentPayload,
   header: string
@@ -40,7 +57,7 @@ export function buildAssignmentsMessage(
     for (const outgoing of assignment.outgoing) {
       const target = outgoing.toName || outgoing.toId || "Unknown";
       const lead = outgoing.lead ? " (lead)" : "";
-      lines.push(`- ${target}: ${outgoing.troops}${lead}`);
+      lines.push(`- ${target}${lead}`);
     }
   }
   if (assignment.incoming.length > 0) {
@@ -49,7 +66,7 @@ export function buildAssignmentsMessage(
     for (const incoming of assignment.incoming) {
       const source = incoming.fromName || incoming.fromId || "Unknown";
       const lead = incoming.lead ? " (lead)" : "";
-      lines.push(`- ${source}: ${incoming.troops}${lead}`);
+      lines.push(`- ${source}${lead}`);
     }
   }
   return lines.join("\n");
@@ -123,10 +140,9 @@ export async function handleVikingsCommand(
     }
 
     const assignment = result.data.assignment;
-    const header =
-      output === "channel"
-        ? `<@${interaction.user.id}>, here are your Viking assignments. Use Equalize on every march and send all marches to the listed target(s).`
-        : "Here are your Viking assignments. Use Equalize on every march and send all marches to the listed target(s).";
+    const header = buildAssignmentsHeader(
+      output === "channel" ? `<@${interaction.user.id}>` : undefined
+    );
     const message = buildAssignmentsMessage(assignment, header);
     if (output === "channel") {
       if (!interaction.channel) {

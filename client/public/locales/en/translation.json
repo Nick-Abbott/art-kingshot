@@ -60,7 +60,7 @@
     "instructions": {
       "equalize": "Use Equalize on every march.",
       "sendAll": "Send one march to each of your assigned targets.",
-      "garrison": "If you have a garrison leader active, send your main heroes to someone else—ideally someone whose garrison you are leading.",
+      "garrison": "If you have a garrison leader incoming, send your main heroes to someone else—ideally someone whose garrison you are leading.",
       "reinforceHeroes": "Use Chenko, Amane, Yeonwoo, Amadeus, or no heroes when reinforcing.",
       "subtext": "Assignments are calculated assuming equalized marches and consistent march counts."
     },

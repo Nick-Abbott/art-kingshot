@@ -60,7 +60,7 @@
     "instructions": {
       "equalize": "Usa Igualar en cada marcha.",
       "sendAll": "Envía una marcha a cada uno de tus objetivos asignados.",
-      "garrison": "Si tienes un líder de guarnición activo, envía a tus héroes principales a otra persona; idealmente a alguien cuya guarnición estás liderando.",
+      "garrison": "Si tienes un líder de guarnición entrante, envía a tus héroes principales a otra persona; idealmente a alguien cuya guarnición estás liderando.",
       "reinforceHeroes": "Usa Chenko, Amane, Yeonwoo, Amadeus o ningún héroe al reforzar.",
       "subtext": "Las asignaciones se calculan asumiendo marchas igualadas y conteos de marchas consistentes."
     },
