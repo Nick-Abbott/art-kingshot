@@ -2,7 +2,6 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   generateAssignments,
-  NEED_PER_CITY,
   MAX_SEND,
   MAX_SEND_WHALE,
   WHALE_MULTIPLIER,
@@ -12,7 +11,7 @@ function sum(values: number[]): number {
   return values.reduce((total, value) => total + value, 0);
 }
 
-test("assignments satisfy minimum incoming and respect per-target caps", () => {
+test("assignments respect per-target caps", () => {
   const members = [
     {
       playerId: "A",
@@ -50,19 +49,6 @@ test("assignments satisfy minimum incoming and respect per-target caps", () => {
   for (const member of result.members) {
     const outgoingTotal = sum(member.outgoing.map((item: { troops: number }) => item.troops));
     assert.ok(outgoingTotal <= member.troopCount);
-    const effectiveIncoming = sum(
-      member.incoming.map((entry: { troops: number; fromId?: string }) =>
-        entry.troops * (entry.fromId && whaleById.get(entry.fromId) ? 1.5 : 1)
-      )
-    );
-    const unmetWarning = result.warnings.some((warning: string) =>
-      warning.includes(`City ${member.playerId} did not reach`)
-    );
-    assert.ok(
-      effectiveIncoming >= NEED_PER_CITY ||
-        member.garrisonLeadId ||
-        unmetWarning
-    );
   }
 
   for (const member of result.members) {
@@ -116,6 +102,34 @@ test("lead is assigned when the strongest sender reinforces", () => {
 
   assert.ok(target, "Expected a target member for D");
   assert.ok(target.garrisonLeadId, "Expected a garrison lead for D");
+});
+
+test("lead is only assigned when sender is at least 25% stronger or a whale", () => {
+  const members = [
+    {
+      playerId: "A",
+      playerName: "A",
+      troopCount: 200000,
+      power: 10000000,
+      marchCount: 2,
+    },
+    {
+      playerId: "B",
+      playerName: "B",
+      troopCount: 200000,
+      power: 11000000,
+      marchCount: 2,
+    },
+  ];
+
+  const result = generateAssignments(members);
+  const memberA = result.members.find((member: { playerId: string }) => member.playerId === "A");
+  const memberB = result.members.find((member: { playerId: string }) => member.playerId === "B");
+
+  assert.ok(memberA);
+  assert.ok(memberB);
+  assert.equal(memberA.garrisonLeadId, undefined);
+  assert.equal(memberB.garrisonLeadId, undefined);
 });
 
 export {};

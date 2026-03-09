@@ -66,31 +66,6 @@ function buildEmptyIncoming(members: { playerId: string }[]): IncomingMeta {
   return incoming;
 }
 
-function pickMaxNeedTarget(
-  needs: Map<string, number>,
-  excludeId: string,
-  excludeTargets: Set<string> | null,
-  incomingMeta: IncomingMeta | null
-): string | null {
-  let bestId = null;
-  let bestNeed = 0;
-  let bestIncoming = Number.POSITIVE_INFINITY;
-  for (const [playerId, need] of needs.entries()) {
-    if (playerId === excludeId) continue;
-    if (excludeTargets?.has(playerId)) continue;
-    const incomingCount = incomingMeta?.get(playerId)?.from.length ?? 0;
-    if (need > bestNeed) {
-      bestNeed = need;
-      bestId = playerId;
-      bestIncoming = incomingCount;
-    } else if (need === bestNeed && incomingCount < bestIncoming) {
-      bestId = playerId;
-      bestIncoming = incomingCount;
-    }
-  }
-  return bestId;
-}
-
 function pickLowestIncomingTarget(
   targets: string[],
   excludeTargets: Set<string> | null,
@@ -214,6 +189,37 @@ function annotateWhales(members: Member[]): AnnotatedMember[] {
   }));
 }
 
+function buildMarchSizes(member: AnnotatedMember): number[] {
+  const cap = member.whale ? MAX_SEND_WHALE : MAX_SEND;
+  const avg = member.troopCount / member.marchCount;
+  let base = Math.floor(avg);
+  let remainder = member.troopCount - base * member.marchCount;
+  if (avg > cap) {
+    base = Math.floor(cap);
+    remainder = 0;
+  }
+
+  const sizes: number[] = [];
+  if (base <= 0) {
+    for (let i = 0; i < remainder; i += 1) {
+      sizes.push(1);
+    }
+  } else {
+    for (let i = 0; i < remainder; i += 1) {
+      sizes.push(base + 1);
+    }
+    for (let i = 0; i < member.marchCount - remainder; i += 1) {
+      sizes.push(base);
+    }
+  }
+
+  return sizes.filter((size) => size > 0).sort((a, b) => a - b);
+}
+
+function isLeadEligible(sender: AnnotatedMember, targetPower: number): boolean {
+  return sender.whale || sender.power >= targetPower * 1.25;
+}
+
 function generateAssignments(members: Member[]): AssignmentResult {
   const { warnings, warningCodes, validMembers } = validateMembers(members);
   if (validMembers.length < 2) {
@@ -225,268 +231,134 @@ function generateAssignments(members: Member[]): AssignmentResult {
   }
 
   const annotated = annotateWhales(validMembers);
-  const needs = new Map<string, number>();
   const outgoing = new Map<string, AssignmentOutgoingEntry[]>();
   const incoming = buildEmptyIncoming(annotated);
+  const assignedTargetsBySender = new Map<string, Set<string>>();
+  const marchSizesBySender = new Map<string, number[]>();
+  const memberById = new Map<string, AnnotatedMember>();
+  const powerById = new Map<string, number>();
+  const nameById = new Map<string, string>();
 
   for (const member of annotated) {
-    needs.set(member.playerId, NEED_PER_CITY);
     outgoing.set(member.playerId, []);
-  }
-
-  const remainingBySender = new Map<string, number>();
-  const marchesRemaining = new Map<string, number>();
-  const perMarchBaseBySender = new Map<string, number>();
-  const perMarchRemainderBySender = new Map<string, number>();
-
-  for (const member of annotated) {
-    const cap = member.whale ? MAX_SEND_WHALE : MAX_SEND;
-    const avg = member.troopCount / member.marchCount;
-    let base = Math.floor(avg);
-    let remainder = member.troopCount - base * member.marchCount;
-    if (avg > cap) {
-      base = Math.floor(cap);
-      remainder = 0;
-    }
-    perMarchBaseBySender.set(member.playerId, Math.max(0, base));
-    perMarchRemainderBySender.set(member.playerId, Math.max(0, remainder));
-    marchesRemaining.set(member.playerId, member.marchCount);
-    remainingBySender.set(member.playerId, member.troopCount);
-  }
-
-  function nextMarchAmount(senderId: string, remaining: number): number {
-    const base = perMarchBaseBySender.get(senderId) || 0;
-    if (base <= 0 || remaining < base) return 0;
-    const remainder = perMarchRemainderBySender.get(senderId) || 0;
-    if (remainder > 0 && remaining >= base + 1) {
-      perMarchRemainderBySender.set(senderId, remainder - 1);
-      return base + 1;
-    }
-    return base;
+    assignedTargetsBySender.set(member.playerId, new Set());
+    marchSizesBySender.set(member.playerId, buildMarchSizes(member));
+    memberById.set(member.playerId, member);
+    powerById.set(member.playerId, member.power);
+    nameById.set(member.playerId, member.playerName || "");
   }
 
   function effectiveTroops(sender: AnnotatedMember, troops: number): number {
     return sender.whale ? troops * WHALE_TROOP_WEIGHT : troops;
   }
 
-  // Fill remaining needs and then dump remaining troops to get armies out.
-  for (const sender of annotated) {
+  const assignMarch = (
+    sender: AnnotatedMember,
+    targetId: string,
+    troops: number
+  ) => {
     const senderOutgoing = getOutgoing(outgoing, sender.playerId);
-    const assignedTargets = new Set(senderOutgoing.map((item) => item.toId));
-    let remaining =
-      sender.troopCount - sum(senderOutgoing.map((o) => o.troops));
-    remainingBySender.set(sender.playerId, remaining);
+    const targetMember = memberById.get(targetId);
+    senderOutgoing.push({
+      toId: targetId,
+      toName: targetMember?.playerName || "",
+      troops,
+      lead: Boolean(sender.whale),
+    });
+    const incomingTarget = incoming.get(targetId);
+    if (!incomingTarget) return;
+    incomingTarget.total += troops;
+    incomingTarget.effectiveTotal += effectiveTroops(sender, troops);
+    incomingTarget.from.push({
+      fromId: sender.playerId,
+      fromName: sender.playerName || "",
+      troops,
+      lead: Boolean(sender.whale),
+    });
+  };
 
-    const targets = annotated
-      .filter((member) => member.playerId !== sender.playerId)
-      .map((member) => member.playerId);
-
-    // First pass: satisfy needs.
-    while (remaining > 0 && (marchesRemaining.get(sender.playerId) ?? 0) > 0) {
-      const targetId = pickMaxNeedTarget(
-        needs,
-        sender.playerId,
-        assignedTargets,
-        incoming
-      );
-      if (!targetId) break;
-
-      const need = needs.get(targetId) || 0;
-      if (need <= 0) break;
-
-      const sendAmount = nextMarchAmount(sender.playerId, remaining);
-      if (sendAmount <= 0) break;
-
-      remaining -= sendAmount;
-      needs.set(targetId, Math.max(0, need - effectiveTroops(sender, sendAmount)));
-      assignedTargets.add(targetId);
-      marchesRemaining.set(
-        sender.playerId,
-        (marchesRemaining.get(sender.playerId) ?? 0) - 1
-      );
-
-      const targetMember = annotated.find(
-        (member) => member.playerId === targetId
-      );
-      const senderOutgoing = getOutgoing(outgoing, sender.playerId);
-      senderOutgoing.push({
-        toId: targetId,
-        toName: targetMember?.playerName || "",
-        troops: sendAmount,
-        lead: Boolean(sender.whale),
-      });
-
-      const incomingTarget = incoming.get(targetId);
-      if (!incomingTarget) break;
-      incomingTarget.total += sendAmount;
-      incomingTarget.effectiveTotal += effectiveTroops(sender, sendAmount);
-      incomingTarget.from.push({
-        fromId: sender.playerId,
-        fromName: sender.playerName || "",
-        troops: sendAmount,
-        lead: Boolean(sender.whale),
-      });
+  // Pass 1: seed leads where eligible (best effort).
+  const leadSeededTargets = new Set<string>();
+  const targetsByPower = [...annotated].sort((a, b) => a.power - b.power);
+  for (const target of targetsByPower) {
+    if (leadSeededTargets.has(target.playerId)) continue;
+    let bestSender: AnnotatedMember | null = null;
+    for (const sender of annotated) {
+      if (sender.playerId === target.playerId) continue;
+      if (!isLeadEligible(sender, target.power)) continue;
+      const sizes = marchSizesBySender.get(sender.playerId) || [];
+      if (sizes.length === 0) continue;
+      if (bestSender && sender.power <= bestSender.power) continue;
+      bestSender = sender;
     }
-
-    // Second pass: balance incoming totals while getting troops out.
-    while (remaining > 0 && (marchesRemaining.get(sender.playerId) ?? 0) > 0) {
-      const targetId = pickLowestIncomingTarget(
-        targets,
-        assignedTargets,
-        incoming
-      );
-      if (!targetId) break;
-
-      const incomingTarget = incoming.get(targetId);
-      if (!incomingTarget) break;
-      const sendAmount = nextMarchAmount(sender.playerId, remaining);
-      if (sendAmount <= 0) break;
-
-      remaining -= sendAmount;
-      assignedTargets.add(targetId);
-      marchesRemaining.set(
-        sender.playerId,
-        (marchesRemaining.get(sender.playerId) ?? 0) - 1
-      );
-
-      const targetMember = annotated.find(
-        (member) => member.playerId === targetId
-      );
-      const senderOutgoing = getOutgoing(outgoing, sender.playerId);
-      senderOutgoing.push({
-        toId: targetId,
-        toName: targetMember?.playerName || "",
-        troops: sendAmount,
-        lead: Boolean(sender.whale),
-      });
-
-      incomingTarget.total += sendAmount;
-      incomingTarget.effectiveTotal += effectiveTroops(sender, sendAmount);
-      incomingTarget.from.push({
-        fromId: sender.playerId,
-        fromName: sender.playerName || "",
-        troops: sendAmount,
-        lead: Boolean(sender.whale),
-      });
-    }
-
-    remainingBySender.set(sender.playerId, remaining);
+    if (!bestSender) continue;
+    const sizes = marchSizesBySender.get(bestSender.playerId);
+    if (!sizes || sizes.length === 0) continue;
+    const troops = sizes.shift();
+    if (!troops) continue;
+    assignMarch(bestSender, target.playerId, troops);
+    assignedTargetsBySender.get(bestSender.playerId)?.add(target.playerId);
+    leadSeededTargets.add(target.playerId);
   }
 
-  // Fill remaining needs with standard marches, respecting march counts.
-  let progress = true;
-  while (progress) {
-    progress = false;
-    const targets = Array.from(needs.entries())
-      .filter(([_playerId, need]) => need > 0)
-      .map(([playerId]) => playerId)
-      .sort((aId, bId) => {
-        const aNeed = needs.get(aId) || 0;
-        const bNeed = needs.get(bId) || 0;
-        const aIncoming = incoming.get(aId)?.from.length ?? 0;
-        const bIncoming = incoming.get(bId)?.from.length ?? 0;
-        if (bNeed !== aNeed) return bNeed - aNeed;
-        return aIncoming - bIncoming;
-      });
+  // Pass 2: equalize by effective incoming with remaining marches.
+  const remainingMarches: Array<{
+    senderId: string;
+    troops: number;
+  }> = [];
+  for (const sender of annotated) {
+    const sizes = marchSizesBySender.get(sender.playerId) || [];
+    for (const troops of sizes) {
+      remainingMarches.push({ senderId: sender.playerId, troops });
+    }
+  }
+  remainingMarches.sort((a, b) => {
+    if (b.troops !== a.troops) return b.troops - a.troops;
+    const powerA = powerById.get(a.senderId) || 0;
+    const powerB = powerById.get(b.senderId) || 0;
+    return powerB - powerA;
+  });
 
-    for (const targetId of targets) {
-      const incomingTarget = incoming.get(targetId);
-      if (!incomingTarget) continue;
-      const sender = annotated.find((candidate) => {
-        if (candidate.playerId === targetId) return false;
-        if ((marchesRemaining.get(candidate.playerId) ?? 0) <= 0) return false;
-        if ((remainingBySender.get(candidate.playerId) || 0) <= 0) {
-          return false;
-        }
-        const candidateOutgoing = getOutgoing(outgoing, candidate.playerId);
-        if (candidateOutgoing.some((o) => o.toId === targetId)) {
-          return false;
-        }
-        return true;
-      });
+  const allTargets = annotated.map((member) => member.playerId);
+  for (const march of remainingMarches) {
+    const sender = memberById.get(march.senderId);
+    if (!sender) continue;
+    const excludeTargets = assignedTargetsBySender.get(march.senderId) || new Set();
+    const targets = allTargets.filter((id) => id !== march.senderId);
+    const targetId = pickLowestIncomingTarget(targets, excludeTargets, incoming);
+    if (!targetId) continue;
+    assignMarch(sender, targetId, march.troops);
+    excludeTargets.add(targetId);
+    assignedTargetsBySender.set(march.senderId, excludeTargets);
+  }
 
+  // Pass 3: select final leads based on highest eligible sender power.
+  const leadByTarget = new Map<string, string>();
+  for (const member of annotated) {
+    const incomingInfo = getIncoming(incoming, member.playerId);
+    let bestLeadId: string | undefined;
+    let bestLeadPower = 0;
+    for (const entry of incomingInfo.from) {
+      if (!entry.fromId) continue;
+      const sender = memberById.get(entry.fromId);
       if (!sender) continue;
-      const remaining = remainingBySender.get(sender.playerId) || 0;
-      const need = needs.get(targetId) || 0;
-      const sendAmount = nextMarchAmount(sender.playerId, remaining);
-      if (sendAmount <= 0) continue;
-
-      remainingBySender.set(sender.playerId, remaining - sendAmount);
-      marchesRemaining.set(
-        sender.playerId,
-        (marchesRemaining.get(sender.playerId) ?? 0) - 1
-      );
-
-      const targetMember = annotated.find(
-        (member) => member.playerId === targetId
-      );
-      const senderOutgoing = getOutgoing(outgoing, sender.playerId);
-      senderOutgoing.push({
-        toId: targetId,
-        toName: targetMember?.playerName || "",
-        troops: sendAmount,
-        lead: Boolean(sender.whale),
-      });
-
-      incomingTarget.total += sendAmount;
-      incomingTarget.effectiveTotal += effectiveTroops(sender, sendAmount);
-      incomingTarget.from.push({
-        fromId: sender.playerId,
-        fromName: sender.playerName || "",
-        troops: sendAmount,
-        lead: Boolean(sender.whale),
-      });
-      needs.set(targetId, Math.max(0, need - effectiveTroops(sender, sendAmount)));
-      progress = true;
+      if (!isLeadEligible(sender, member.power)) continue;
+      if (sender.power > bestLeadPower) {
+        bestLeadPower = sender.power;
+        bestLeadId = entry.fromId;
+      }
     }
-  }
-
-  for (const member of annotated) {
-    const outgoingCount = outgoing.get(member.playerId)?.length ?? 0;
-    if (outgoingCount > member.marchCount) {
-      warnings.push(`${member.playerId} exceeds march limit.`);
+    if (bestLeadId) {
+      leadByTarget.set(member.playerId, bestLeadId);
     }
-    if ((remainingBySender.get(member.playerId) || 0) > 0) {
-      warnings.push(`${member.playerId} still has troops at home.`);
-    }
-  }
-
-  const powerById = new Map<string, number>();
-  const nameById = new Map<string, string>();
-  for (const member of annotated) {
-    powerById.set(member.playerId, member.power);
-    nameById.set(member.playerId, member.playerName || "");
   }
 
   const baseResult = annotated.map((member) => {
     const incomingInfo = getIncoming(incoming, member.playerId);
     const outgoingInfo = getOutgoing(outgoing, member.playerId);
     const outgoingTotal = sum(outgoingInfo.map((entry) => entry.troops));
-    let garrisonLeadId: string | undefined;
-    let garrisonLeadName = "";
-    let maxLeadTroops = 0;
-    for (const entry of incomingInfo.from) {
-      if (entry.lead && entry.troops > maxLeadTroops) {
-        maxLeadTroops = entry.troops;
-        garrisonLeadId = entry.fromId;
-        garrisonLeadName = entry.fromName || "";
-      }
-    }
-    if (!garrisonLeadId) {
-      let bestLeadId: string | undefined;
-      let bestLeadPower = 0;
-      for (const entry of incomingInfo.from) {
-        const senderPower = powerById.get(entry.fromId) || 0;
-        if (senderPower > bestLeadPower) {
-          bestLeadPower = senderPower;
-          bestLeadId = entry.fromId;
-        }
-      }
-      if (bestLeadId && bestLeadPower > member.power * 1.4) {
-        garrisonLeadId = bestLeadId;
-        garrisonLeadName = nameById.get(bestLeadId) || "";
-      }
-    }
+    const garrisonLeadId = leadByTarget.get(member.playerId);
+    const garrisonLeadName = garrisonLeadId ? nameById.get(garrisonLeadId) || "" : "";
 
     return {
       playerId: member.playerId,
@@ -500,13 +372,6 @@ function generateAssignments(members: Member[]): AssignmentResult {
       garrisonLeadName,
     };
   });
-
-  const leadByTarget = new Map<string, string>();
-  for (const member of baseResult) {
-    if (member.garrisonLeadId) {
-      leadByTarget.set(member.playerId, member.garrisonLeadId);
-    }
-  }
 
   const result = baseResult.map((member) => {
     const outgoingInfo = member.outgoing.map((entry) => ({
@@ -525,6 +390,13 @@ function generateAssignments(members: Member[]): AssignmentResult {
   });
 
   for (const member of result) {
+    const outgoingCount = member.outgoing.length;
+    if (outgoingCount > (memberById.get(member.playerId)?.marchCount || 0)) {
+      warnings.push(`${member.playerId} exceeds march limit.`);
+    }
+    if ((member.troopsRemaining || 0) > 0) {
+      warnings.push(`${member.playerId} still has troops at home.`);
+    }
     const incomingInfo = getIncoming(incoming, member.playerId);
     const effectiveIncoming = incomingInfo.effectiveTotal ?? member.incomingTotal;
     if (effectiveIncoming < NEED_PER_CITY && !member.garrisonLeadId) {
