@@ -29,7 +29,7 @@ export function useBearRallyOrder(
     const members = bearGroup === "bear1" ? sortedBear1 : sortedBear2;
     const selectedMembers = members.slice(0, hostCount);
 
-    let order = "🐻Bear Rally Order🐻\n";
+    const lines = ["🐻Bear Rally Order🐻"];
     for (let i = 0; i < selectedMembers.length; i += 2) {
       const member1 = selectedMembers[i];
       const member2 = selectedMembers[i + 1];
@@ -43,13 +43,13 @@ export function useBearRallyOrder(
         const fullName2 = member2.playerName || member2.playerId;
         const name2 =
           fullName2.length > 10 ? fullName2.substring(0, 7) + "..." : fullName2;
-        order += `${num1}. ${name1.padEnd(10)} ${num2}. ${name2}\n`;
+        lines.push(`${num1}. ${name1.padEnd(10)} ${num2}. ${name2}`);
       } else {
-        order += `${num1}. ${name1}\n`;
+        lines.push(`${num1}. ${name1}`);
       }
     }
 
-    setRallyOrder(order);
+    setRallyOrder(lines.join("\n"));
   }
 
   function copyToClipboard() {

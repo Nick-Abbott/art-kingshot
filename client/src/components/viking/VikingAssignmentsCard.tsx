@@ -86,37 +86,39 @@ function VikingAssignmentsCard({
                   <p className="text-sm text-muted">{t("viking.garrisonNone")}</p>
                 )}
               </header>
-              <div className="mt-3">
-                <h4 className="text-sm font-semibold">{t("viking.sendTroopsTo")}</h4>
-                <ul className="mt-2 grid gap-2 text-sm">
-                  {member.outgoing.map((item, index) => (
-                    <li key={`${member.playerId}-out-${index}`}>
-                      {(item.toName || item.toId)}
-                      {showAdvancedDetails ? ` — ${formatNumber(item.troops)}` : ""}{" "}
-                      {item.lead ? (
-                        <span className="ml-2 inline-flex rounded-md bg-accent/15 px-2 py-0.5 text-[0.65rem] font-semibold text-accent-dark">
-                          {t("viking.lead")}
-                        </span>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="mt-3">
-                <h4 className="text-sm font-semibold">{t("viking.receivingFrom")}</h4>
-                <ul className="mt-2 grid gap-2 text-sm">
-                  {member.incoming.map((item, index) => (
-                    <li key={`${member.playerId}-in-${index}`}>
-                      {(item.fromName || item.fromId)}
-                      {showAdvancedDetails ? ` — ${formatNumber(item.troops)}` : ""}{" "}
-                      {item.lead ? (
-                        <span className="ml-2 inline-flex rounded-md bg-accent/15 px-2 py-0.5 text-[0.65rem] font-semibold text-accent-dark">
-                          {t("viking.lead")}
-                        </span>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
+              <div className="mt-3 grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
+                <div>
+                  <h4 className="text-sm font-semibold">{t("viking.sendTroopsTo")}</h4>
+                  <ul className="mt-2 grid gap-1.5 text-sm">
+                    {member.outgoing.map((item, index) => (
+                      <li key={`${member.playerId}-out-${index}`}>
+                        {(item.toName || item.toId)}
+                        {showAdvancedDetails ? ` — ${formatNumber(item.troops)}` : ""}{" "}
+                        {item.lead ? (
+                          <span className="ml-2 inline-flex rounded-md bg-accent/15 px-2 py-0.5 text-[0.65rem] font-semibold text-accent-dark">
+                            {t("viking.lead")}
+                          </span>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold">{t("viking.receivingFrom")}</h4>
+                  <ul className="mt-2 grid gap-1.5 text-sm">
+                    {member.incoming.map((item, index) => (
+                      <li key={`${member.playerId}-in-${index}`}>
+                        {(item.fromName || item.fromId)}
+                        {showAdvancedDetails ? ` — ${formatNumber(item.troops)}` : ""}{" "}
+                        {item.lead ? (
+                          <span className="ml-2 inline-flex rounded-md bg-accent/15 px-2 py-0.5 text-[0.65rem] font-semibold text-accent-dark">
+                            {t("viking.lead")}
+                          </span>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             </article>
           ))}
