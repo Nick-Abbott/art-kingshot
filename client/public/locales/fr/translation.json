@@ -53,9 +53,12 @@
     "cancelEdit": "Annuler la modification",
     "findAssignmentsTitle": "Trouvez vos affectations",
     "findAssignmentsSubtitle": "Recherchez par nom de joueur pour acc\u00e9der \u00e0 votre carte.",
+    "findSignupsTitle": "Trouver des inscriptions",
+    "findSignupsSubtitle": "Recherchez par nom de joueur pour trouver une inscription.",
     "playerName": "Nom du joueur",
     "searchPlaceholder": "Commencez \u00e0 taper un nom...",
     "showAllAssignments": "Tout afficher",
+    "showAllSignups": "Afficher toutes les inscriptions",
     "instructionsTitle": "Comment lancer vos marches",
     "instructions": {
       "equalize": "Utilisez \u00c9galiser pour chaque marche.",

@@ -53,9 +53,12 @@
     "cancelEdit": "Cancelar edi\u00e7\u00e3o",
     "findAssignmentsTitle": "Encontre suas atribui\u00e7\u00f5es",
     "findAssignmentsSubtitle": "Pesquise pelo nome do jogador para ir ao seu cart\u00e3o.",
+    "findSignupsTitle": "Encontrar inscri\u00e7\u00f5es",
+    "findSignupsSubtitle": "Pesquise pelo nome do jogador para encontrar uma inscri\u00e7\u00e3o.",
     "playerName": "Nome do jogador",
     "searchPlaceholder": "Comece a digitar um nome...",
     "showAllAssignments": "Mostrar tudo",
+    "showAllSignups": "Mostrar todas as inscri\u00e7\u00f5es",
     "instructionsTitle": "Como executar suas marchas",
     "instructions": {
       "equalize": "Use Igualar em cada marcha.",

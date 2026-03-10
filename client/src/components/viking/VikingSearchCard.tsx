@@ -3,6 +3,9 @@ import type { TFunction } from "i18next";
 
 type Props = {
   t: TFunction;
+  title?: string;
+  subtitle?: string;
+  showAllLabel?: string;
   searchQuery: string;
   setSearchQuery: (value: string) => void;
   suggestionTail: string;
@@ -11,6 +14,9 @@ type Props = {
 
 function VikingSearchCard({
   t,
+  title,
+  subtitle,
+  showAllLabel,
   searchQuery,
   setSearchQuery,
   suggestionTail,
@@ -19,8 +25,12 @@ function VikingSearchCard({
   return (
     <section className="ui-card">
       <div className="ui-section-header">
-        <h2 className="ui-section-title">{t("viking.findAssignmentsTitle")}</h2>
-        <p className="ui-section-subtitle">{t("viking.findAssignmentsSubtitle")}</p>
+        <h2 className="ui-section-title">
+          {title || t("viking.findAssignmentsTitle")}
+        </h2>
+        <p className="ui-section-subtitle">
+          {subtitle || t("viking.findAssignmentsSubtitle")}
+        </p>
       </div>
       <div className="mt-5">
         <label className="ui-field">
@@ -57,7 +67,7 @@ function VikingSearchCard({
             disabled={!searchQuery.trim()}
             data-testid="viking-show-all"
           >
-            {t("viking.showAllAssignments")}
+            {showAllLabel || t("viking.showAllAssignments")}
           </button>
         </div>
       </div>

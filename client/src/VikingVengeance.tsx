@@ -13,6 +13,7 @@ import {
   useEligibleMembersQuery
 } from "./hooks/useEligibleMembersQuery";
 import { useVikingAssignmentSearch } from "./hooks/useVikingAssignmentSearch";
+import { useVikingSignupSearch } from "./hooks/useVikingSignupSearch";
 import VikingAssignmentsCard from "./components/viking/VikingAssignmentsCard";
 import VikingHeader from "./components/viking/VikingHeader";
 import VikingInstructionsCard from "./components/viking/VikingInstructionsCard";
@@ -82,18 +83,32 @@ function VikingVengeance({ profileId, profile, canManage }: Props) {
     return options;
   }, [eligibleMembers, profile]);
 
+  const memberCount = members.length;
+
+  const sortedMembers = useMemo(() => {
+    const copy = [...members];
+    copy.sort((a, b) => {
+      const nameA = (a.playerName || a.playerId || "").toLowerCase();
+      const nameB = (b.playerName || b.playerId || "").toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
+    if (!profile?.playerId) return copy;
+    const index = copy.findIndex((member) => member.playerId === profile.playerId);
+    if (index <= 0) return copy;
+    const [own] = copy.splice(index, 1);
+    return [own, ...copy];
+  }, [members, profile?.playerId]);
+
   const defaultAssignmentQuery = profile?.playerName || profile?.playerId || "";
   const { searchQuery, setSearchQuery, filteredResults, suggestionTail, topSuggestion } =
     useVikingAssignmentSearch(results, {
       profileId,
       defaultQuery: defaultAssignmentQuery
     });
-
-  const memberCount = members.length;
-
-  const sortedMembers = useMemo(() => {
-    return [...members].sort((a, b) => a.playerId.localeCompare(b.playerId));
-  }, [members]);
+  const signupSearch = useVikingSignupSearch(sortedMembers, {
+    profileId,
+    defaultQuery: defaultAssignmentQuery
+  });
 
   useEffect(() => {
     if (!profileId) return;
@@ -481,9 +496,22 @@ function VikingVengeance({ profileId, profile, canManage }: Props) {
         )}
 
         {!results && (
+          <VikingSearchCard
+            t={t}
+            title={t("viking.findSignupsTitle")}
+            subtitle={t("viking.findSignupsSubtitle")}
+            showAllLabel={t("viking.showAllSignups")}
+            searchQuery={signupSearch.searchQuery}
+            setSearchQuery={signupSearch.setSearchQuery}
+            suggestionTail={signupSearch.suggestionTail}
+            topSuggestion={signupSearch.topSuggestion}
+          />
+        )}
+
+        {!results && (
           <VikingRosterCard
             t={t}
-            members={sortedMembers}
+            members={signupSearch.filteredMembers}
             profile={profile}
             canManage={canManage}
             busy={busy}

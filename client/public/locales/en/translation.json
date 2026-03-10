@@ -53,9 +53,12 @@
     "cancelEdit": "Cancel Edit",
     "findAssignmentsTitle": "Find your assignments",
     "findAssignmentsSubtitle": "Search by player name to jump to your card.",
+    "findSignupsTitle": "Find signups",
+    "findSignupsSubtitle": "Search by player name to find a signup.",
     "playerName": "Player name",
     "searchPlaceholder": "Start typing a name...",
     "showAllAssignments": "Show all",
+    "showAllSignups": "Show all signups",
     "instructionsTitle": "How to run your marches",
     "instructions": {
       "equalize": "Use Equalize on every march.",

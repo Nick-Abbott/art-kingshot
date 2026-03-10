@@ -53,9 +53,12 @@
     "cancelEdit": "\u53d6\u6d88\u7f16\u8f91",
     "findAssignmentsTitle": "\u67e5\u627e\u4f60\u7684\u5206\u914d",
     "findAssignmentsSubtitle": "\u6309\u73a9\u5bb6\u540d\u641c\u7d22\u4ee5\u8df3\u8f6c\u5230\u4f60\u7684\u5361\u7247\u3002",
+    "findSignupsTitle": "\u67e5\u627e\u62a5\u540d",
+    "findSignupsSubtitle": "\u6309\u73a9\u5bb6\u540d\u79f0\u641c\u7d22\u4ee5\u627e\u5230\u62a5\u540d\u3002",
     "playerName": "\u73a9\u5bb6\u540d",
     "searchPlaceholder": "\u5f00\u59cb\u8f93\u5165\u540d\u5b57...",
     "showAllAssignments": "\u663e\u793a\u5168\u90e8",
+    "showAllSignups": "\u663e\u793a\u6240\u6709\u62a5\u540d",
     "instructionsTitle": "\u5982\u4f55\u6267\u884c\u884c\u519b",
     "instructions": {
       "equalize": "\u6bcf\u6b21\u884c\u519b\u90fd\u4f7f\u7528\u5747\u8861\u3002",
