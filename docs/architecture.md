@@ -52,6 +52,12 @@ This guide is a quick reference for agents working in this repo. It summarizes h
 - `server/routes/bear.ts` — Bear roster + eligible list.
 - `server/routes/assignments.ts` — run/reset/results.
 - `server/routes/admin.ts` — app-admin cross-kingdom tooling.
+- `server/routes/bot.ts` — Discord bot API (profiles, notifications, commands).
+
+### Assignment DM Opt-in
+- Opt-in is stored per profile (`profiles.botOptInAssignments`).
+- The Profiles page toggles the selected profile’s flag.
+- Notification recipients are selected by profile opt-in + active alliance membership.
 
 ## Playwright & Testing
 

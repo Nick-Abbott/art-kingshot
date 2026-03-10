@@ -9,6 +9,10 @@ import { handleVikingsAutocomplete, handleVikingsCommand } from "./handlers/viki
 import { processAssignmentNotification } from "./notifications";
 import { handleLinkCommand } from "./handlers/link";
 import { handleGuildCommand } from "./handlers/guild";
+import {
+  handleNotificationsAutocomplete,
+  handleNotificationsCommand,
+} from "./handlers/notifications";
 
 type BotClient = {
   once: (
@@ -95,6 +99,14 @@ export function createBot(deps: BotDeps) {
               botSecret: config.botSecret,
             }
           );
+        } else if (interaction.commandName === "notifications") {
+          await handleNotificationsAutocomplete(
+            interaction as unknown as Parameters<typeof handleNotificationsAutocomplete>[0],
+            {
+              serverUrl: config.serverUrl,
+              botSecret: config.botSecret,
+            }
+          );
         } else {
           await interaction.respond([]);
         }
@@ -145,6 +157,17 @@ export function createBot(deps: BotDeps) {
               : undefined,
             channel: interaction.channel ?? null,
           },
+          {
+            serverUrl: config.serverUrl,
+            botSecret: config.botSecret,
+          }
+        );
+        await interaction.editReply(message);
+        return;
+      }
+      if (interaction.commandName === "notifications") {
+        const message = await handleNotificationsCommand(
+          interaction as unknown as Parameters<typeof handleNotificationsCommand>[0],
           {
             serverUrl: config.serverUrl,
             botSecret: config.botSecret,

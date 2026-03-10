@@ -326,7 +326,7 @@ Verify DM and channel paths and copy; run `npm run test:server`.
 **Status**: Complete
 
 **Scope / Requirements**
-- Add an opt-in preference for assignment DMs (default off).
+- Add an opt-in preference for assignment DMs (per-profile, default on for new profiles).
 - When assignments are run, send DMs to opted-in members with their assignments.
 - If DM fails (privacy settings), record failure and rely on the existing `/vikings assignments` command for manual retrieval (no channel fallback required).
 - Ensure messaging complies with Discord policy: only message users who have opted in or previously interacted with the bot in-context.
@@ -348,7 +348,8 @@ Verify opt-in enforcement, DM failure handling (status recorded), and copy. Conf
 
 - **Engineer Update (2026-03-06)**: treated account linking as opt-in; restored notifications queue table and bot polling with periodic cleanup; added server tests for opt-in flag and queueing on assignment runs.
 - **Engineer Tests (2026-03-06)**: `npm run test:server` (pass).
-- **QA Validation (2026-03-06)**: ✓ Opt-in enforced via `users.botOptInAssignments` and `listOptedInAssignmentRecipients` in `server/db/queries.ts`; ✓ Assignment run queues notifications for opted-in users (`server/routes/assignments.ts`, `server/api.test.ts`); ✓ Bot polls and sends DMs, marking status sent/failed and logging failures (`server/bot/index.ts`, `server/routes/bot.ts`); ⚠️ No explicit test for DM failure logging/fallback beyond status update; ⚠️ No Discord UI smoke re-run in QA.
+- **QA Validation (2026-03-06)**: ✓ Opt-in enforced via `profiles.botOptInAssignments` and `listOptedInAssignmentRecipients` in `server/db/queries.ts`; ✓ Assignment run queues notifications for opted-in users (`server/routes/assignments.ts`, `server/api.test.ts`); ✓ Bot polls and sends DMs, marking status sent/failed and logging failures (`server/bot/index.ts`, `server/routes/bot.ts`); ⚠️ No explicit test for DM failure logging/fallback beyond status update; ⚠️ No Discord UI smoke re-run in QA.
+- **Engineer Update (2026-03-10)**: moved assignment DM opt-in to `profiles.botOptInAssignments` (per-profile), added a profile-level toggle in the Profiles page, and added a `/notifications` Discord command with optional profile selection + autocomplete. Backfilled profile opt-in values from user opt-in during migration.
 - **QA Tests (2026-03-06)**: `npm run test:server` (pass).
 - **TPM Re-check (2026-03-06)**: Accepted. DM failure status is recorded in `server/bot/index.ts`, and `/vikings assignments` supports manual retrieval via `server/bot/handlers/vikings.ts` + `server/routes/bot.ts`.
  

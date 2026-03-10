@@ -9,6 +9,10 @@ type Props = {
   error: string;
   success: string;
   onRefresh: () => void;
+  dmOptIn: boolean;
+  dmOptInBusy: boolean;
+  dmOptInError: string;
+  onDmOptInChange: (nextValue: boolean) => void;
 };
 
 function ProfilesCurrentCard({
@@ -17,7 +21,11 @@ function ProfilesCurrentCard({
   lookupStatus,
   error,
   success,
-  onRefresh
+  onRefresh,
+  dmOptIn,
+  dmOptInBusy,
+  dmOptInError,
+  onDmOptInChange
 }: Props) {
   return (
     <section className="ui-card">
@@ -98,6 +106,31 @@ function ProfilesCurrentCard({
                 defaultValue: "Rally capacity: {{value}}"
               })}
             </p>
+          </div>
+        </div>
+        <div className="ui-card-muted">
+          <div className="flex flex-col gap-3">
+            <p className="font-semibold">
+              {t("profiles.notificationsTitle", {
+                defaultValue: "Notifications"
+              })}
+            </p>
+            <label className="flex items-start gap-3 text-sm text-ink">
+              <input
+                type="checkbox"
+                className="mt-1 h-4 w-4 accent-accent"
+                checked={dmOptIn}
+                onChange={(event) => onDmOptInChange(event.target.checked)}
+                disabled={dmOptInBusy}
+              />
+              <span>
+                {t("profiles.discordDmOptInLabel")}
+                <span className="block text-xs text-muted">
+                  {t("profiles.discordDmOptInHint")}
+                </span>
+              </span>
+            </label>
+            {dmOptInError && <p className="ui-error">{dmOptInError}</p>}
           </div>
         </div>
       </div>

@@ -440,6 +440,41 @@ export default function profileRoutes(ctx: RouteContext) {
     }
   );
 
+  router.post(
+    "/api/profiles/:profileId/assignments-opt-in",
+    ctx.requireAuthMiddleware,
+    (req: Request, res: Response) => {
+      if (!req.user) {
+        ctx.fail(res, 401, "Authentication required.");
+        return;
+      }
+      const profileId =
+        typeof req.params.profileId === "string" ? req.params.profileId.trim() : "";
+      if (!profileId) {
+        ctx.fail(res, 400, "profileId is required.");
+        return;
+      }
+      const profile = ctx.getProfileById(profileId);
+      if (!profile) {
+        ctx.fail(res, 404, "Profile not found.");
+        return;
+      }
+      if (profile.userId !== req.user.id && !req.user?.isAppAdmin) {
+        ctx.fail(res, 403, "Profile access denied.");
+        return;
+      }
+      const parsed = ctx.parseAssignmentOptInPayload(req.body);
+      if (!parsed.ok) {
+        ctx.fail(res, 400, parsed.error, parsed.code);
+        return;
+      }
+      const now = Date.now();
+      ctx.queries.updateProfileBotOptIn(parsed.data.enabled ? 1 : 0, now, profile.id);
+      const updated = ctx.getProfileById(profile.id);
+      ctx.ok(res, { profile: updated });
+    }
+  );
+
   router.get(
     "/api/alliance/profiles",
     ctx.requireAuthMiddleware,

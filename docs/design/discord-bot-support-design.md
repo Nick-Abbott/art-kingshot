@@ -34,6 +34,8 @@ Members want to interact with alliance tools without leaving Discord. Today, all
   - register, edit, remove, view
 - /vikings ...
   - register, edit, remove, assignments
+- /notifications ...
+  - toggle assignment DMs per profile
 
 Each command uses autocomplete for profile selection and any needed fields.
 
@@ -41,6 +43,8 @@ Each command uses autocomplete for profile selection and any needed fields.
 - /vikings assignments
   - Default: DM the user with their assignment.
   - Optional: user can request a channel post via a command flag.
+- /notifications enabled
+  - Toggle assignment DMs per profile (profile option optional; defaults to single active profile).
 
 ## Command Design
 
@@ -88,6 +92,7 @@ Inputs (autocomplete where applicable):
 ## Data Model Considerations
 - Store Discord guild association per alliance (1:1).
 - Ensure Discord ID is stored on profiles/users as it is today for role determination.
+- Store assignment DM opt-in on profiles (per profile).
 - Bot uses existing API endpoints where possible; avoid new admin endpoints.
 
 ## API & System Changes (High-Level)

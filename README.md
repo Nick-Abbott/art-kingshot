@@ -48,7 +48,7 @@ Set the server environment variables listed below before starting the server.
 ## Discord Bot Usage
 
 Members can use these slash commands inside the linked guild:
-- `/link player_id` — link a Kingshot profile to your Discord account (also opts you into assignment DMs).
+- `/link player_id` — link a Kingshot profile to your Discord account.
 - `/guild associate alliance_id kingdom_id` — admins only; associate this guild to an alliance.
 - `/bear register|edit|remove|view` — manage Bear Rally signup.
   - `group` is required; `rally_size` is optional if a default exists for the selected profile.
@@ -57,6 +57,8 @@ Members can use these slash commands inside the linked guild:
   - `march_count` is required; `troop_count`/`power` are optional if defaults exist for the selected profile.
   - `profile` is optional; when omitted, the bot uses your first linked profile.
 - `/vikings assignments` — receive Viking assignments (DM by default; `output=channel` posts to the current channel).
+- `/notifications enabled` — toggle Viking assignment DMs for a specific profile.
+  - `profile` is optional; when omitted, the bot uses your first active linked profile.
 
 ## Discord Guild Association (Admin)
 

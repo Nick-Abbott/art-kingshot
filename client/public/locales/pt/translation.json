@@ -184,6 +184,9 @@
     "selectAllianceBadge": "Selecionar alian\u00e7a",
     "currentTitle": "Perfil atual",
     "currentSubtitle": "Mantenha os dados do seu perfil atualizados.",
+    "notificationsTitle": "Notifica\u00e7\u00f5es",
+    "discordDmOptInLabel": "Receber DMs de atribui\u00e7\u00f5es vikings",
+    "discordDmOptInHint": "Envia as atribui\u00e7\u00f5es para seus DMs do Discord quando ativado.",
     "adminTitle": "Perfis da alian\u00e7a",
     "adminSubtitle": "Aprove novos perfis e gerencie fun\u00e7\u00f5es.",
     "adminAddPlayerId": "Adicionar perfil por ID do jogador",
@@ -211,7 +214,8 @@
       "tagRequired": "A tag da alian\u00e7a deve ter 3 letras.",
       "nameRequired": "O nome da alian\u00e7a \u00e9 obrigat\u00f3rio.",
       "createAllianceFailed": "Falha ao criar a alian\u00e7a.",
-      "deleteAllianceFailed": "Falha ao excluir a alian\u00e7a."
+      "deleteAllianceFailed": "Falha ao excluir a alian\u00e7a.",
+      "dmOptInUpdateFailed": "Falha ao atualizar a prefer\u00eancia de DM do Discord."
     },
     "pendingNotice": "Sua solicita\u00e7\u00e3o de acesso est\u00e1 pendente de aprova\u00e7\u00e3o por um admin da alian\u00e7a.",
     "selectAllianceNotice": "Crie ou escolha uma alian\u00e7a abaixo para solicitar acesso.",

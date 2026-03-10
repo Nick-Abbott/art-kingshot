@@ -343,7 +343,7 @@ export default function botRoutes(ctx: RouteContext) {
             now,
             existing.id
           );
-          ctx.updateUserBotOptIn(auth.userId, 1);
+          ctx.queries.updateProfileBotOptIn(1, now, existing.id);
           if (targetAllianceId && existing.allianceId !== targetAllianceId) {
             ctx.updateProfile(
               existing.playerId ?? null,
@@ -381,7 +381,7 @@ export default function botRoutes(ctx: RouteContext) {
           now,
           existing.id
         );
-        ctx.updateUserBotOptIn(auth.userId, 1);
+        ctx.queries.updateProfileBotOptIn(1, now, existing.id);
         if (targetAllianceId && !existing.allianceId) {
           ctx.updateProfile(
             existing.playerId ?? null,
@@ -422,7 +422,7 @@ export default function botRoutes(ctx: RouteContext) {
         now,
         now
       );
-      ctx.updateUserBotOptIn(auth.userId, 1);
+      ctx.queries.updateProfileBotOptIn(1, now, id);
       const profile = ctx.getProfileById(id);
       ctx.ok(res, { profile });
     }
@@ -435,6 +435,28 @@ export default function botRoutes(ctx: RouteContext) {
       if (!auth) return;
       const notifications = ctx.queries.listPendingAssignmentNotificationsAll();
       ctx.ok(res, { notifications });
+    }
+  );
+
+  router.post(
+    "/api/bot/notifications/assignments",
+    (req: Request, res: Response) => {
+      const auth = requireBotAuth(req, res, { allowCreate: true });
+      if (!auth) return;
+      const parsed = ctx.parseBotAssignmentOptInPayload(req.body);
+      if (!parsed.ok) {
+        ctx.fail(res, 400, parsed.error, parsed.code);
+        return;
+      }
+      const profile = auth.profiles.find((item) => item.id === parsed.data.profileId);
+      if (!profile) {
+        ctx.fail(res, 404, "Profile not found.");
+        return;
+      }
+      const now = Date.now();
+      ctx.queries.updateProfileBotOptIn(parsed.data.enabled ? 1 : 0, now, profile.id);
+      const updated = ctx.getProfileById(profile.id);
+      ctx.ok(res, { profile: updated });
     }
   );
 

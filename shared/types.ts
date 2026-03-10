@@ -24,7 +24,8 @@ export type User = {
   discordId: string;
   displayName: string;
   avatar?: string | null;
-  isAppAdmin?: number | boolean;
+  isAppAdmin?: boolean;
+  botOptInAssignments?: boolean;
 };
 
 export type Alliance = {
@@ -49,11 +50,16 @@ export type Profile = {
   marchCount?: number | null;
   power?: number | null;
   rallySize?: number | null;
+  botOptInAssignments?: boolean;
 };
 
 export type SessionPayload = {
   user: User | null;
   profiles: Profile[];
+};
+
+export type UserPayload = {
+  user: User | null;
 };
 
 export type AlliancesPayload = {

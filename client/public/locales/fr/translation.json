@@ -184,6 +184,9 @@
     "selectAllianceBadge": "Choisir alliance",
     "currentTitle": "Profil actuel",
     "currentSubtitle": "Gardez les informations de votre profil \u00e0 jour.",
+    "notificationsTitle": "Alertes",
+    "discordDmOptInLabel": "Recevoir les DM d\u2019assignations vikings",
+    "discordDmOptInHint": "Envoie les assignations dans vos DM Discord lorsque c\u2019est activ\u00e9.",
     "adminTitle": "Profils d\u2019alliance",
     "adminSubtitle": "Approuvez les nouveaux profils et g\u00e9rez les r\u00f4les.",
     "adminAddPlayerId": "Ajouter un profil par ID joueur",
@@ -211,7 +214,8 @@
       "tagRequired": "Le tag d\u2019alliance doit contenir 3 lettres.",
       "nameRequired": "Le nom de l\u2019alliance est obligatoire.",
       "createAllianceFailed": "\u00c9chec de la cr\u00e9ation de l\u2019alliance.",
-      "deleteAllianceFailed": "\u00c9chec de la suppression de l\u2019alliance."
+      "deleteAllianceFailed": "\u00c9chec de la suppression de l\u2019alliance.",
+      "dmOptInUpdateFailed": "Impossible de mettre \u00e0 jour la pr\u00e9f\u00e9rence de DM Discord."
     },
     "pendingNotice": "Votre demande d\u2019acc\u00e8s est en attente d\u2019approbation par un admin de l\u2019alliance.",
     "selectAllianceNotice": "Cr\u00e9ez ou choisissez une alliance ci-dessous pour demander l\u2019acc\u00e8s.",

@@ -779,7 +779,7 @@ test("assignment run queues notifications for opted-in users", async () => {
     const allianceId = getPayload<{ alliance: { id: string } }>(createAlliance).alliance.id;
 
     const db = new Database(dbPath);
-    db.prepare("UPDATE users SET botOptInAssignments = 1").run();
+    db.prepare("UPDATE profiles SET botOptInAssignments = 1").run();
     db.close();
 
     const signup = await requestJson(
@@ -1296,8 +1296,8 @@ test("bot endpoints resolve discord user and enforce ownership", async () => {
 
     const dbAfterLink = new Database(dbPath);
     const optInRow = dbAfterLink.prepare(
-      "SELECT botOptInAssignments FROM users WHERE discordId = ?"
-    ).get(discordId) as { botOptInAssignments: number };
+      "SELECT botOptInAssignments FROM profiles WHERE playerId = ?"
+    ).get("NEWPLAYER") as { botOptInAssignments: number };
     assert.equal(optInRow.botOptInAssignments, 1);
     dbAfterLink.close();
 

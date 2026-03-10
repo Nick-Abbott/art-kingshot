@@ -31,9 +31,6 @@ export function createQueries(db: Database) {
   const selectUserById = db.prepare(
     "SELECT id, discordId, displayName, avatar, isAppAdmin FROM users WHERE id = ?"
   );
-  const updateUserBotOptIn = db.prepare(
-    "UPDATE users SET botOptInAssignments = ? WHERE id = ?"
-  );
   const selectProfilesByUser = db.prepare(
     `SELECT profiles.id,
             profiles.userId,
@@ -48,6 +45,7 @@ export function createQueries(db: Database) {
             profiles.marchCount,
             profiles.power,
             profiles.rallySize,
+            profiles.botOptInAssignments,
             alliances.name AS allianceName
      FROM profiles
      LEFT JOIN alliances ON alliances.id = profiles.allianceId
@@ -67,6 +65,7 @@ export function createQueries(db: Database) {
             profiles.marchCount,
             profiles.power,
             profiles.rallySize,
+            profiles.botOptInAssignments,
             alliances.name AS allianceName
      FROM profiles
      LEFT JOIN alliances ON alliances.id = profiles.allianceId
@@ -145,6 +144,12 @@ export function createQueries(db: Database) {
          updatedAt = ?
      WHERE id = ?`
   );
+  const updateProfileBotOptIn = db.prepare(
+    `UPDATE profiles
+     SET botOptInAssignments = ?,
+         updatedAt = ?
+     WHERE id = ?`
+  );
   const selectAllianceById = db.prepare(
     "SELECT id, name, kingdomId FROM alliances WHERE id = ?"
   );
@@ -174,6 +179,7 @@ export function createQueries(db: Database) {
             profiles.marchCount,
             profiles.power,
             profiles.rallySize,
+            profiles.botOptInAssignments,
             users.displayName AS userDisplayName
      FROM profiles
      LEFT JOIN users ON users.id = profiles.userId
@@ -293,7 +299,7 @@ export function createQueries(db: Database) {
      JOIN users ON users.id = profiles.userId
      WHERE profiles.allianceId = ?
        AND profiles.status = 'active'
-       AND users.botOptInAssignments = 1
+       AND profiles.botOptInAssignments = 1
        AND users.discordId IS NOT NULL`
   );
   const insertAssignmentNotification = db.prepare(
@@ -348,26 +354,44 @@ export function createQueries(db: Database) {
     "DELETE FROM assignment_notifications WHERE updatedAt < ?"
   );
 
+  function normalizeUser(row: User | undefined): User | null {
+    if (!row) return null;
+    return {
+      ...row,
+      isAppAdmin: Boolean(row.isAppAdmin),
+    };
+  }
+
   function getUserByDiscordId(discordId: string): User | null {
-    return (selectUserByDiscordId.get(discordId) as User | undefined) ?? null;
+    return normalizeUser(selectUserByDiscordId.get(discordId) as User | undefined);
   }
 
   function getUserById(id: string): User | null {
-    return (selectUserById.get(id) as User | undefined) ?? null;
+    return normalizeUser(selectUserById.get(id) as User | undefined);
+  }
+
+  function normalizeProfile(row: Profile | undefined): Profile | null {
+    if (!row) return null;
+    return {
+      ...row,
+      botOptInAssignments: Boolean(row.botOptInAssignments),
+    };
   }
 
   function getProfileById(id: string): Profile | null {
-    return (selectProfileById.get(id) as Profile | undefined) ?? null;
+    return normalizeProfile(selectProfileById.get(id) as Profile | undefined);
   }
 
   function getProfileByPlayerId(playerId: string): Profile | null {
-    return (
-      (selectProfileByPlayerId.get(playerId) as Profile | undefined) ?? null
-    );
+    return normalizeProfile(selectProfileByPlayerId.get(playerId) as Profile | undefined);
   }
 
   function getProfilesByUser(userId: string): Profile[] {
-    return (selectProfilesByUser.all(userId) as Profile[]) || [];
+    const rows = (selectProfilesByUser.all(userId) as Profile[]) || [];
+    return rows.map((row) => ({
+      ...row,
+      botOptInAssignments: Boolean(row.botOptInAssignments),
+    }));
   }
 
   function getAllianceById(id: string): Alliance | null {
@@ -399,7 +423,11 @@ export function createQueries(db: Database) {
   }
 
   function listAllianceProfiles(allianceId: string): Profile[] {
-    return (selectAllianceProfiles.all(allianceId) as Profile[]) || [];
+    const rows = (selectAllianceProfiles.all(allianceId) as Profile[]) || [];
+    return rows.map((row) => ({
+      ...row,
+      botOptInAssignments: Boolean(row.botOptInAssignments),
+    }));
   }
 
   function listEligibleMembers(allianceId: string): EligibleMember[] {
@@ -576,12 +604,6 @@ export function createQueries(db: Database) {
     return updateUser.run(displayName, avatar, id);
   }
 
-  function updateUserBotOptInRow(
-    id: string,
-    enabled: number
-  ): RunResult {
-    return updateUserBotOptIn.run(enabled, id);
-  }
 
   function insertBootstrapRowOnce(createdAt: number): RunResult {
     return insertBootstrapRow.run(createdAt);
@@ -886,6 +908,14 @@ export function createQueries(db: Database) {
     return updateProfileStatus.run(status, role, updatedAt, id);
   }
 
+  function updateProfileBotOptInRow(
+    enabled: number,
+    updatedAt: number,
+    id: string
+  ): RunResult {
+    return updateProfileBotOptIn.run(enabled, updatedAt, id);
+  }
+
   return {
     getUserByDiscordId,
     getUserById,
@@ -920,7 +950,6 @@ export function createQueries(db: Database) {
     countActiveProfiles,
     insertUser: insertUserRow,
     updateUser: updateUserRow,
-    updateUserBotOptIn: updateUserBotOptInRow,
     insertBootstrapRow: insertBootstrapRowOnce,
     insertSession: insertSessionRow,
     getSession,
@@ -943,6 +972,7 @@ export function createQueries(db: Database) {
     updateProfileClaim: updateProfileClaimRow,
     updateProfileFields: updateProfileFieldsRow,
     updateProfileStatus: updateProfileStatusRow,
+    updateProfileBotOptIn: updateProfileBotOptInRow,
   };
 }
 

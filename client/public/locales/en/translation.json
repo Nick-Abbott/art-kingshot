@@ -184,6 +184,9 @@
     "selectAllianceBadge": "Select alliance",
     "currentTitle": "Current profile",
     "currentSubtitle": "Keep your profile details up to date.",
+    "notificationsTitle": "Notifications",
+    "discordDmOptInLabel": "Receive Viking assignment DMs",
+    "discordDmOptInHint": "Sends assignments to your Discord DMs when enabled.",
     "adminTitle": "Alliance profiles",
     "adminSubtitle": "Approve new profiles and manage roles.",
     "adminAddPlayerId": "Add profile by player ID",
@@ -211,7 +214,8 @@
       "tagRequired": "Alliance tag must be 3 letters.",
       "nameRequired": "Alliance name is required.",
       "createAllianceFailed": "Failed to create alliance.",
-      "deleteAllianceFailed": "Failed to delete alliance."
+      "deleteAllianceFailed": "Failed to delete alliance.",
+      "dmOptInUpdateFailed": "Failed to update Discord DM preference."
     },
     "pendingNotice": "Your join request is pending approval by an alliance admin.",
     "selectAllianceNotice": "Create or join an alliance below to request access.",

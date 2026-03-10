@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Profile, User } from "@shared/types";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { createAlliance, deleteAlliance } from "./api/alliances";
 import { lookupAndParsePlayer } from "./utils/playerLookup";
 import { ApiError } from "./apiClient";
+import { updateAssignmentDmOptIn } from "./api/user";
 import {
   useCreateAllianceProfileMutation,
   useCreateProfileMutation,
@@ -37,6 +38,10 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
   const createProfileMutation = useCreateProfileMutation();
   const updateProfileMutation = useUpdateProfileMutation();
   const createAllianceProfileMutation = useCreateAllianceProfileMutation();
+  const assignmentOptInMutation = useMutation({
+    mutationFn: (payload: { profileId: string; enabled: boolean }) =>
+      updateAssignmentDmOptIn(payload.profileId, payload.enabled)
+  });
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -49,6 +54,10 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
   const [createError, setCreateError] = useState("");
   const [createSuccess, setCreateSuccess] = useState("");
   const [deleteError, setDeleteError] = useState("");
+  const [dmOptIn, setDmOptIn] = useState(
+    Boolean(selectedProfile?.botOptInAssignments)
+  );
+  const [dmOptInError, setDmOptInError] = useState("");
   const canManage =
     Boolean(user?.isAppAdmin) || selectedProfile?.role === "alliance_admin";
   const allianceProfilesQuery = useAllianceProfilesQuery(
@@ -71,6 +80,7 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
   const alliances = alliancesQuery.data || [];
   const adminProfiles = allianceProfilesQuery.data || [];
   const loadingAdmin = allianceProfilesQuery.isLoading;
+  const dmOptInBusy = assignmentOptInMutation.isPending;
 
   useEffect(() => {
     setJoinError("");
@@ -88,6 +98,36 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
       return;
     }
   }, [selectedProfile]);
+
+  useEffect(() => {
+    setDmOptIn(Boolean(selectedProfile?.botOptInAssignments));
+  }, [selectedProfile?.botOptInAssignments]);
+
+  function handleDmOptInChange(nextValue: boolean) {
+    if (!selectedProfile) return;
+    setDmOptIn(nextValue);
+    setDmOptInError("");
+    assignmentOptInMutation.mutate(
+      { profileId: selectedProfile.id, enabled: nextValue },
+      {
+        onSuccess: (updatedProfile) => {
+          if (updatedProfile) {
+            setDmOptIn(Boolean(updatedProfile.botOptInAssignments));
+            queryClient.setQueryData<Profile[]>(profilesQueryKey, (prev) => {
+              const current = prev || [];
+              return current.map((item) =>
+                item.id === updatedProfile.id ? updatedProfile : item
+              );
+            });
+          }
+        },
+        onError: () => {
+          setDmOptIn(Boolean(selectedProfile.botOptInAssignments));
+          setDmOptInError(t("profiles.errors.dmOptInUpdateFailed"));
+        }
+      }
+    );
+  }
 
   async function submitProfile(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -343,6 +383,10 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
             error={error}
             success={success}
             onRefresh={refreshProfileData}
+            dmOptIn={dmOptIn}
+            dmOptInBusy={dmOptInBusy}
+            dmOptInError={dmOptInError}
+            onDmOptInChange={handleDmOptInChange}
           />
         )}
 

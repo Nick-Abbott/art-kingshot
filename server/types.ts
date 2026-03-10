@@ -135,6 +135,14 @@ export type RouteContext = {
   ) =>
     | { ok: true; data: { allianceId: string; kingdomId: number } }
     | { ok: false; error: string; code?: string };
+  parseAssignmentOptInPayload: (
+    body: unknown
+  ) => { ok: true; data: { enabled: boolean } } | { ok: false; error: string; code?: string };
+  parseBotAssignmentOptInPayload: (
+    body: unknown
+  ) =>
+    | { ok: true; data: { enabled: boolean; profileId: string } }
+    | { ok: false; error: string; code?: string };
   generateAssignments: (members: Member[]) => AssignmentResult;
   buildPlayerLookupPayload: (fid: string | number, now?: number) => {
     fid: string;
@@ -185,7 +193,6 @@ export type RouteContext = {
   getAllianceById: (id: string) => Alliance | null;
   insertUser: Queries["insertUser"];
   updateUser: Queries["updateUser"];
-  updateUserBotOptIn: Queries["updateUserBotOptIn"];
   insertBootstrapRow: Queries["insertBootstrapRow"];
   insertProfile: Queries["insertProfile"];
   updateProfile: Queries["updateProfile"];

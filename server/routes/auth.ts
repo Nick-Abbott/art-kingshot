@@ -124,6 +124,7 @@ export default function authRoutes(ctx: RouteContext) {
     ctx.ok(res, { user: req.user, profiles });
   });
 
+
   router.get(
     "/api/alliances",
     ctx.requireAuthMiddleware,

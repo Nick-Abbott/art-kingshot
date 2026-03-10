@@ -184,6 +184,9 @@
     "selectAllianceBadge": "Selecciona alianza",
     "currentTitle": "Perfil actual",
     "currentSubtitle": "Mant\u00e9n los datos de tu perfil actualizados.",
+    "notificationsTitle": "Notificaciones",
+    "discordDmOptInLabel": "Recibir DMs de asignaciones vikingas",
+    "discordDmOptInHint": "Env\u00eda las asignaciones a tus DMs de Discord cuando est\u00e1 activado.",
     "adminTitle": "Perfiles de la alianza",
     "adminSubtitle": "Aprueba nuevos perfiles y gestiona roles.",
     "adminAddPlayerId": "Agregar perfil por ID de jugador",
@@ -211,7 +214,8 @@
       "tagRequired": "La etiqueta de la alianza debe tener 3 letras.",
       "nameRequired": "El nombre de la alianza es obligatorio.",
       "createAllianceFailed": "No se pudo crear la alianza.",
-      "deleteAllianceFailed": "No se pudo eliminar la alianza."
+      "deleteAllianceFailed": "No se pudo eliminar la alianza.",
+      "dmOptInUpdateFailed": "No se pudo actualizar la preferencia de DMs de Discord."
     },
     "pendingNotice": "Tu solicitud de acceso est\u00e1 pendiente de aprobaci\u00f3n por un admin de la alianza.",
     "selectAllianceNotice": "Crea o elige una alianza abajo para solicitar acceso.",

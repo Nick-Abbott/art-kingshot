@@ -365,3 +365,37 @@ export function parseBotGuildAssociatePayload(payload: unknown): ParseResult<{
 
   return { ok: true, data: { allianceId, kingdomId: parsed.data.kingdomId } };
 }
+
+const AssignmentOptInSchema = z.object({
+  enabled: z.boolean(),
+});
+
+export function parseAssignmentOptInPayload(
+  payload: unknown
+): ParseResult<{ enabled: boolean }> {
+  const parsed = AssignmentOptInSchema.safeParse(payload);
+  if (!parsed.success) {
+    return { ok: false, error: "Invalid opt-in payload." };
+  }
+
+  return { ok: true, data: { enabled: parsed.data.enabled } };
+}
+
+const BotAssignmentOptInSchema = z.object({
+  enabled: z.boolean(),
+  profileId: z.string(),
+});
+
+export function parseBotAssignmentOptInPayload(
+  payload: unknown
+): ParseResult<{ enabled: boolean; profileId: string }> {
+  const parsed = BotAssignmentOptInSchema.safeParse(payload);
+  if (!parsed.success) {
+    return { ok: false, error: "Invalid opt-in payload." };
+  }
+  const profileId = parsed.data.profileId.trim();
+  if (!profileId) {
+    return { ok: false, error: "profileId is required.", code: "profile_id_required" };
+  }
+  return { ok: true, data: { enabled: parsed.data.enabled, profileId } };
+}

@@ -22,6 +22,8 @@ import {
   parseBotBearPayload,
   parseBotLinkPayload,
   parseBotGuildAssociatePayload,
+  parseAssignmentOptInPayload,
+  parseBotAssignmentOptInPayload,
 } from "./validation";
 import authRoutes from "./routes/auth";
 import membersRoutes from "./routes/members";
@@ -100,7 +102,6 @@ export function createApp({ dbPath: dbPathOverride }: { dbPath?: string } = {}) 
     getAllianceById,
     insertUser,
     updateUser,
-    updateUserBotOptIn,
     insertBootstrapRow,
     insertSession,
     getSession,
@@ -361,6 +362,8 @@ export function createApp({ dbPath: dbPathOverride }: { dbPath?: string } = {}) 
     parseBotBearPayload,
     parseBotLinkPayload,
     parseBotGuildAssociatePayload,
+    parseAssignmentOptInPayload,
+    parseBotAssignmentOptInPayload,
     generateAssignments,
     buildPlayerLookupPayload,
     parseCookies,
@@ -385,7 +388,6 @@ export function createApp({ dbPath: dbPathOverride }: { dbPath?: string } = {}) 
     getAllianceById,
     insertUser,
     updateUser,
-    updateUserBotOptIn,
     insertBootstrapRow,
     insertSession,
     getSession,

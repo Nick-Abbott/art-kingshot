@@ -215,4 +215,21 @@ export const commands = [
         )
     )
     .toJSON(),
+  new SlashCommandBuilder()
+    .setName("notifications")
+    .setDescription("Toggle Viking assignment DMs.")
+    .addBooleanOption((option) =>
+      option
+        .setName("enabled")
+        .setDescription("Enable assignment DMs.")
+        .setRequired(true)
+    )
+    .addStringOption((option) =>
+      option
+        .setName("profile")
+        .setDescription("Select a profile.")
+        .setRequired(false)
+        .setAutocomplete(true)
+    )
+    .toJSON(),
 ];

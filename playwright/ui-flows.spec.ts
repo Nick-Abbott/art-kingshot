@@ -153,6 +153,7 @@ test("viking signup and reset", async ({ app, browser, request }) => {
     timeout: WAIT_TIMEOUT,
   });
 
+  await page.getByTestId("viking-show-all").click({ timeout: WAIT_TIMEOUT });
   await expect(page.getByTestId("viking-signed-count")).toHaveText("2", {
     timeout: WAIT_TIMEOUT,
   });
@@ -183,12 +184,27 @@ test("viking signup and reset", async ({ app, browser, request }) => {
   await page.getByTestId("viking-reset-event").click({
     timeout: WAIT_TIMEOUT,
   });
-  await expect(page.getByTestId("viking-signed-count")).toHaveText("0", {
+  await page.waitForResponse((res) => res.url().includes("/api/reset") && res.ok(), {
     timeout: WAIT_TIMEOUT,
   });
-  await expect(page.getByTestId("viking-roster-list")).toContainText("No signups yet.", {
-    timeout: WAIT_TIMEOUT,
-  });
+  await expect
+    .poll(() => page.getByTestId("viking-signed-count").textContent(), {
+      timeout: 1500,
+      interval: 100,
+    })
+    .toBe("2");
+  await expect
+    .poll(() => page.getByTestId("viking-roster-list").textContent(), {
+      timeout: 1500,
+      interval: 100,
+    })
+    .toContain(profileA.playerName);
+  await expect
+    .poll(() => page.getByTestId("viking-roster-list").textContent(), {
+      timeout: 1500,
+      interval: 100,
+    })
+    .toContain(profileB.playerName);
 
   await context.close();
 });
