@@ -59,12 +59,12 @@
     "searchPlaceholder": "Empieza a escribir un nombre...",
     "showAllAssignments": "Mostrar todo",
     "showAllSignups": "Mostrar todos los registros",
-    "instructionsTitle": "Cómo ejecutar tus marchas",
+    "instructionsTitle": "C\u00f3mo ejecutar tus marchas",
     "instructions": {
       "equalize": "Usa Igualar en cada marcha.",
-      "sendAll": "Envía una marcha a cada uno de tus objetivos asignados.",
-      "garrison": "Si tienes un líder de guarnición entrante, envía a tus héroes principales a otra persona; idealmente a alguien cuya guarnición estás liderando.",
-      "reinforceHeroes": "Usa Chenko, Amane, Yeonwoo, Amadeus o ningún héroe al reforzar.",
+      "sendAll": "Env\u00eda una marcha a cada uno de tus objetivos asignados.",
+      "garrison": "Si tienes un l\u00edder de guarnici\u00f3n entrante, env\u00eda a tus h\u00e9roes principales a otra persona; idealmente a alguien cuya guarnici\u00f3n est\u00e1s liderando.",
+      "reinforceHeroes": "Usa Chenko, Amane, Yeonwoo, Amadeus o ning\u00fan h\u00e9roe al reforzar.",
       "subtext": "Las asignaciones se calculan asumiendo marchas igualadas y conteos de marchas consistentes."
     },
     "advancedDetailsLabel": "Detalles avanzados",
@@ -230,7 +230,7 @@
     "deleteAlliance": "Eliminar alianza",
     "deleteConfirm": "\u00bfEliminar esta alianza? Esto eliminar\u00e1 todos los miembros y datos.",
     "applicantsTitle": "Solicitantes",
-    "membersTitle": "Miembros",
+    "membersTitle": "Miembros ({{count}})",
     "statsTitle": "Estad\u00edsticas del perfil",
     "kingdom": "Reino {{id}}",
     "stats": {
@@ -238,11 +238,15 @@
       "marchCount": "Cantidad de marchas: {{value}}",
       "power": "Poder: {{value}}",
       "rallySize": "Capacidad de rally: {{value}}",
-      "none": "No establecido"
+      "none": "No establecido",
+      "allianceMembers": "Miembros de la alianza: {{value}}"
     },
     "refreshProfile": "Actualizar perfil",
     "refreshed": "Perfil actualizado desde Kingshot.",
-    "reject": "Reject"
+    "reject": "Reject",
+    "membersSearchLabel": "Buscar miembros",
+    "membersSearchPlaceholder": "Escribe un nombre de jugador...",
+    "showAllMembers": "Mostrar todos los miembros"
   },
   "admin": {
     "eyebrow": "Admin Console",

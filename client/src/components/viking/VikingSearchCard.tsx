@@ -35,41 +35,41 @@ function VikingSearchCard({
       <div className="mt-5">
         <label className="ui-field">
           {t("viking.playerName")}
-          <div className="ui-search">
-            <input
-              className="ui-input"
-              name="search"
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              onKeyDown={(event) => {
-                if (!suggestionTail) return;
-                if (event.key === "Tab" || event.key === "Enter") {
-                  event.preventDefault();
-                  setSearchQuery(topSuggestion);
-                }
-              }}
-              placeholder={t("viking.searchPlaceholder")}
-              autoComplete="off"
-            />
-            {suggestionTail && (
-              <div className="ui-search-hint" aria-hidden="true">
-                <span className="ui-search-hint-typed">{searchQuery}</span>
-                <span className="ui-search-hint-tail">{suggestionTail}</span>
-              </div>
-            )}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="ui-search flex-1">
+              <input
+                className="ui-input"
+                name="search"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                onKeyDown={(event) => {
+                  if (!suggestionTail) return;
+                  if (event.key === "Tab" || event.key === "Enter") {
+                    event.preventDefault();
+                    setSearchQuery(topSuggestion);
+                  }
+                }}
+                placeholder={t("viking.searchPlaceholder")}
+                autoComplete="off"
+              />
+              {suggestionTail && (
+                <div className="ui-search-hint" aria-hidden="true">
+                  <span className="ui-search-hint-typed">{searchQuery}</span>
+                  <span className="ui-search-hint-tail">{suggestionTail}</span>
+                </div>
+              )}
+            </div>
+            <button
+              className="ui-button-ghost ui-button-sm"
+              type="button"
+              onClick={() => setSearchQuery("")}
+              disabled={!searchQuery.trim()}
+              data-testid="viking-show-all"
+            >
+              {showAllLabel || t("viking.showAllAssignments")}
+            </button>
           </div>
         </label>
-        <div className="mt-3 flex items-center justify-end">
-          <button
-            className="ui-button-ghost ui-button-sm"
-            type="button"
-            onClick={() => setSearchQuery("")}
-            disabled={!searchQuery.trim()}
-            data-testid="viking-show-all"
-          >
-            {showAllLabel || t("viking.showAllAssignments")}
-          </button>
-        </div>
       </div>
     </section>
   );

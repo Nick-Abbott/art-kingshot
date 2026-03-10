@@ -67,9 +67,9 @@
       "reinforceHeroes": "Use Chenko, Amane, Yeonwoo, Amadeus ou nenhum her\u00f3i ao refor\u00e7ar.",
       "subtext": "As atribui\u00e7\u00f5es s\u00e3o calculadas assumindo marchas equalizadas e contagens de marchas consistentes."
     },
-    "advancedDetailsLabel": "Detalhes avançados",
-    "showAdvancedDetails": "Mostrar avançados",
-    "hideAdvancedDetails": "Ocultar avançados",
+    "advancedDetailsLabel": "Detalhes avan\u00e7ados",
+    "showAdvancedDetails": "Mostrar avan\u00e7ados",
+    "hideAdvancedDetails": "Ocultar avan\u00e7ados",
     "rosterTitle": "Lista",
     "rosterSubtitle": "Toque em Executar para calcular quem refor\u00e7a quem.",
     "noSignups": "Nenhuma inscri\u00e7\u00e3o ainda.",
@@ -230,7 +230,7 @@
     "deleteAlliance": "Excluir alian\u00e7a",
     "deleteConfirm": "Excluir esta alian\u00e7a? Isso remover\u00e1 todos os membros e dados.",
     "applicantsTitle": "Candidatos",
-    "membersTitle": "Membros",
+    "membersTitle": "Membros ({{count}})",
     "statsTitle": "Estat\u00edsticas do perfil",
     "kingdom": "Reino {{id}}",
     "stats": {
@@ -238,11 +238,15 @@
       "marchCount": "N\u00famero de marchas: {{value}}",
       "power": "Poder: {{value}}",
       "rallySize": "Capacidade de rally: {{value}}",
-      "none": "N\u00e3o definido"
+      "none": "N\u00e3o definido",
+      "allianceMembers": "Membros da alian\u00e7a: {{value}}"
     },
     "refreshProfile": "Atualizar perfil",
     "refreshed": "Perfil atualizado a partir do Kingshot.",
-    "reject": "Reject"
+    "reject": "Reject",
+    "membersSearchLabel": "Buscar membros",
+    "membersSearchPlaceholder": "Digite um nome de jogador...",
+    "showAllMembers": "Mostrar todos os membros"
   },
   "admin": {
     "eyebrow": "Admin Console",

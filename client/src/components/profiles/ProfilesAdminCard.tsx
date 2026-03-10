@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import type { TFunction } from "i18next";
 import type { Profile } from "@shared/types";
 
@@ -21,6 +21,10 @@ type Props = {
   onDeleteAlliance: () => void;
 };
 
+function normalize(value: string) {
+  return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
 function ProfilesAdminCard({
   t,
   selectedProfile,
@@ -39,6 +43,53 @@ function ProfilesAdminCard({
   onSetRole,
   onDeleteAlliance
 }: Props) {
+  const [memberSearch, setMemberSearch] = useState("");
+
+  const fuzzyScore = useCallback((query: string, text: string) => {
+    if (!query) return 0;
+    const q = normalize(query);
+    const tValue = normalize(text);
+    if (!q || !tValue) return null;
+    let qi = 0;
+    let score = 0;
+    let lastMatch = -1;
+    for (let ti = 0; ti < tValue.length && qi < q.length; ti += 1) {
+      if (tValue[ti] === q[qi]) {
+        score += lastMatch === -1 ? 1 : Math.max(1, 5 - (ti - lastMatch));
+        lastMatch = ti;
+        qi += 1;
+      }
+    }
+    if (qi < q.length) return null;
+    return score;
+  }, []);
+
+  const activeMembers = useMemo(
+    () => adminProfiles.filter((profile) => profile.status === "active"),
+    [adminProfiles]
+  );
+
+  const filteredMembers = useMemo(() => {
+    const query = memberSearch.trim();
+    if (!query) return activeMembers;
+    const scored = activeMembers
+      .map((profile) => {
+        const name = [
+          profile.playerName,
+          profile.playerId,
+          profile.userDisplayName
+        ]
+          .filter(Boolean)
+          .join(" ");
+        const score = fuzzyScore(query, name);
+        return score === null ? null : { profile, score };
+      })
+      .filter(
+        (item): item is { profile: Profile; score: number } => item !== null
+      )
+      .sort((a, b) => b.score - a.score);
+    return scored.map((item) => item.profile);
+  }, [activeMembers, fuzzyScore, memberSearch]);
   return (
     <section className="ui-card">
       <div className="flex flex-col gap-4 nav:flex-row nav:items-start nav:justify-between">
@@ -141,12 +192,37 @@ function ProfilesAdminCard({
           ) : null}
 
           <h3 className="mt-5 border-t border-black/10 pt-4 text-base font-semibold">
-            {t("profiles.membersTitle")}
+            {t("profiles.membersTitle", {
+              count: activeMembers.length
+            })}
           </h3>
+          <div className="mt-3">
+            <label className="ui-field">
+              {t("profiles.membersSearchLabel")}
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="ui-search flex-1">
+                  <input
+                    className="ui-input"
+                    name="membersSearch"
+                    value={memberSearch}
+                    onChange={(event) => setMemberSearch(event.target.value)}
+                    placeholder={t("profiles.membersSearchPlaceholder")}
+                    autoComplete="off"
+                  />
+                </div>
+                <button
+                  className="ui-button-ghost ui-button-sm"
+                  type="button"
+                  onClick={() => setMemberSearch("")}
+                  disabled={!memberSearch.trim()}
+                >
+                  {t("profiles.showAllMembers")}
+                </button>
+              </div>
+            </label>
+          </div>
           <div className="mt-3 grid gap-3" data-testid="profiles-members-list">
-            {adminProfiles
-              .filter((profile) => profile.status === "active")
-              .map((profile) => (
+            {filteredMembers.map((profile) => (
                 <div
                   key={profile.id}
                   className="ui-card-muted flex flex-col gap-3 nav:flex-row nav:items-center nav:justify-between"

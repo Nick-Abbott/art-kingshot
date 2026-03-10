@@ -11,7 +11,14 @@ type Props = {
   onRefresh: () => void;
 };
 
-function ProfilesCurrentCard({ t, profile, lookupStatus, error, success, onRefresh }: Props) {
+function ProfilesCurrentCard({
+  t,
+  profile,
+  lookupStatus,
+  error,
+  success,
+  onRefresh
+}: Props) {
   return (
     <section className="ui-card">
       <div className="flex flex-col gap-4 nav:flex-row nav:items-start nav:justify-between">

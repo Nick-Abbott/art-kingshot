@@ -230,7 +230,7 @@
     "deleteAlliance": "Supprimer l\u2019alliance",
     "deleteConfirm": "Supprimer cette alliance ? Cela supprimera tous les membres et donn\u00e9es.",
     "applicantsTitle": "Candidats",
-    "membersTitle": "Membres",
+    "membersTitle": "Membres ({{count}})",
     "statsTitle": "Statistiques du profil",
     "kingdom": "Royaume {{id}}",
     "stats": {
@@ -238,11 +238,15 @@
       "marchCount": "Nombre de marches : {{value}}",
       "power": "Puissance : {{value}}",
       "rallySize": "Capacit\u00e9 de rally : {{value}}",
-      "none": "Non d\u00e9fini"
+      "none": "Non d\u00e9fini",
+      "allianceMembers": "Membres de l'alliance : {{value}}"
     },
     "refreshProfile": "Rafra\u00eechir le profil",
     "refreshed": "Profil mis \u00e0 jour depuis Kingshot.",
-    "reject": "Reject"
+    "reject": "Reject",
+    "membersSearchLabel": "Rechercher des membres",
+    "membersSearchPlaceholder": "Saisissez un nom de joueur...",
+    "showAllMembers": "Afficher tous les membres"
   },
   "admin": {
     "eyebrow": "Admin Console",

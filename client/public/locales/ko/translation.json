@@ -230,7 +230,7 @@
     "deleteAlliance": "\ub3d9\ub9f9 \uc0ad\uc81c",
     "deleteConfirm": "\uc774 \ub3d9\ub9f9\uc744 \uc0ad\uc81c\ud560\uae4c\uc694? \ubaa8\ub4e0 \uba64\ubc84\uc640 \ub370\uc774\ud130\uac00 \uc0ad\uc81c\ub429\ub2c8\ub2e4.",
     "applicantsTitle": "\uc9c0\uc6d0\uc790",
-    "membersTitle": "\uba64\ubc84",
+    "membersTitle": "\ub3d9\ub9f9\uc6d0 ({{count}})",
     "statsTitle": "\ud504\ub85c\ud544 \ud1b5\uacc4",
     "kingdom": "\uc655\uad6d {{id}}",
     "stats": {
@@ -238,11 +238,15 @@
       "marchCount": "\ud589\uad70 \uc218: {{value}}",
       "power": "\uc804\ud22c\ub825: {{value}}",
       "rallySize": "\uc9d1\uacb0 \uc6a9\ub7c9: {{value}}",
-      "none": "\ubbf8\uc124\uc815"
+      "none": "\ubbf8\uc124\uc815",
+      "allianceMembers": "\ub3d9\ub9f9\uc6d0: {{value}}"
     },
     "refreshProfile": "\ud504\ub85c\ud544 \uc0c8\ub85c\uace0\uce68",
     "refreshed": "Kingshot\uc5d0\uc11c \ud504\ub85c\ud544\uc744 \uc5c5\ub370\uc774\ud2b8\ud588\uc2b5\ub2c8\ub2e4.",
-    "reject": "Reject"
+    "reject": "Reject",
+    "membersSearchLabel": "\uba64\ubc84 \uac80\uc0c9",
+    "membersSearchPlaceholder": "\ud50c\ub808\uc774\uc5b4 \uc774\ub984 \uc785\ub825...",
+    "showAllMembers": "\ubaa8\ub4e0 \uba64\ubc84 \ud45c\uc2dc"
   },
   "admin": {
     "eyebrow": "Admin Console",

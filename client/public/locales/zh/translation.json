@@ -230,7 +230,7 @@
     "deleteAlliance": "\u5220\u9664\u8054\u76df",
     "deleteConfirm": "\u5220\u9664\u8be5\u8054\u76df\uff1f\u8fd9\u5c06\u5220\u9664\u6240\u6709\u6210\u5458\u548c\u6570\u636e\u3002",
     "applicantsTitle": "\u7533\u8bf7\u8005",
-    "membersTitle": "\u6210\u5458",
+    "membersTitle": "\u6210\u5458\uff08{{count}}\uff09",
     "statsTitle": "\u8d44\u6599\u7edf\u8ba1",
     "kingdom": "\u738b\u56fd {{id}}",
     "stats": {
@@ -238,11 +238,15 @@
       "marchCount": "\u884c\u519b\u6570\uff1a{{value}}",
       "power": "\u6218\u529b\uff1a{{value}}",
       "rallySize": "\u96c6\u7ed3\u5bb9\u91cf\uff1a{{value}}",
-      "none": "\u672a\u8bbe\u7f6e"
+      "none": "\u672a\u8bbe\u7f6e",
+      "allianceMembers": "\u8054\u76df\u6210\u5458\uff1a{{value}}"
     },
     "refreshProfile": "\u5237\u65b0\u8d44\u6599",
     "refreshed": "\u5df2\u4ece Kingshot \u66f4\u65b0\u8d44\u6599\u3002",
-    "reject": "Reject"
+    "reject": "Reject",
+    "membersSearchLabel": "\u641c\u7d22\u6210\u5458",
+    "membersSearchPlaceholder": "\u8f93\u5165\u73a9\u5bb6\u540d\u79f0...",
+    "showAllMembers": "\u663e\u793a\u6240\u6709\u6210\u5458"
   },
   "admin": {
     "eyebrow": "Admin Console",
