@@ -172,6 +172,13 @@ test("ui snapshots", async ({ app, browser, request }, testInfo) => {
     });
     await pendingPage.close();
 
+    const noAlliancePage = await contextWithAuth.newPage();
+    await runSnapshot(noAlliancePage, "profiles-no-alliance", {
+      pageKey: "profiles",
+      selectedProfileId: profileC.id,
+    });
+    await noAlliancePage.close();
+
     await approveProfile(request, sessionToken, profileA.id, profileB.id, app.serverUrl);
 
     const activePage = await contextWithAuth.newPage();

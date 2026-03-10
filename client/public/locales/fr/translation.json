@@ -181,6 +181,7 @@
     "role": "R\u00f4le : {{role}}",
     "active": "Actif",
     "pending": "En attente d\u2019approbation",
+    "selectAllianceBadge": "Choisir alliance",
     "currentTitle": "Profil actuel",
     "currentSubtitle": "Gardez les informations de votre profil \u00e0 jour.",
     "adminTitle": "Profils d\u2019alliance",
@@ -212,7 +213,8 @@
       "createAllianceFailed": "\u00c9chec de la cr\u00e9ation de l\u2019alliance.",
       "deleteAllianceFailed": "\u00c9chec de la suppression de l\u2019alliance."
     },
-    "pendingNotice": "Ce profil est en attente d\u2019approbation par un admin.",
+    "pendingNotice": "Votre demande d\u2019acc\u00e8s est en attente d\u2019approbation par un admin de l\u2019alliance.",
+    "selectAllianceNotice": "Cr\u00e9ez ou choisissez une alliance ci-dessous pour demander l\u2019acc\u00e8s.",
     "unclaimed": "Profil non r\u00e9clam\u00e9",
     "lookupStatus": "Recherche du joueur...",
     "lookupFound": "Trouv\u00e9 {{name}}",

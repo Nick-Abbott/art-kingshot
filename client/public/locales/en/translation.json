@@ -181,6 +181,7 @@
     "role": "Role: {{role}}",
     "active": "Active",
     "pending": "Pending approval",
+    "selectAllianceBadge": "Select alliance",
     "currentTitle": "Current profile",
     "currentSubtitle": "Keep your profile details up to date.",
     "adminTitle": "Alliance profiles",
@@ -212,7 +213,8 @@
       "createAllianceFailed": "Failed to create alliance.",
       "deleteAllianceFailed": "Failed to delete alliance."
     },
-    "pendingNotice": "This profile is pending approval by an alliance admin.",
+    "pendingNotice": "Your join request is pending approval by an alliance admin.",
+    "selectAllianceNotice": "Create or join an alliance below to request access.",
     "unclaimed": "Unclaimed profile",
     "lookupStatus": "Looking up player...",
     "lookupFound": "Found {{name}}",

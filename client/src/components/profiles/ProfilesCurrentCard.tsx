@@ -50,7 +50,11 @@ function ProfilesCurrentCard({
             </p>
           </div>
           <span className="ui-badge">
-            {profile.status === "active" ? t("profiles.active") : t("profiles.pending")}
+            {profile.status === "active"
+              ? t("profiles.active")
+              : profile.allianceId
+                ? t("profiles.pending")
+                : t("profiles.selectAllianceBadge")}
           </span>
         </div>
         <div className="ui-card-muted">

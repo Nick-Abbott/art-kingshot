@@ -181,6 +181,7 @@
     "role": "Rol: {{role}}",
     "active": "Activo",
     "pending": "Pendiente de aprobaci\u00f3n",
+    "selectAllianceBadge": "Selecciona alianza",
     "currentTitle": "Perfil actual",
     "currentSubtitle": "Mant\u00e9n los datos de tu perfil actualizados.",
     "adminTitle": "Perfiles de la alianza",
@@ -212,7 +213,8 @@
       "createAllianceFailed": "No se pudo crear la alianza.",
       "deleteAllianceFailed": "No se pudo eliminar la alianza."
     },
-    "pendingNotice": "Este perfil est\u00e1 pendiente de aprobaci\u00f3n por un admin de la alianza.",
+    "pendingNotice": "Tu solicitud de acceso est\u00e1 pendiente de aprobaci\u00f3n por un admin de la alianza.",
+    "selectAllianceNotice": "Crea o elige una alianza abajo para solicitar acceso.",
     "unclaimed": "Perfil sin reclamar",
     "lookupStatus": "Buscando jugador...",
     "lookupFound": "Encontrado {{name}}",

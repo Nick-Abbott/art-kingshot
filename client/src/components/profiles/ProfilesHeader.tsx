@@ -20,6 +20,11 @@ function ProfilesHeader({ t, selectedProfile }: Props) {
         <p className="mt-3 max-w-xl text-[1.05rem] leading-relaxed text-muted">
           {t("profiles.subtitle")}
         </p>
+        {selectedProfile && !selectedProfile.allianceId && (
+          <p className="mt-3 text-sm font-semibold text-[#9e2a2b]">
+            {t("profiles.selectAllianceNotice")}
+          </p>
+        )}
         {selectedProfile &&
           selectedProfile.status !== "active" &&
           selectedProfile.allianceId && (

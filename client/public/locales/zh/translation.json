@@ -181,6 +181,7 @@
     "role": "\u89d2\u8272\uff1a{{role}}",
     "active": "\u5df2\u6fc0\u6d3b",
     "pending": "\u7b49\u5f85\u5ba1\u6838",
+    "selectAllianceBadge": "\u9009\u62e9\u8054\u76df",
     "currentTitle": "\u5f53\u524d\u8d44\u6599",
     "currentSubtitle": "\u4fdd\u6301\u8d44\u6599\u4fe1\u606f\u6700\u65b0\u3002",
     "adminTitle": "\u8054\u76df\u8d44\u6599",
@@ -212,7 +213,8 @@
       "createAllianceFailed": "\u521b\u5efa\u8054\u76df\u5931\u8d25\u3002",
       "deleteAllianceFailed": "\u5220\u9664\u8054\u76df\u5931\u8d25\u3002"
     },
-    "pendingNotice": "\u8be5\u8d44\u6599\u7b49\u5f85\u8054\u76df\u7ba1\u7406\u5458\u5ba1\u6838\u3002",
+    "pendingNotice": "\u4f60\u7684\u52a0\u5165\u7533\u8bf7\u6b63\u5728\u7b49\u5f85\u8054\u76df\u7ba1\u7406\u5458\u5ba1\u6838\u3002",
+    "selectAllianceNotice": "\u8bf7\u5728\u4e0b\u65b9\u521b\u5efa\u6216\u9009\u62e9\u8054\u76df\u5e76\u53d1\u9001\u52a0\u5165\u7533\u8bf7\u3002",
     "unclaimed": "\u672a\u8ba4\u9886\u8d44\u6599",
     "lookupStatus": "\u6b63\u5728\u67e5\u8be2\u73a9\u5bb6\u2026",
     "lookupFound": "\u5df2\u627e\u5230 {{name}}",
