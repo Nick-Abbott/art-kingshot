@@ -24,7 +24,7 @@ describe("useSession", () => {
           id: "u1",
           discordId: "d1",
           displayName: "Test",
-          isAppAdmin: 0
+          isAppAdmin: false
         },
         profiles: [
           {
