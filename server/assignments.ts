@@ -1,4 +1,6 @@
 import type { AssignmentResult, Member } from "../shared/types";
+import fs from "node:fs";
+import path from "node:path";
 
 type AssignmentOutgoingEntry = {
   toId: string;
@@ -54,6 +56,8 @@ const RECENCY_PENALTY_FALLBACK_ROUNDS = 4;
 const LEADER_PENALTY_FREE_PICKS = 2;
 const LEADER_PENALTY_MIN = 0.6;
 const LEADER_PENALTY_MAX_PICKS = 6;
+const DEBUG_LOG_PATH = path.join(process.cwd(), "assignment-debug.log");
+const DEBUG_LOG_ENABLED = process.env.ASSIGNMENT_DEBUG === "1";
 
 function sum(values: number[]): number {
   return values.reduce((total, value) => total + value, 0);
@@ -246,6 +250,11 @@ function isLeadEligible(sender: AnnotatedMember, targetPower: number): boolean {
 }
 
 function generateAssignments(members: Member[]): AssignmentResult {
+  const debugLines: string[] = [];
+  const logDebug = (line: string) => {
+    if (!DEBUG_LOG_ENABLED) return;
+    debugLines.push(line);
+  };
   const { warnings, warningCodes, validMembers } = validateMembers(members);
   if (validMembers.length < 2) {
     return {
@@ -263,6 +272,8 @@ function generateAssignments(members: Member[]): AssignmentResult {
   const memberById = new Map<string, AnnotatedMember>();
   const powerById = new Map<string, number>();
   const nameById = new Map<string, string>();
+  const leaderCountById = new Map<string, number>();
+  const leaderAssignments = new Map<string, { senderId: string; troops: number }>();
 
   for (const member of annotated) {
     outgoing.set(member.playerId, []);
@@ -271,6 +282,7 @@ function generateAssignments(members: Member[]): AssignmentResult {
     memberById.set(member.playerId, member);
     powerById.set(member.playerId, member.power);
     nameById.set(member.playerId, member.playerName || "");
+    leaderCountById.set(member.playerId, 0);
   }
 
   function effectiveTroops(sender: AnnotatedMember, troops: number): number {
@@ -303,30 +315,113 @@ function generateAssignments(members: Member[]): AssignmentResult {
   };
 
   // Pass 1: seed leads where eligible (best effort).
-  const leadSeededTargets = new Set<string>();
   const targetsByPower = [...annotated].sort((a, b) => a.power - b.power);
   for (const target of targetsByPower) {
-    if (leadSeededTargets.has(target.playerId)) continue;
     let bestSender: AnnotatedMember | null = null;
+    let bestScore = Number.POSITIVE_INFINITY;
     for (const sender of annotated) {
       if (sender.playerId === target.playerId) continue;
       if (!isLeadEligible(sender, target.power)) continue;
       const sizes = marchSizesBySender.get(sender.playerId) || [];
       if (sizes.length === 0) continue;
-      if (bestSender && sender.power <= bestSender.power) continue;
-      bestSender = sender;
+      const leadCount = leaderCountById.get(sender.playerId) || 0;
+      const multiplier = getLeaderPenaltyMultiplier(leadCount + 1);
+      const score = sender.power * multiplier;
+      if (score < bestScore) {
+        bestScore = score;
+        bestSender = sender;
+      }
     }
     if (!bestSender) continue;
     const sizes = marchSizesBySender.get(bestSender.playerId);
     if (!sizes || sizes.length === 0) continue;
     const troops = sizes.shift();
     if (!troops) continue;
-    assignMarch(bestSender, target.playerId, troops);
-    assignedTargetsBySender.get(bestSender.playerId)?.add(target.playerId);
-    leadSeededTargets.add(target.playerId);
+    logDebug(
+      `pass1 seed target=${target.playerName}(${target.playerId}) sender=${bestSender.playerName}(${bestSender.playerId}) troops=${troops}`
+    );
+    leaderAssignments.set(target.playerId, {
+      senderId: bestSender.playerId,
+      troops,
+    });
+    leaderCountById.set(
+      bestSender.playerId,
+      (leaderCountById.get(bestSender.playerId) || 0) + 1
+    );
   }
 
-  // Pass 2: equalize by effective incoming with remaining marches.
+  const insertMarchSize = (sizes: number[], troops: number) => {
+    sizes.push(troops);
+    sizes.sort((a, b) => a - b);
+  };
+
+  // Pass 2: top-down leader refinement with penalty-adjusted swaps.
+  const targetsWithLeader = [...annotated]
+    .filter((member) => leaderAssignments.has(member.playerId))
+    .sort((a, b) => b.power - a.power);
+  for (const target of targetsWithLeader) {
+    const current = leaderAssignments.get(target.playerId);
+    if (!current) continue;
+    const currentSender = memberById.get(current.senderId);
+    if (!currentSender) continue;
+    const currentLeadCount = leaderCountById.get(current.senderId) || 0;
+    const currentMultiplier = getLeaderPenaltyMultiplier(currentLeadCount);
+    const currentScore = currentSender.power * currentMultiplier;
+
+    let bestSender: AnnotatedMember | null = null;
+    let bestScore = currentScore;
+    for (const sender of annotated) {
+      if (sender.playerId === target.playerId) continue;
+      if (!isLeadEligible(sender, target.power)) continue;
+      const sizes = marchSizesBySender.get(sender.playerId) || [];
+      if (sender.playerId !== current.senderId && sizes.length === 0) continue;
+      const leadCount = leaderCountById.get(sender.playerId) || 0;
+      const multiplier = getLeaderPenaltyMultiplier(leadCount + 1);
+      const score = sender.power * multiplier;
+      if (score > bestScore) {
+        bestScore = score;
+        bestSender = sender;
+      }
+    }
+
+    if (bestSender && bestSender.playerId !== current.senderId) {
+      const bestSizes = marchSizesBySender.get(bestSender.playerId) || [];
+      const bestTroops = bestSizes.shift();
+      if (!bestTroops) continue;
+      const currentSizes = marchSizesBySender.get(current.senderId) || [];
+      insertMarchSize(currentSizes, current.troops);
+      leaderAssignments.set(target.playerId, {
+        senderId: bestSender.playerId,
+        troops: bestTroops,
+      });
+      leaderCountById.set(
+        current.senderId,
+        Math.max(0, (leaderCountById.get(current.senderId) || 0) - 1)
+      );
+      leaderCountById.set(
+        bestSender.playerId,
+        (leaderCountById.get(bestSender.playerId) || 0) + 1
+      );
+      logDebug(
+        `pass2 swap target=${target.playerName}(${target.playerId}) from=${currentSender.playerName}(${currentSender.playerId}) to=${bestSender.playerName}(${bestSender.playerId}) score=${bestScore.toFixed(2)}`
+      );
+    } else {
+      logDebug(
+        `pass2 keep target=${target.playerName}(${target.playerId}) leader=${currentSender.playerName}(${currentSender.playerId}) score=${currentScore.toFixed(2)}`
+      );
+    }
+  }
+
+  const leadByTarget = new Map<string, string>();
+  for (const [targetId, assignment] of leaderAssignments.entries()) {
+    const sender = memberById.get(assignment.senderId);
+    if (!sender) continue;
+    assignMarch(sender, targetId, assignment.troops);
+    assignedTargetsBySender.get(sender.playerId)?.add(targetId);
+    leadByTarget.set(targetId, assignment.senderId);
+  }
+
+  // Pass 3: equalize by effective incoming with remaining marches.
   const remainingMarches: Array<{
     senderId: string;
     troops: number;
@@ -383,6 +478,9 @@ function generateAssignments(members: Member[]): AssignmentResult {
     const targets = allTargets.filter((id) => id !== march.senderId);
     const targetId = pickLowestIncomingTarget(targets, excludeTargets, incoming);
     if (!targetId) continue;
+    logDebug(
+      `pass2 march sender=${sender.playerName}(${sender.playerId}) troops=${march.troops} target=${nameById.get(targetId) || ""}(${targetId}) score=${bestScore.toFixed(2)}`
+    );
     assignMarch(sender, targetId, march.troops);
     excludeTargets.add(targetId);
     assignedTargetsBySender.set(march.senderId, excludeTargets);
@@ -393,71 +491,6 @@ function generateAssignments(members: Member[]): AssignmentResult {
         if (senderId === march.senderId || multiplier >= 1) continue;
         senderMultiplierById.set(senderId, Math.min(1, multiplier + recencyStep));
       }
-    }
-  }
-
-  // Pass 3: select final leads with a bottom-up then top-down sweep.
-  const leadByTarget = new Map<string, string>();
-  const leaderCountById = new Map(
-    annotated.map((member) => [member.playerId, 0])
-  );
-  const targetsByPowerAsc = [...annotated].sort((a, b) => a.power - b.power);
-  const targetsByPowerDesc = [...annotated].sort((a, b) => b.power - a.power);
-
-  for (const target of targetsByPowerAsc) {
-    const incomingInfo = getIncoming(incoming, target.playerId);
-    let bestLeadId: string | undefined;
-    let bestScore = Number.POSITIVE_INFINITY;
-    for (const entry of incomingInfo.from) {
-      if (!entry.fromId) continue;
-      const sender = memberById.get(entry.fromId);
-      if (!sender) continue;
-      if (!isLeadEligible(sender, target.power)) continue;
-      const leadCount = leaderCountById.get(sender.playerId) || 0;
-      const multiplier = getLeaderPenaltyMultiplier(leadCount);
-      const score = sender.power / multiplier;
-      if (score < bestScore) {
-        bestScore = score;
-        bestLeadId = sender.playerId;
-      }
-    }
-    if (bestLeadId) {
-      leadByTarget.set(target.playerId, bestLeadId);
-      leaderCountById.set(bestLeadId, (leaderCountById.get(bestLeadId) || 0) + 1);
-    }
-  }
-
-  for (const target of targetsByPowerDesc) {
-    const incomingInfo = getIncoming(incoming, target.playerId);
-    const currentLeadId = leadByTarget.get(target.playerId);
-    let currentScore = Number.NEGATIVE_INFINITY;
-    if (currentLeadId) {
-      const currentLeader = memberById.get(currentLeadId);
-      const leadCount = leaderCountById.get(currentLeadId) || 0;
-      const multiplier = getLeaderPenaltyMultiplier(leadCount);
-      if (currentLeader) {
-        currentScore = currentLeader.power * multiplier;
-      }
-    }
-
-    let bestLeadId: string | undefined;
-    let bestScore = currentScore;
-    for (const entry of incomingInfo.from) {
-      if (!entry.fromId) continue;
-      const sender = memberById.get(entry.fromId);
-      if (!sender) continue;
-      if (!isLeadEligible(sender, target.power)) continue;
-      const leadCount = leaderCountById.get(sender.playerId) || 0;
-      const multiplier = getLeaderPenaltyMultiplier(leadCount);
-      const score = sender.power * multiplier;
-      if (score > bestScore) {
-        bestScore = score;
-        bestLeadId = sender.playerId;
-      }
-    }
-    if (bestLeadId && bestLeadId !== currentLeadId) {
-      leadByTarget.set(target.playerId, bestLeadId);
-      leaderCountById.set(bestLeadId, (leaderCountById.get(bestLeadId) || 0) + 1);
     }
   }
 
@@ -481,21 +514,17 @@ function generateAssignments(members: Member[]): AssignmentResult {
     };
   });
 
-  const result = baseResult.map((member) => {
-    const outgoingInfo = member.outgoing.map((entry) => ({
+  const result = baseResult.map((member) => ({
+    ...member,
+    outgoing: member.outgoing.map((entry) => ({
       ...entry,
       lead: leadByTarget.get(entry.toId) === member.playerId,
-    }));
-    const incomingInfo = member.incoming.map((entry) => ({
+    })),
+    incoming: member.incoming.map((entry) => ({
       ...entry,
       lead: leadByTarget.get(member.playerId) === entry.fromId,
-    }));
-    return {
-      ...member,
-      outgoing: outgoingInfo,
-      incoming: incomingInfo,
-    };
-  });
+    })),
+  }));
 
   for (const member of result) {
     const outgoingCount = member.outgoing.length;
@@ -512,6 +541,14 @@ function generateAssignments(members: Member[]): AssignmentResult {
         `City ${member.playerId} did not reach ${NEED_PER_CITY} reinforcements.`
       );
       warningCodes.push("assignments_city_below_requirement");
+    }
+  }
+
+  if (DEBUG_LOG_ENABLED && debugLines.length > 0) {
+    try {
+      fs.writeFileSync(DEBUG_LOG_PATH, debugLines.join("\n"));
+    } catch (error) {
+      warnings.push("Unable to write assignment debug log.");
     }
   }
 
@@ -533,6 +570,7 @@ export {
   LEADER_PENALTY_FREE_PICKS,
   LEADER_PENALTY_MIN,
   LEADER_PENALTY_MAX_PICKS,
+  DEBUG_LOG_PATH,
   getLeaderPenaltyMultiplier,
   getRecencyPenaltyStep,
 };

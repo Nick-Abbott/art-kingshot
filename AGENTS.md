@@ -28,6 +28,11 @@ These instructions are for agents working in this repository.
 - Server changes:
   - Run server tests before marking the task complete.
   - Command: `npm run test:server`
+- Assignment algorithm changes:
+  - Capture baseline assignment metrics before changes.
+  - Generate new assignment metrics after changes.
+  - Call out metric deltas in the response (including improvements/regressions).
+  - Command: `node scripts/assignments-metrics.js`
 
 If you cannot run these checks, state what was skipped and why, and list any risks.
 
@@ -37,6 +42,7 @@ If you cannot run these checks, state what was skipped and why, and list any ris
 - Dev (server only): `npm run dev:server`
 - Dev (client only): `npm run dev:client`
 - Build: `npm run build`
+- Build (server): `npm run build:server`
 - Typecheck (client): `npm run typecheck`
 - Tests (all): `npm run test`
 - Tests (server): `npm run test:server`
@@ -49,6 +55,10 @@ If you cannot run these checks, state what was skipped and why, and list any ris
 - Smoke checks:
   - `node scripts/check-auth-flow.js`
   - `SESSION_TOKEN=your_token node scripts/check-alliance-switch.js`
+- Assignment metrics:
+  - `node scripts/assignments-metrics.js [signupsFile] [outputRunFile] [outputMetricsFile]`
+ - Assignment debug logging (disabled by default):
+   - `ASSIGNMENT_DEBUG=1 node scripts/assignments-metrics.js`
 
 ## UI Layer Usage
 
@@ -67,3 +77,13 @@ If you cannot run these checks, state what was skipped and why, and list any ris
 - Use `data-testid` selectors for critical flows and snapshots; avoid visible text when possible.
 - Snapshot assertions are done with `expect(page).toHaveScreenshot()` and stored under `snapshots/playwright/`.
 - Diagnostics (screenshots/traces/videos) are written to `test-results/` on failure.
+
+## API Interaction
+
+- Prefer existing API wrappers in `client/src/api` and keep server routes in `server/routes` as the source of truth.
+- Update shared request/response shapes in `shared/types.ts` whenever an API contract changes.
+- Avoid ad-hoc fetches; use TanStack Query hooks and the established data flow in `docs/architecture.md`.
+
+## Debug Logging
+
+- Assignment debug logs are gated by `ASSIGNMENT_DEBUG=1` and written to `assignment-debug.log`.

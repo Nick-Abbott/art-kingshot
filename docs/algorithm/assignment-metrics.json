@@ -1,0 +1,107 @@
+{
+  "inputPath": "/data/dev/vikingApp/docs/algorithm/signups.latest.txt",
+  "outputRunPath": "/data/dev/vikingApp/lastrun.from-signups-new.json",
+  "generatedAt": "2026-03-12T18:56:18.566Z",
+  "metrics": {
+    "garrisonsCovered": 69,
+    "garrisonsUncovered": 1,
+    "uniqueGarrisonLeaders": 17,
+    "averageLeadsPerLeader": 4.0588235294117645,
+    "medianIncomingPerCity": 360796.5,
+    "stddevIncomingPerCityExcludingWhaleLeads": 15009.46584528447,
+    "repeatedMoonsongKorusSenders": 4,
+    "repeatedMoonsongKorusSenderNames": [
+      "LMDFALLING",
+      "Ketrod",
+      "joel",
+      "CrispyChip"
+    ],
+    "leaders": [
+      {
+        "leaderId": "212254395",
+        "leaderName": "korus",
+        "leadCount": 6
+      },
+      {
+        "leaderId": "213859392",
+        "leaderName": "Moonsong",
+        "leadCount": 6
+      },
+      {
+        "leaderId": "213221049",
+        "leaderName": "DJJerryJay",
+        "leadCount": 5
+      },
+      {
+        "leaderId": "209731209",
+        "leaderName": "RWS",
+        "leadCount": 5
+      },
+      {
+        "leaderId": "211369396",
+        "leaderName": "Viggo Leif",
+        "leadCount": 5
+      },
+      {
+        "leaderId": "212352520",
+        "leaderName": "Yoyomann",
+        "leadCount": 5
+      },
+      {
+        "leaderId": "211631473",
+        "leaderName": "Dennis Reynolds",
+        "leadCount": 4
+      },
+      {
+        "leaderId": "213187952",
+        "leaderName": "Freazy",
+        "leadCount": 4
+      },
+      {
+        "leaderId": "210943706",
+        "leaderName": "Lord William B",
+        "leadCount": 4
+      },
+      {
+        "leaderId": "209927780",
+        "leaderName": "MuffinMan",
+        "leadCount": 4
+      },
+      {
+        "leaderId": "210713813",
+        "leaderName": "Pooch McDog",
+        "leadCount": 4
+      },
+      {
+        "leaderId": "211402206",
+        "leaderName": "stevedods187",
+        "leadCount": 4
+      },
+      {
+        "leaderId": "213286186",
+        "leaderName": "Alhail1608mani",
+        "leadCount": 3
+      },
+      {
+        "leaderId": "211467402",
+        "leaderName": "iceman shah",
+        "leadCount": 3
+      },
+      {
+        "leaderId": "211992333",
+        "leaderName": "Ricky",
+        "leadCount": 3
+      },
+      {
+        "leaderId": "213597838",
+        "leaderName": "DreamoFilipino",
+        "leadCount": 2
+      },
+      {
+        "leaderId": "210091339",
+        "leaderName": "Efknit",
+        "leadCount": 2
+      }
+    ]
+  }
+}
