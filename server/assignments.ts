@@ -547,7 +547,7 @@ function generateAssignments(members: Member[]): AssignmentResult {
   if (DEBUG_LOG_ENABLED && debugLines.length > 0) {
     try {
       fs.writeFileSync(DEBUG_LOG_PATH, debugLines.join("\n"));
-    } catch (error) {
+    } catch {
       warnings.push("Unable to write assignment debug log.");
     }
   }

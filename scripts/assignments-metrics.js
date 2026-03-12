@@ -3,9 +3,8 @@ const path = require("node:path");
 
 function loadAssignments() {
   try {
-    // eslint-disable-next-line global-require, import/no-dynamic-require
     return require(path.join(process.cwd(), "server/dist/server/assignments.js"));
-  } catch (error) {
+  } catch {
     console.error(
       "Unable to load server/dist/server/assignments.js. Run `npm run build:server` first."
     );
