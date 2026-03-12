@@ -13,12 +13,21 @@ type Props = {
   addPlayerError: string;
   addPlayerSuccess: string;
   deleteError: string;
+  showAllianceSettings: boolean;
+  settingsBear1Time: string;
+  settingsBear2Time: string;
+  settingsBusy: boolean;
+  settingsError: string;
+  settingsSuccess: string;
   onAddPlayerIdChange: (value: string) => void;
   onSubmitAdminAdd: (event: React.FormEvent<HTMLFormElement>) => void;
   onApproveProfile: (profile: Profile, status: "pending" | "active") => void;
   onRejectProfile: (profile: Profile) => void;
   onSetRole: (profile: Profile, role: "member" | "alliance_admin") => void;
   onDeleteAlliance: () => void;
+  onSettingsBear1TimeChange: (value: string) => void;
+  onSettingsBear2TimeChange: (value: string) => void;
+  onSubmitAllianceSettings: (event: React.FormEvent<HTMLFormElement>) => void;
 };
 
 function normalize(value: string) {
@@ -36,12 +45,21 @@ function ProfilesAdminCard({
   addPlayerError,
   addPlayerSuccess,
   deleteError,
+  showAllianceSettings,
+  settingsBear1Time,
+  settingsBear2Time,
+  settingsBusy,
+  settingsError,
+  settingsSuccess,
   onAddPlayerIdChange,
   onSubmitAdminAdd,
   onApproveProfile,
   onRejectProfile,
   onSetRole,
-  onDeleteAlliance
+  onDeleteAlliance,
+  onSettingsBear1TimeChange,
+  onSettingsBear2TimeChange,
+  onSubmitAllianceSettings
 }: Props) {
   const [memberSearch, setMemberSearch] = useState("");
 
@@ -114,6 +132,46 @@ function ProfilesAdminCard({
           </div>
         )}
       </div>
+      {showAllianceSettings && (
+        <div className="ui-card-muted mt-6">
+          <div className="ui-section-header">
+            <h3 className="ui-section-title">{t("profiles.allianceSettingsTitle")}</h3>
+            <p className="ui-section-subtitle">{t("profiles.allianceSettingsSubtitle")}</p>
+          </div>
+          <form
+            className="mt-4 grid gap-3 nav:grid-cols-[repeat(2,minmax(0,1fr))_auto] nav:items-end"
+            onSubmit={onSubmitAllianceSettings}
+          >
+            <label className="ui-field">
+              {t("profiles.bear1TimeLabel")}
+              <input
+                className="ui-input"
+                type="time"
+                step={60}
+                value={settingsBear1Time}
+                onChange={(event) => onSettingsBear1TimeChange(event.target.value)}
+                required
+              />
+            </label>
+            <label className="ui-field">
+              {t("profiles.bear2TimeLabel")}
+              <input
+                className="ui-input"
+                type="time"
+                step={60}
+                value={settingsBear2Time}
+                onChange={(event) => onSettingsBear2TimeChange(event.target.value)}
+                required
+              />
+            </label>
+            <button className="ui-button" type="submit" disabled={settingsBusy}>
+              {t("profiles.saveAllianceSettings")}
+            </button>
+          </form>
+          {settingsError && <p className="ui-error">{settingsError}</p>}
+          {settingsSuccess && <p className="ui-success">{settingsSuccess}</p>}
+        </div>
+      )}
       {selectedProfile.role === "alliance_admin" && (
         <form
           className="mt-5 flex flex-col gap-3 nav:grid nav:grid-cols-[minmax(0,1fr)_160px] nav:items-end"

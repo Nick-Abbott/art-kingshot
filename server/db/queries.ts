@@ -153,6 +153,9 @@ export function createQueries(db: Database) {
   const selectAllianceById = db.prepare(
     "SELECT id, name, kingdomId FROM alliances WHERE id = ?"
   );
+  const selectAllianceConfig = db.prepare(
+    "SELECT config FROM alliances WHERE id = ?"
+  );
   const selectAllianceByIdAndKingdom = db.prepare(
     "SELECT id, name, kingdomId FROM alliances WHERE id = ? AND kingdomId = ?"
   );
@@ -161,6 +164,9 @@ export function createQueries(db: Database) {
   );
   const selectAlliancesByKingdom = db.prepare(
     "SELECT id, name, kingdomId FROM alliances WHERE kingdomId = ? ORDER BY name ASC"
+  );
+  const updateAllianceConfig = db.prepare(
+    "UPDATE alliances SET config = ? WHERE id = ?"
   );
   const selectAdminKingdoms = db.prepare(
     "SELECT DISTINCT kingdomId FROM alliances WHERE kingdomId IS NOT NULL ORDER BY kingdomId ASC"
@@ -398,6 +404,11 @@ export function createQueries(db: Database) {
     return (selectAllianceById.get(id) as Alliance | undefined) ?? null;
   }
 
+  function getAllianceConfig(allianceId: string): string | null {
+    const row = selectAllianceConfig.get(allianceId) as { config?: string } | undefined;
+    return row?.config ?? null;
+  }
+
   function getAllianceByIdAndKingdom(
     id: string,
     kingdomId: number
@@ -415,6 +426,10 @@ export function createQueries(db: Database) {
 
   function listAlliancesByKingdom(kingdomId: number): Alliance[] {
     return (selectAlliancesByKingdom.all(kingdomId) as Alliance[]) || [];
+  }
+
+  function updateAllianceConfigRow(allianceId: string, config: string): RunResult {
+    return updateAllianceConfig.run(config, allianceId);
   }
 
   function listAdminKingdoms(): number[] {
@@ -923,6 +938,7 @@ export function createQueries(db: Database) {
     getProfileByPlayerId,
     getProfilesByUser,
     getAllianceById,
+    getAllianceConfig,
     getAllianceByIdAndKingdom,
     listAlliances,
     listAlliancesByKingdom,
@@ -958,6 +974,7 @@ export function createQueries(db: Database) {
     getAllianceGuildByGuildId,
     upsertAllianceGuild: upsertAllianceGuildRow,
     deleteAllianceGuildByAlliance: deleteAllianceGuildByAlliance,
+    updateAllianceConfig: updateAllianceConfigRow,
     listOptedInAssignmentRecipients,
     insertAssignmentNotification: insertAssignmentNotificationRow,
     listPendingAssignmentNotificationsByAlliance,

@@ -14,6 +14,7 @@ import {
   parseMemberPayload,
   parseBearPayload,
   parseAllianceCreatePayload,
+  parseAllianceSettingsPayload,
   parsePlayerLookupPayload,
   parseProfileCreatePayload,
   parseProfileUpdatePayload,
@@ -29,6 +30,7 @@ import authRoutes from "./routes/auth";
 import membersRoutes from "./routes/members";
 import assignmentsRoutes from "./routes/assignments";
 import bearRoutes from "./routes/bear";
+import allianceSettingsRoutes from "./routes/allianceSettings";
 import profileRoutes from "./routes/profile";
 import adminRoutes from "./routes/admin";
 import botRoutes from "./routes/bot";
@@ -354,6 +356,7 @@ export function createApp({ dbPath: dbPathOverride }: { dbPath?: string } = {}) 
     parseMemberPayload,
     parseBearPayload,
     parseAllianceCreatePayload,
+    parseAllianceSettingsPayload,
     parsePlayerLookupPayload,
     parseProfileCreatePayload,
     parseProfileUpdatePayload,
@@ -406,6 +409,7 @@ export function createApp({ dbPath: dbPathOverride }: { dbPath?: string } = {}) 
   app.use(assignmentsRoutes(routeContext));
   app.use(profileRoutes(routeContext));
   app.use(bearRoutes(routeContext));
+  app.use(allianceSettingsRoutes(routeContext));
   app.use(adminRoutes(routeContext));
   app.use(botRoutes(routeContext));
 

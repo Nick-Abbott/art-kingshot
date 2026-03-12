@@ -5,9 +5,11 @@ type Props = {
   t: TFunction;
   bear1Count: number;
   bear2Count: number;
+  bear1Label: string;
+  bear2Label: string;
 };
 
-function BearHeader({ t, bear1Count, bear2Count }: Props) {
+function BearHeader({ t, bear1Count, bear2Count, bear1Label, bear2Label }: Props) {
   return (
     <header className="relative z-[1] mb-8 flex flex-col gap-6 nav:flex-row nav:items-start nav:justify-between">
       <div>
@@ -24,7 +26,7 @@ function BearHeader({ t, bear1Count, bear2Count }: Props) {
       <div className="ui-card-compact grid gap-4 nav:min-w-[240px] nav:grid-cols-2">
         <div>
           <p className="text-xs uppercase tracking-[0.08em] text-muted">
-            {t("bear.bear1")}
+            {bear1Label}
           </p>
           <p className="text-2xl font-semibold" data-testid="bear1-count">
             {bear1Count}
@@ -32,7 +34,7 @@ function BearHeader({ t, bear1Count, bear2Count }: Props) {
         </div>
         <div>
           <p className="text-xs uppercase tracking-[0.08em] text-muted">
-            {t("bear.bear2")}
+            {bear2Label}
           </p>
           <p className="text-2xl font-semibold" data-testid="bear2-count">
             {bear2Count}

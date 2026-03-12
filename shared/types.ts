@@ -34,6 +34,13 @@ export type Alliance = {
   kingdomId: number;
 };
 
+export type AllianceSettings = {
+  bearTimes: {
+    bear1: string;
+    bear2: string;
+  };
+};
+
 export type Profile = {
   id: string;
   userId: string | null;
@@ -74,6 +81,12 @@ export type AllianceCreatePayload = {
   alliance: Alliance | null;
   profile: Profile | null;
 };
+
+export type AllianceSettingsPayload = {
+  settings: AllianceSettings;
+};
+
+export type AllianceSettingsUpdateRequest = AllianceSettings;
 
 export type Member = {
   playerId: string;

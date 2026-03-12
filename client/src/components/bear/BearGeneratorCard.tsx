@@ -13,6 +13,8 @@ type Props = {
   onGenerate: (group: BearGroup) => void;
   onCopy: () => void;
   canGenerate: boolean;
+  bear1Label: string;
+  bear2Label: string;
 };
 
 function BearGeneratorCard({
@@ -24,7 +26,9 @@ function BearGeneratorCard({
   onSelectedBearGroupChange,
   onGenerate,
   onCopy,
-  canGenerate
+  canGenerate,
+  bear1Label,
+  bear2Label
 }: Props) {
   return (
     <section className="ui-card">
@@ -51,8 +55,8 @@ function BearGeneratorCard({
             value={selectedBearGroup}
             onChange={(e) => onSelectedBearGroupChange(e.target.value as BearGroup)}
           >
-            <option value="bear1">{t("bear.bear1")}</option>
-            <option value="bear2">{t("bear.bear2")}</option>
+            <option value="bear1">{bear1Label}</option>
+            <option value="bear2">{bear2Label}</option>
           </select>
         </label>
         <button

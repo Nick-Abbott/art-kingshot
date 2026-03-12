@@ -5,6 +5,8 @@ import {
   MAX_SEND,
   MAX_SEND_WHALE,
   WHALE_MULTIPLIER,
+  getRecencyPenaltyStep,
+  getLeaderPenaltyMultiplier,
 } from "./assignments";
 
 function sum(values: number[]): number {
@@ -130,6 +132,24 @@ test("lead is only assigned when sender is at least 25% stronger or a whale", ()
   assert.ok(memberB);
   assert.equal(memberA.garrisonLeadId, undefined);
   assert.equal(memberB.garrisonLeadId, undefined);
+});
+
+test("recency penalty step scales to whale march totals", () => {
+  const step = getRecencyPenaltyStep(12);
+  assert.equal(step, (1 - 0.6) / 12);
+});
+
+test("recency penalty step defaults to fallback rounds without whales", () => {
+  const step = getRecencyPenaltyStep(0);
+  assert.equal(step, (1 - 0.6) / 4);
+});
+
+test("leader penalty multiplier drops exponentially after free picks", () => {
+  assert.equal(getLeaderPenaltyMultiplier(0), 1);
+  assert.equal(getLeaderPenaltyMultiplier(2), 1);
+  assert.equal(getLeaderPenaltyMultiplier(6), 0.6);
+  const mid = getLeaderPenaltyMultiplier(4);
+  assert.ok(mid < 1 && mid > 0.6);
 });
 
 export {};

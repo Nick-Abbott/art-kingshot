@@ -23,6 +23,8 @@ type Props = {
   lookupStatus: string;
   profileWarning: string;
   error: string;
+  bear1Label: string;
+  bear2Label: string;
   onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
   onAdminTargetChange: (value: string) => void;
   onSetForm: (next: BearForm) => void;
@@ -42,6 +44,8 @@ function BearSignupCard({
   lookupStatus,
   profileWarning,
   error,
+  bear1Label,
+  bear2Label,
   onSubmit,
   onAdminTargetChange,
   onSetForm,
@@ -105,8 +109,8 @@ function BearSignupCard({
             }
             required
           >
-            <option value="bear1">{t("bear.bear1")}</option>
-            <option value="bear2">{t("bear.bear2")}</option>
+            <option value="bear1">{bear1Label}</option>
+            <option value="bear2">{bear2Label}</option>
           </select>
         </label>
         <button

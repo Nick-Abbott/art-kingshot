@@ -49,6 +49,11 @@ const MAX_SEND = 100000;
 const MAX_SEND_WHALE = 150000;
 const WHALE_MULTIPLIER = 2.5;
 const WHALE_TROOP_WEIGHT = 1.5;
+const RECENCY_PENALTY_START = 0.6;
+const RECENCY_PENALTY_FALLBACK_ROUNDS = 4;
+const LEADER_PENALTY_FREE_PICKS = 2;
+const LEADER_PENALTY_MIN = 0.6;
+const LEADER_PENALTY_MAX_PICKS = 6;
 
 function sum(values: number[]): number {
   return values.reduce((total, value) => total + value, 0);
@@ -216,6 +221,26 @@ function buildMarchSizes(member: AnnotatedMember): number[] {
   return sizes.filter((size) => size > 0).sort((a, b) => a - b);
 }
 
+function getRecencyPenaltyStep(whaleMarchTotal: number): number {
+  if (!Number.isFinite(whaleMarchTotal) || whaleMarchTotal <= 0) {
+    return (1 - RECENCY_PENALTY_START) / RECENCY_PENALTY_FALLBACK_ROUNDS;
+  }
+  return (1 - RECENCY_PENALTY_START) / whaleMarchTotal;
+}
+
+function getLeaderPenaltyMultiplier(leadCount: number): number {
+  if (!Number.isFinite(leadCount) || leadCount <= LEADER_PENALTY_FREE_PICKS) {
+    return 1;
+  }
+  if (leadCount >= LEADER_PENALTY_MAX_PICKS) {
+    return LEADER_PENALTY_MIN;
+  }
+  const steps = LEADER_PENALTY_MAX_PICKS - LEADER_PENALTY_FREE_PICKS;
+  const progress = (leadCount - LEADER_PENALTY_FREE_PICKS) / steps;
+  const eased = Math.pow(progress, 2);
+  return 1 - (1 - LEADER_PENALTY_MIN) * eased;
+}
+
 function isLeadEligible(sender: AnnotatedMember, targetPower: number): boolean {
   return sender.whale || sender.power >= targetPower * 1.25;
 }
@@ -312,15 +337,46 @@ function generateAssignments(members: Member[]): AssignmentResult {
       remainingMarches.push({ senderId: sender.playerId, troops });
     }
   }
-  remainingMarches.sort((a, b) => {
-    if (b.troops !== a.troops) return b.troops - a.troops;
-    const powerA = powerById.get(a.senderId) || 0;
-    const powerB = powerById.get(b.senderId) || 0;
-    return powerB - powerA;
-  });
+  const whaleMarchTotal = annotated
+    .filter((member) => member.whale)
+    .reduce((total, member) => total + member.marchCount, 0);
+  const recencyStep = getRecencyPenaltyStep(whaleMarchTotal);
+  const senderMultiplierById = new Map(
+    annotated.map((member) => [member.playerId, 1])
+  );
 
   const allTargets = annotated.map((member) => member.playerId);
-  for (const march of remainingMarches) {
+  while (remainingMarches.length > 0) {
+    let bestIndex = -1;
+    let bestScore = Number.NEGATIVE_INFINITY;
+    let bestTroops = 0;
+    let bestPower = 0;
+
+    for (let index = 0; index < remainingMarches.length; index += 1) {
+      const march = remainingMarches[index];
+      const sender = memberById.get(march.senderId);
+      if (!sender) continue;
+      const senderMultiplier = senderMultiplierById.get(march.senderId) || 1;
+      const score = effectiveTroops(sender, march.troops) * senderMultiplier;
+      if (score > bestScore) {
+        bestScore = score;
+        bestTroops = march.troops;
+        bestPower = powerById.get(march.senderId) || 0;
+        bestIndex = index;
+        continue;
+      }
+      if (score === bestScore) {
+        const power = powerById.get(march.senderId) || 0;
+        if (march.troops > bestTroops || (march.troops === bestTroops && power > bestPower)) {
+          bestScore = score;
+          bestTroops = march.troops;
+          bestPower = power;
+          bestIndex = index;
+        }
+      }
+    }
+
+    const march = remainingMarches.splice(bestIndex, 1)[0];
     const sender = memberById.get(march.senderId);
     if (!sender) continue;
     const excludeTargets = assignedTargetsBySender.get(march.senderId) || new Set();
@@ -330,26 +386,78 @@ function generateAssignments(members: Member[]): AssignmentResult {
     assignMarch(sender, targetId, march.troops);
     excludeTargets.add(targetId);
     assignedTargetsBySender.set(march.senderId, excludeTargets);
+
+    if (recencyStep > 0) {
+      senderMultiplierById.set(march.senderId, RECENCY_PENALTY_START);
+      for (const [senderId, multiplier] of senderMultiplierById.entries()) {
+        if (senderId === march.senderId || multiplier >= 1) continue;
+        senderMultiplierById.set(senderId, Math.min(1, multiplier + recencyStep));
+      }
+    }
   }
 
-  // Pass 3: select final leads based on highest eligible sender power.
+  // Pass 3: select final leads with a bottom-up then top-down sweep.
   const leadByTarget = new Map<string, string>();
-  for (const member of annotated) {
-    const incomingInfo = getIncoming(incoming, member.playerId);
+  const leaderCountById = new Map(
+    annotated.map((member) => [member.playerId, 0])
+  );
+  const targetsByPowerAsc = [...annotated].sort((a, b) => a.power - b.power);
+  const targetsByPowerDesc = [...annotated].sort((a, b) => b.power - a.power);
+
+  for (const target of targetsByPowerAsc) {
+    const incomingInfo = getIncoming(incoming, target.playerId);
     let bestLeadId: string | undefined;
-    let bestLeadPower = 0;
+    let bestScore = Number.POSITIVE_INFINITY;
     for (const entry of incomingInfo.from) {
       if (!entry.fromId) continue;
       const sender = memberById.get(entry.fromId);
       if (!sender) continue;
-      if (!isLeadEligible(sender, member.power)) continue;
-      if (sender.power > bestLeadPower) {
-        bestLeadPower = sender.power;
-        bestLeadId = entry.fromId;
+      if (!isLeadEligible(sender, target.power)) continue;
+      const leadCount = leaderCountById.get(sender.playerId) || 0;
+      const multiplier = getLeaderPenaltyMultiplier(leadCount);
+      const score = sender.power / multiplier;
+      if (score < bestScore) {
+        bestScore = score;
+        bestLeadId = sender.playerId;
       }
     }
     if (bestLeadId) {
-      leadByTarget.set(member.playerId, bestLeadId);
+      leadByTarget.set(target.playerId, bestLeadId);
+      leaderCountById.set(bestLeadId, (leaderCountById.get(bestLeadId) || 0) + 1);
+    }
+  }
+
+  for (const target of targetsByPowerDesc) {
+    const incomingInfo = getIncoming(incoming, target.playerId);
+    const currentLeadId = leadByTarget.get(target.playerId);
+    let currentScore = Number.NEGATIVE_INFINITY;
+    if (currentLeadId) {
+      const currentLeader = memberById.get(currentLeadId);
+      const leadCount = leaderCountById.get(currentLeadId) || 0;
+      const multiplier = getLeaderPenaltyMultiplier(leadCount);
+      if (currentLeader) {
+        currentScore = currentLeader.power * multiplier;
+      }
+    }
+
+    let bestLeadId: string | undefined;
+    let bestScore = currentScore;
+    for (const entry of incomingInfo.from) {
+      if (!entry.fromId) continue;
+      const sender = memberById.get(entry.fromId);
+      if (!sender) continue;
+      if (!isLeadEligible(sender, target.power)) continue;
+      const leadCount = leaderCountById.get(sender.playerId) || 0;
+      const multiplier = getLeaderPenaltyMultiplier(leadCount);
+      const score = sender.power * multiplier;
+      if (score > bestScore) {
+        bestScore = score;
+        bestLeadId = sender.playerId;
+      }
+    }
+    if (bestLeadId && bestLeadId !== currentLeadId) {
+      leadByTarget.set(target.playerId, bestLeadId);
+      leaderCountById.set(bestLeadId, (leaderCountById.get(bestLeadId) || 0) + 1);
     }
   }
 
@@ -420,4 +528,11 @@ export {
   MAX_SEND,
   MAX_SEND_WHALE,
   WHALE_MULTIPLIER,
+  RECENCY_PENALTY_START,
+  RECENCY_PENALTY_FALLBACK_ROUNDS,
+  LEADER_PENALTY_FREE_PICKS,
+  LEADER_PENALTY_MIN,
+  LEADER_PENALTY_MAX_PICKS,
+  getLeaderPenaltyMultiplier,
+  getRecencyPenaltyStep,
 };

@@ -1,5 +1,5 @@
 import { z } from "zod/mini";
-import type { Member } from "../shared/types";
+import type { AllianceSettings, Member } from "../shared/types";
 
 type ParseResult<T> =
   | { ok: true; data: T }
@@ -50,6 +50,15 @@ const BearPayloadSchema = z.object({
   rallySize: z.coerce.number(),
 });
 
+const AllianceSettingsSchema = z.object({
+  bearTimes: z.object({
+    bear1: z.string(),
+    bear2: z.string(),
+  }),
+});
+
+const TIME_24H_REGEX = /^([01]\\d|2[0-3]):[0-5]\\d$/;
+
 export function parseBearPayload(
   payload: unknown
 ): ParseResult<{ playerId: string; playerName: string; rallySize: number }> {
@@ -96,6 +105,32 @@ export function parseAllianceCreatePayload(
   }
 
   return { ok: true, data: { tag, name } };
+}
+
+export function parseAllianceSettingsPayload(
+  payload: unknown
+): ParseResult<AllianceSettings> {
+  const parsed = AllianceSettingsSchema.safeParse(payload);
+  if (!parsed.success) {
+    return { ok: false, error: "Invalid alliance settings payload." };
+  }
+
+  const bear1 = parsed.data.bearTimes.bear1.trim();
+  const bear2 = parsed.data.bearTimes.bear2.trim();
+
+  if (!TIME_24H_REGEX.test(bear1) || !TIME_24H_REGEX.test(bear2)) {
+    return { ok: false, error: "bearTimes must be in HH:mm (24h) format." };
+  }
+
+  return {
+    ok: true,
+    data: {
+      bearTimes: {
+        bear1,
+        bear2,
+      },
+    },
+  };
 }
 
 const PlayerLookupSchema = z.object({

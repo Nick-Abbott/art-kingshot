@@ -339,6 +339,82 @@ test("alliance create and delete updates profile", async () => {
   }
 });
 
+test("alliance settings return defaults and update", async () => {
+  const dbPath = tmpDbPath();
+  process.env.DB_PATH = dbPath;
+  process.env.PORT = "0";
+  const { httpServer, port } = await startServer();
+  try {
+    const headers = { Cookie: createSessionCookie(dbPath) };
+    const createProfile = await requestJson(
+      port,
+      "POST",
+      "/api/profiles",
+      { ...headers, "Content-Type": "application/json" },
+      JSON.stringify({ playerId: "FIDSETTINGS", kingdomId: 1459 })
+    );
+    assert.equal(createProfile.status, 200);
+    const createProfilePayload = getPayload<{ profile: { id: string } }>(createProfile);
+    const profileId = createProfilePayload.profile.id;
+
+    const createAlliance = await requestJson(
+      port,
+      "POST",
+      "/api/alliances",
+      { ...headers, "Content-Type": "application/json", "x-profile-id": profileId },
+      JSON.stringify({ tag: "SET", name: "Settings Alliance" })
+    );
+    assert.equal(createAlliance.status, 200);
+    const createAlliancePayload = getPayload<{ profile: { id: string } }>(createAlliance);
+    const profileHeaders = {
+      ...headers,
+      "x-profile-id": createAlliancePayload.profile.id,
+    };
+
+    const initialSettings = await requestJson(
+      port,
+      "GET",
+      "/api/alliance/settings",
+      profileHeaders
+    );
+    assert.equal(initialSettings.status, 200);
+    const initialPayload = getPayload<{ settings: { bearTimes: { bear1: string; bear2: string } } }>(
+      initialSettings
+    );
+    assert.equal(initialPayload.settings.bearTimes.bear1, "01:00");
+    assert.equal(initialPayload.settings.bearTimes.bear2, "12:00");
+
+    const updateSettings = await requestJson(
+      port,
+      "PUT",
+      "/api/alliance/settings",
+      { ...profileHeaders, "Content-Type": "application/json" },
+      JSON.stringify({ bearTimes: { bear1: "02:30", bear2: "14:45" } })
+    );
+    assert.equal(updateSettings.status, 200);
+    const updatePayload = getPayload<{ settings: { bearTimes: { bear1: string; bear2: string } } }>(
+      updateSettings
+    );
+    assert.equal(updatePayload.settings.bearTimes.bear1, "02:30");
+    assert.equal(updatePayload.settings.bearTimes.bear2, "14:45");
+
+    const refreshed = await requestJson(
+      port,
+      "GET",
+      "/api/alliance/settings",
+      profileHeaders
+    );
+    assert.equal(refreshed.status, 200);
+    const refreshedPayload = getPayload<{ settings: { bearTimes: { bear1: string; bear2: string } } }>(
+      refreshed
+    );
+    assert.equal(refreshedPayload.settings.bearTimes.bear1, "02:30");
+    assert.equal(refreshedPayload.settings.bearTimes.bear2, "14:45");
+  } finally {
+    httpServer.close();
+  }
+});
+
 test("alliance delete cascades members, bear, meta, and profile reset", async () => {
   const dbPath = tmpDbPath();
   process.env.DB_PATH = dbPath;

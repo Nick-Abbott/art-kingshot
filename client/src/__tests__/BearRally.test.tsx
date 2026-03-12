@@ -27,6 +27,12 @@ vi.mock("../hooks/useBear", () => ({
   })
 }));
 
+vi.mock("../hooks/useAllianceSettingsQuery", () => ({
+  useAllianceSettingsQuery: () => ({
+    data: { bearTimes: { bear1: "01:00", bear2: "12:00" } }
+  })
+}));
+
 vi.mock("../api/profile", () => ({
   updateProfile: vi.fn().mockResolvedValue({
     id: "p1",

@@ -11,10 +11,13 @@ import {
   eligibleBearMembersQueryKey
 } from "./hooks/useEligibleBearMembersQuery";
 import { useBearRallyOrder } from "./hooks/useBearRallyOrder";
+import { useAllianceSettingsQuery } from "./hooks/useAllianceSettingsQuery";
 import BearGeneratorCard from "./components/bear/BearGeneratorCard";
 import BearGroupCard from "./components/bear/BearGroupCard";
 import BearHeader from "./components/bear/BearHeader";
 import BearSignupCard from "./components/bear/BearSignupCard";
+import { DEFAULT_ALLIANCE_SETTINGS } from "@shared/allianceConfig";
+import { utcTimeToLocalLabel } from "./utils/time";
 
 type Props = {
   profileId: string;
@@ -69,9 +72,19 @@ function BearRally({ profileId, profile, canManage }: Props) {
   const updateProfileMutation = useUpdateProfileMutation();
   const queryClient = useQueryClient();
   const eligibleMembersQuery = useEligibleBearMembersQuery(profileId, canManage);
+  const allianceSettingsQuery = useAllianceSettingsQuery(profileId, Boolean(profileId));
   const eligibleMembers = useMemo(
     () => eligibleMembersQuery.data ?? [],
     [eligibleMembersQuery.data]
+  );
+  const bearTimes = allianceSettingsQuery.data?.bearTimes ?? DEFAULT_ALLIANCE_SETTINGS.bearTimes;
+  const bear1Label = useMemo(
+    () => t("bear.bear1", { time: utcTimeToLocalLabel(bearTimes.bear1) }),
+    [bearTimes.bear1, t]
+  );
+  const bear2Label = useMemo(
+    () => t("bear.bear2", { time: utcTimeToLocalLabel(bearTimes.bear2) }),
+    [bearTimes.bear2, t]
   );
   const adminOptions = useMemo(() => {
     const options: { playerId: string; playerName: string }[] = [];
@@ -342,6 +355,8 @@ function BearRally({ profileId, profile, canManage }: Props) {
         t={t}
         bear1Count={bear1Members.length}
         bear2Count={bear2Members.length}
+        bear1Label={bear1Label}
+        bear2Label={bear2Label}
       />
 
       <main className="relative z-[1] grid gap-6">
@@ -356,6 +371,8 @@ function BearRally({ profileId, profile, canManage }: Props) {
           lookupStatus={lookupStatus}
           profileWarning={profileWarning}
           error={error}
+          bear1Label={bear1Label}
+          bear2Label={bear2Label}
           onSubmit={submitSignup}
           onAdminTargetChange={handleAdminTargetChange}
           onSetForm={setForm}
@@ -366,7 +383,7 @@ function BearRally({ profileId, profile, canManage }: Props) {
 
         <BearGroupCard
           t={t}
-          title={t("bear.bear1")}
+          title={bear1Label}
           members={sortedBear1}
           group="bear1"
           busy={busy}
@@ -381,7 +398,7 @@ function BearRally({ profileId, profile, canManage }: Props) {
 
         <BearGroupCard
           t={t}
-          title={t("bear.bear2")}
+          title={bear2Label}
           members={sortedBear2}
           group="bear2"
           busy={busy}
@@ -404,6 +421,8 @@ function BearRally({ profileId, profile, canManage }: Props) {
           onGenerate={generateRallyOrder}
           onCopy={copyToClipboard}
           canGenerate={canGenerateOrder}
+          bear1Label={bear1Label}
+          bear2Label={bear2Label}
         />
       </main>
     </div>

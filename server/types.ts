@@ -4,6 +4,7 @@ import type {
   AllianceRole,
   Alliance,
   AssignmentResult,
+  AllianceSettings,
   Member,
   Profile,
   User,
@@ -59,6 +60,9 @@ export type RouteContext = {
   ) =>
     | { ok: true; data: { tag: string; name: string } }
     | { ok: false; error: string; code?: string };
+  parseAllianceSettingsPayload: (
+    body: unknown
+  ) => { ok: true; data: AllianceSettings } | { ok: false; error: string; code?: string };
   parsePlayerLookupPayload: (
     body: unknown
   ) => { ok: true; data: { fid: string } } | { ok: false; error: string; code?: string };

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { Profile, User } from "@shared/types";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { createAlliance, deleteAlliance } from "./api/alliances";
+import { updateAllianceSettings } from "./api/allianceSettings";
 import { lookupAndParsePlayer } from "./utils/playerLookup";
 import { ApiError } from "./apiClient";
 import { updateAssignmentDmOptIn } from "./api/user";
@@ -15,12 +16,22 @@ import { profilesQueryKey } from "./hooks/useProfilesQuery";
 import { useAllianceProfilesQuery } from "./hooks/useAllianceProfilesQuery";
 import { useAlliancesQuery } from "./hooks/useAlliancesQuery";
 import { useAllianceAdminActions } from "./hooks/useAllianceAdminActions";
+import {
+  useAllianceSettingsQuery,
+  allianceSettingsQueryKey
+} from "./hooks/useAllianceSettingsQuery";
 import ProfilesAdminCard from "./components/profiles/ProfilesAdminCard";
 import ProfilesCreateAllianceCard from "./components/profiles/ProfilesCreateAllianceCard";
 import ProfilesCreateCard from "./components/profiles/ProfilesCreateCard";
 import ProfilesCurrentCard from "./components/profiles/ProfilesCurrentCard";
 import ProfilesHeader from "./components/profiles/ProfilesHeader";
 import ProfilesJoinCard from "./components/profiles/ProfilesJoinCard";
+import { DEFAULT_ALLIANCE_SETTINGS } from "@shared/allianceConfig";
+import {
+  isValidTime,
+  localTimeToUtcHHmm,
+  utcTimeToLocalHHmm
+} from "./utils/time";
 
 type Props = {
   user: User | null;
@@ -42,6 +53,10 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
     mutationFn: (payload: { profileId: string; enabled: boolean }) =>
       updateAssignmentDmOptIn(payload.profileId, payload.enabled)
   });
+  const settingsMutation = useMutation({
+    mutationFn: (settings: { bearTimes: { bear1: string; bear2: string } }) =>
+      updateAllianceSettings(selectedProfileId, settings)
+  });
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -58,11 +73,25 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
     Boolean(selectedProfile?.botOptInAssignments)
   );
   const [dmOptInError, setDmOptInError] = useState("");
+  const [settingsBear1Time, setSettingsBear1Time] = useState(
+    utcTimeToLocalHHmm(DEFAULT_ALLIANCE_SETTINGS.bearTimes.bear1)
+  );
+  const [settingsBear2Time, setSettingsBear2Time] = useState(
+    utcTimeToLocalHHmm(DEFAULT_ALLIANCE_SETTINGS.bearTimes.bear2)
+  );
+  const [settingsDirty, setSettingsDirty] = useState(false);
+  const [settingsError, setSettingsError] = useState("");
+  const [settingsSuccess, setSettingsSuccess] = useState("");
   const canManage =
     Boolean(user?.isAppAdmin) || selectedProfile?.role === "alliance_admin";
+  const canManageSettings = canManage && Boolean(selectedProfile?.allianceId);
   const allianceProfilesQuery = useAllianceProfilesQuery(
     selectedProfileId,
     canManage
+  );
+  const allianceSettingsQuery = useAllianceSettingsQuery(
+    selectedProfileId,
+    canManageSettings
   );
   const alliancesQuery = useAlliancesQuery(
     selectedProfile?.kingdomId ?? null,
@@ -81,6 +110,7 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
   const adminProfiles = allianceProfilesQuery.data || [];
   const loadingAdmin = allianceProfilesQuery.isLoading;
   const dmOptInBusy = assignmentOptInMutation.isPending;
+  const settingsBusy = settingsMutation.isPending;
 
   useEffect(() => {
     setJoinError("");
@@ -94,6 +124,15 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
     setAddPlayerError("");
     setAddPlayerSuccess("");
     setAddLookupStatus("");
+    setSettingsError("");
+    setSettingsSuccess("");
+    setSettingsDirty(false);
+    setSettingsBear1Time(
+      utcTimeToLocalHHmm(DEFAULT_ALLIANCE_SETTINGS.bearTimes.bear1)
+    );
+    setSettingsBear2Time(
+      utcTimeToLocalHHmm(DEFAULT_ALLIANCE_SETTINGS.bearTimes.bear2)
+    );
     if (!selectedProfile || selectedProfile.allianceId) {
       return;
     }
@@ -102,6 +141,14 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
   useEffect(() => {
     setDmOptIn(Boolean(selectedProfile?.botOptInAssignments));
   }, [selectedProfile?.botOptInAssignments]);
+
+  useEffect(() => {
+    if (!canManageSettings || settingsDirty) return;
+    const settings = allianceSettingsQuery.data;
+    if (!settings) return;
+    setSettingsBear1Time(utcTimeToLocalHHmm(settings.bearTimes.bear1));
+    setSettingsBear2Time(utcTimeToLocalHHmm(settings.bearTimes.bear2));
+  }, [allianceSettingsQuery.data, canManageSettings, settingsDirty]);
 
   function handleDmOptInChange(nextValue: boolean) {
     if (!selectedProfile) return;
@@ -124,6 +171,62 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
         onError: () => {
           setDmOptIn(Boolean(selectedProfile.botOptInAssignments));
           setDmOptInError(t("profiles.errors.dmOptInUpdateFailed"));
+        }
+      }
+    );
+  }
+
+  function handleSettingsBear1TimeChange(value: string) {
+    setSettingsBear1Time(value);
+    setSettingsDirty(true);
+    setSettingsError("");
+    setSettingsSuccess("");
+  }
+
+  function handleSettingsBear2TimeChange(value: string) {
+    setSettingsBear2Time(value);
+    setSettingsDirty(true);
+    setSettingsError("");
+    setSettingsSuccess("");
+  }
+
+  function submitAllianceSettings(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedProfileId) return;
+    setSettingsError("");
+    setSettingsSuccess("");
+
+    if (!isValidTime(settingsBear1Time) || !isValidTime(settingsBear2Time)) {
+      setSettingsError(t("profiles.errors.timeInvalid"));
+      return;
+    }
+
+    const bear1Utc = localTimeToUtcHHmm(settingsBear1Time);
+    const bear2Utc = localTimeToUtcHHmm(settingsBear2Time);
+    if (!bear1Utc || !bear2Utc) {
+      setSettingsError(t("profiles.errors.timeInvalid"));
+      return;
+    }
+
+    settingsMutation.mutate(
+      { bearTimes: { bear1: bear1Utc, bear2: bear2Utc } },
+      {
+        onSuccess: (settings) => {
+          if (!settings) {
+            setSettingsError(t("profiles.errors.settingsUpdateFailed"));
+            return;
+          }
+          queryClient.setQueryData(
+            allianceSettingsQueryKey(selectedProfileId),
+            settings
+          );
+          setSettingsBear1Time(utcTimeToLocalHHmm(settings.bearTimes.bear1));
+          setSettingsBear2Time(utcTimeToLocalHHmm(settings.bearTimes.bear2));
+          setSettingsDirty(false);
+          setSettingsSuccess(t("profiles.settingsSaved"));
+        },
+        onError: () => {
+          setSettingsError(t("profiles.errors.settingsUpdateFailed"));
         }
       }
     );
@@ -429,12 +532,21 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
             addPlayerError={addPlayerError}
             addPlayerSuccess={addPlayerSuccess}
             deleteError={deleteError}
+            showAllianceSettings={canManageSettings}
+            settingsBear1Time={settingsBear1Time}
+            settingsBear2Time={settingsBear2Time}
+            settingsBusy={settingsBusy}
+            settingsError={settingsError}
+            settingsSuccess={settingsSuccess}
             onAddPlayerIdChange={setAddPlayerId}
             onSubmitAdminAdd={submitAdminAdd}
             onApproveProfile={approveProfile}
             onRejectProfile={rejectProfile}
             onSetRole={setRole}
             onDeleteAlliance={handleDeleteAlliance}
+            onSettingsBear1TimeChange={handleSettingsBear1TimeChange}
+            onSettingsBear2TimeChange={handleSettingsBear2TimeChange}
+            onSubmitAllianceSettings={submitAllianceSettings}
           />
         )}
       </main>
