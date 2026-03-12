@@ -1,20 +1,21 @@
 {
-  "inputPath": "/data/dev/vikingApp/docs/algorithm/signups.latest.txt",
-  "outputRunPath": "/data/dev/vikingApp/lastrun.from-signups-new.json",
-  "generatedAt": "2026-03-12T18:56:18.566Z",
+  "inputPath": "/data/dev/vikingApp/docs/algorithm/signups.txt",
+  "outputRunPath": "/data/dev/vikingApp/docs/algorithm/lastrun.json",
+  "generatedAt": "2026-03-12T19:34:14.383Z",
   "metrics": {
-    "garrisonsCovered": 69,
-    "garrisonsUncovered": 1,
+    "garrisonsCovered": 68,
+    "garrisonsUncovered": 2,
     "uniqueGarrisonLeaders": 17,
-    "averageLeadsPerLeader": 4.0588235294117645,
-    "medianIncomingPerCity": 360796.5,
-    "stddevIncomingPerCityExcludingWhaleLeads": 15009.46584528447,
-    "repeatedMoonsongKorusSenders": 4,
+    "averageLeadsPerLeader": 4,
+    "medianIncomingPerCity": 360846.5,
+    "stddevIncomingPerCityExcludingWhaleLeads": 14930.385999107406,
+    "repeatedMoonsongKorusSenders": 5,
     "repeatedMoonsongKorusSenderNames": [
+      "LordyMcLordFace",
+      "Shridhar",
       "LMDFALLING",
-      "Ketrod",
-      "joel",
-      "CrispyChip"
+      "Charly_TQ",
+      "joel"
     ],
     "leaders": [
       {
@@ -63,11 +64,6 @@
         "leadCount": 4
       },
       {
-        "leaderId": "209927780",
-        "leaderName": "MuffinMan",
-        "leadCount": 4
-      },
-      {
         "leaderId": "210713813",
         "leaderName": "Pooch McDog",
         "leadCount": 4
@@ -85,6 +81,11 @@
       {
         "leaderId": "211467402",
         "leaderName": "iceman shah",
+        "leadCount": 3
+      },
+      {
+        "leaderId": "209927780",
+        "leaderName": "MuffinMan",
         "leadCount": 3
       },
       {

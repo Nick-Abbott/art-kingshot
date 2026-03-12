@@ -1,0 +1,5431 @@
+{
+  "members": [
+    {
+      "playerId": "209731209",
+      "playerName": "RWS",
+      "troopCount": 538569,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "209796180",
+          "toName": "Siegfried",
+          "troops": 89762,
+          "lead": true
+        },
+        {
+          "toId": "210664511",
+          "toName": "LotusEater",
+          "troops": 89762,
+          "lead": true
+        },
+        {
+          "toId": "211402545",
+          "toName": "Wild Dog",
+          "troops": 89761,
+          "lead": true
+        },
+        {
+          "toId": "213433522",
+          "toName": "WinnerWinner",
+          "troops": 89761,
+          "lead": true
+        },
+        {
+          "toId": "210468511",
+          "toName": "astutotigre396",
+          "troops": 89761,
+          "lead": true
+        },
+        {
+          "toId": "212876528",
+          "toName": "Shanks",
+          "troops": 89762,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "213859392",
+          "fromName": "Moonsong",
+          "troops": 130833,
+          "lead": true
+        },
+        {
+          "fromId": "211320277",
+          "fromName": "Big Cat",
+          "troops": 66833,
+          "lead": false
+        },
+        {
+          "fromId": "210664511",
+          "fromName": "LotusEater",
+          "troops": 52367,
+          "lead": false
+        },
+        {
+          "fromId": "209911019",
+          "fromName": "RenTheBoss",
+          "troops": 49000,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 299033,
+      "garrisonLeadId": "213859392",
+      "garrisonLeadName": "Moonsong"
+    },
+    {
+      "playerId": "209796180",
+      "playerName": "Siegfried",
+      "troopCount": 229000,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "210370280",
+          "toName": "aadarsh god",
+          "troops": 57250,
+          "lead": false
+        },
+        {
+          "toId": "213777938",
+          "toName": "Luty",
+          "troops": 57250,
+          "lead": false
+        },
+        {
+          "toId": "212254395",
+          "toName": "korus",
+          "troops": 57250,
+          "lead": false
+        },
+        {
+          "toId": "209829293",
+          "toName": "GH0§T",
+          "troops": 57250,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "209731209",
+          "fromName": "RWS",
+          "troops": 89762,
+          "lead": true
+        },
+        {
+          "fromId": "209829293",
+          "fromName": "GH0§T",
+          "troops": 76667,
+          "lead": false
+        },
+        {
+          "fromId": "209927780",
+          "fromName": "MuffinMan",
+          "troops": 65667,
+          "lead": false
+        },
+        {
+          "fromId": "210501088",
+          "fromName": "Ketrod",
+          "troops": 55200,
+          "lead": false
+        },
+        {
+          "fromId": "210386252",
+          "fromName": "Liv",
+          "troops": 52233,
+          "lead": false
+        },
+        {
+          "fromId": "210648634",
+          "fromName": "purpdaderp13",
+          "troops": 36866,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 376395,
+      "garrisonLeadId": "209731209",
+      "garrisonLeadName": "RWS"
+    },
+    {
+      "playerId": "209812591",
+      "playerName": "joel",
+      "troopCount": 235700,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "210566708",
+          "toName": "Shridhar",
+          "troops": 47140,
+          "lead": false
+        },
+        {
+          "toId": "213646752",
+          "toName": "otopupulo",
+          "troops": 47140,
+          "lead": false
+        },
+        {
+          "toId": "213286186",
+          "toName": "Alhail1608mani",
+          "troops": 47140,
+          "lead": false
+        },
+        {
+          "toId": "211402206",
+          "toName": "stevedods187",
+          "troops": 47140,
+          "lead": false
+        },
+        {
+          "toId": "212811179",
+          "toName": "CrispyChip",
+          "troops": 47140,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "212352520",
+          "fromName": "Yoyomann",
+          "troops": 86667,
+          "lead": true
+        },
+        {
+          "fromId": "211500263",
+          "fromName": "Ironsoul",
+          "troops": 73125,
+          "lead": false
+        },
+        {
+          "fromId": "209829293",
+          "fromName": "GH0§T",
+          "troops": 76666,
+          "lead": false
+        },
+        {
+          "fromId": "213614439",
+          "fromName": "HeroineKate",
+          "troops": 54200,
+          "lead": false
+        },
+        {
+          "fromId": "210386252",
+          "fromName": "Liv",
+          "troops": 52233,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 342891,
+      "garrisonLeadId": "212352520",
+      "garrisonLeadName": "Yoyomann"
+    },
+    {
+      "playerId": "209829293",
+      "playerName": "GH0§T",
+      "troopCount": 460000,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "211549979",
+          "toName": "Hardy Cox",
+          "troops": 76667,
+          "lead": false
+        },
+        {
+          "toId": "209796180",
+          "toName": "Siegfried",
+          "troops": 76667,
+          "lead": false
+        },
+        {
+          "toId": "211189295",
+          "toName": "Charly_TQ",
+          "troops": 76667,
+          "lead": false
+        },
+        {
+          "toId": "213892446",
+          "toName": "Brook",
+          "troops": 76667,
+          "lead": false
+        },
+        {
+          "toId": "209812591",
+          "toName": "joel",
+          "troops": 76666,
+          "lead": false
+        },
+        {
+          "toId": "211402545",
+          "toName": "Wild Dog",
+          "troops": 76666,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "212352520",
+          "fromName": "Yoyomann",
+          "troops": 86666,
+          "lead": true
+        },
+        {
+          "fromId": "211992333",
+          "fromName": "Ricky",
+          "troops": 78117,
+          "lead": false
+        },
+        {
+          "fromId": "213876083",
+          "fromName": "Darntootin",
+          "troops": 71500,
+          "lead": false
+        },
+        {
+          "fromId": "209796180",
+          "fromName": "Siegfried",
+          "troops": 57250,
+          "lead": false
+        },
+        {
+          "fromId": "211189295",
+          "fromName": "Charly_TQ",
+          "troops": 46434,
+          "lead": false
+        },
+        {
+          "fromId": "213270250",
+          "fromName": "BLOTzSOFAKINGDOM",
+          "troops": 22900,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 362867,
+      "garrisonLeadId": "212352520",
+      "garrisonLeadName": "Yoyomann"
+    },
+    {
+      "playerId": "209878301",
+      "playerName": "Satinsaber",
+      "troopCount": 250000,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "213270250",
+          "toName": "BLOTzSOFAKINGDOM",
+          "troops": 50000,
+          "lead": false
+        },
+        {
+          "toId": "209911019",
+          "toName": "RenTheBoss",
+          "troops": 50000,
+          "lead": false
+        },
+        {
+          "toId": "212417687",
+          "toName": "LMDFALLING",
+          "troops": 50000,
+          "lead": false
+        },
+        {
+          "toId": "213433522",
+          "toName": "WinnerWinner",
+          "troops": 50000,
+          "lead": false
+        },
+        {
+          "toId": "227159579",
+          "toName": "Macdaddydil",
+          "troops": 50000,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "213286186",
+          "fromName": "Alhail1608mani",
+          "troops": 62500,
+          "lead": true
+        },
+        {
+          "fromId": "210468511",
+          "fromName": "astutotigre396",
+          "troops": 100000,
+          "lead": false
+        },
+        {
+          "fromId": "213302384",
+          "fromName": "Trebz",
+          "troops": 65840,
+          "lead": false
+        },
+        {
+          "fromId": "213646752",
+          "fromName": "otopupulo",
+          "troops": 62383,
+          "lead": false
+        },
+        {
+          "fromId": "212008429",
+          "fromName": "IvH3AD5H0TvI",
+          "troops": 52166,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 342889,
+      "garrisonLeadId": "213286186",
+      "garrisonLeadName": "Alhail1608mani"
+    },
+    {
+      "playerId": "209894842",
+      "playerName": "Calypso",
+      "troopCount": 272600,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "210091339",
+          "toName": "Efknit",
+          "troops": 45434,
+          "lead": false
+        },
+        {
+          "toId": "211631473",
+          "toName": "Dennis Reynolds",
+          "troops": 45434,
+          "lead": false
+        },
+        {
+          "toId": "210435468",
+          "toName": "DarkFury",
+          "troops": 45433,
+          "lead": false
+        },
+        {
+          "toId": "209911019",
+          "toName": "RenTheBoss",
+          "troops": 45433,
+          "lead": false
+        },
+        {
+          "toId": "219377584",
+          "toName": "West",
+          "troops": 45433,
+          "lead": false
+        },
+        {
+          "toId": "213777938",
+          "toName": "Luty",
+          "troops": 45433,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "213187952",
+          "fromName": "Freazy",
+          "troops": 72500,
+          "lead": true
+        },
+        {
+          "fromId": "210370280",
+          "fromName": "aadarsh god",
+          "troops": 83400,
+          "lead": false
+        },
+        {
+          "fromId": "211713743",
+          "fromName": "orage",
+          "troops": 76980,
+          "lead": false
+        },
+        {
+          "fromId": "210124609",
+          "fromName": "BananaheadPrime",
+          "troops": 56517,
+          "lead": false
+        },
+        {
+          "fromId": "209911019",
+          "fromName": "RenTheBoss",
+          "troops": 49000,
+          "lead": false
+        },
+        {
+          "fromId": "213270250",
+          "fromName": "BLOTzSOFAKINGDOM",
+          "troops": 22900,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 361297,
+      "garrisonLeadId": "213187952",
+      "garrisonLeadName": "Freazy"
+    },
+    {
+      "playerId": "209911019",
+      "playerName": "RenTheBoss",
+      "troopCount": 245000,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "211926746",
+          "toName": "高雄誌宏",
+          "troops": 49000,
+          "lead": false
+        },
+        {
+          "toId": "209894842",
+          "toName": "Calypso",
+          "troops": 49000,
+          "lead": false
+        },
+        {
+          "toId": "211189295",
+          "toName": "Charly_TQ",
+          "troops": 49000,
+          "lead": false
+        },
+        {
+          "toId": "210664929",
+          "toName": "Lizzie",
+          "troops": 49000,
+          "lead": false
+        },
+        {
+          "toId": "209731209",
+          "toName": "RWS",
+          "troops": 49000,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "213286186",
+          "fromName": "Alhail1608mani",
+          "troops": 62500,
+          "lead": true
+        },
+        {
+          "fromId": "211549979",
+          "fromName": "Hardy Cox",
+          "troops": 100000,
+          "lead": false
+        },
+        {
+          "fromId": "213237471",
+          "fromName": "RAJA",
+          "troops": 63200,
+          "lead": false
+        },
+        {
+          "fromId": "213433522",
+          "fromName": "WinnerWinner",
+          "troops": 60000,
+          "lead": false
+        },
+        {
+          "fromId": "209878301",
+          "fromName": "Satinsaber",
+          "troops": 50000,
+          "lead": false
+        },
+        {
+          "fromId": "209894842",
+          "fromName": "Calypso",
+          "troops": 45433,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 381133,
+      "garrisonLeadId": "213286186",
+      "garrisonLeadName": "Alhail1608mani"
+    },
+    {
+      "playerId": "209927780",
+      "playerName": "MuffinMan",
+      "troopCount": 394000,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "211713743",
+          "toName": "orage",
+          "troops": 65667,
+          "lead": true
+        },
+        {
+          "toId": "210566708",
+          "toName": "Shridhar",
+          "troops": 65666,
+          "lead": true
+        },
+        {
+          "toId": "213302384",
+          "toName": "Trebz",
+          "troops": 65666,
+          "lead": true
+        },
+        {
+          "toId": "213270250",
+          "toName": "BLOTzSOFAKINGDOM",
+          "troops": 65667,
+          "lead": false
+        },
+        {
+          "toId": "211353390",
+          "toName": "coolghost",
+          "troops": 65667,
+          "lead": false
+        },
+        {
+          "toId": "209796180",
+          "toName": "Siegfried",
+          "troops": 65667,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "212254395",
+          "fromName": "korus",
+          "troops": 138334,
+          "lead": true
+        },
+        {
+          "fromId": "210271712",
+          "fromName": "yepghany",
+          "troops": 64800,
+          "lead": false
+        },
+        {
+          "fromId": "213614439",
+          "fromName": "HeroineKate",
+          "troops": 54200,
+          "lead": false
+        },
+        {
+          "fromId": "210468094",
+          "fromName": "LordyMcLordFace",
+          "troops": 47833,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 305167,
+      "garrisonLeadId": "212254395",
+      "garrisonLeadName": "korus"
+    },
+    {
+      "playerId": "210091339",
+      "playerName": "Efknit",
+      "troopCount": 379130,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "213630389",
+          "toName": "febreze86usa1",
+          "troops": 63188,
+          "lead": true
+        },
+        {
+          "toId": "212811179",
+          "toName": "CrispyChip",
+          "troops": 63188,
+          "lead": true
+        },
+        {
+          "toId": "210419464",
+          "toName": "kerker",
+          "troops": 63189,
+          "lead": false
+        },
+        {
+          "toId": "213597838",
+          "toName": "DreamoFilipino",
+          "troops": 63189,
+          "lead": false
+        },
+        {
+          "toId": "210926991",
+          "toName": "queenclaw",
+          "troops": 63188,
+          "lead": false
+        },
+        {
+          "toId": "211402206",
+          "toName": "stevedods187",
+          "troops": 63188,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "211369396",
+          "fromName": "Viggo Leif",
+          "troops": 99500,
+          "lead": true
+        },
+        {
+          "fromId": "211713743",
+          "fromName": "orage",
+          "troops": 76980,
+          "lead": false
+        },
+        {
+          "fromId": "211484455",
+          "fromName": "Kexxs",
+          "troops": 65833,
+          "lead": false
+        },
+        {
+          "fromId": "214179411",
+          "fromName": "Jacob",
+          "troops": 59400,
+          "lead": false
+        },
+        {
+          "fromId": "209894842",
+          "fromName": "Calypso",
+          "troops": 45434,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 347147,
+      "garrisonLeadId": "211369396",
+      "garrisonLeadName": "Viggo Leif"
+    },
+    {
+      "playerId": "210124609",
+      "playerName": "BananaheadPrime",
+      "troopCount": 339100,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "210419464",
+          "toName": "kerker",
+          "troops": 56517,
+          "lead": false
+        },
+        {
+          "toId": "210501088",
+          "toName": "Ketrod",
+          "troops": 56517,
+          "lead": false
+        },
+        {
+          "toId": "209894842",
+          "toName": "Calypso",
+          "troops": 56517,
+          "lead": false
+        },
+        {
+          "toId": "213646752",
+          "toName": "otopupulo",
+          "troops": 56517,
+          "lead": false
+        },
+        {
+          "toId": "210943706",
+          "toName": "Lord William B",
+          "troops": 56516,
+          "lead": false
+        },
+        {
+          "toId": "212811179",
+          "toName": "CrispyChip",
+          "troops": 56516,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "211369396",
+          "fromName": "Viggo Leif",
+          "troops": 99500,
+          "lead": true
+        },
+        {
+          "fromId": "213777938",
+          "fromName": "Luty",
+          "troops": 82425,
+          "lead": false
+        },
+        {
+          "fromId": "210271712",
+          "fromName": "yepghany",
+          "troops": 64800,
+          "lead": false
+        },
+        {
+          "fromId": "213614439",
+          "fromName": "HeroineKate",
+          "troops": 54200,
+          "lead": false
+        },
+        {
+          "fromId": "212417687",
+          "fromName": "LMDFALLING",
+          "troops": 46334,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 347259,
+      "garrisonLeadId": "211369396",
+      "garrisonLeadName": "Viggo Leif"
+    },
+    {
+      "playerId": "210271712",
+      "playerName": "yepghany",
+      "troopCount": 388800,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "213630389",
+          "toName": "febreze86usa1",
+          "troops": 64800,
+          "lead": false
+        },
+        {
+          "toId": "211713743",
+          "toName": "orage",
+          "troops": 64800,
+          "lead": false
+        },
+        {
+          "toId": "211467402",
+          "toName": "iceman shah",
+          "troops": 64800,
+          "lead": false
+        },
+        {
+          "toId": "210124609",
+          "toName": "BananaheadPrime",
+          "troops": 64800,
+          "lead": false
+        },
+        {
+          "toId": "209927780",
+          "toName": "MuffinMan",
+          "troops": 64800,
+          "lead": false
+        },
+        {
+          "toId": "210845284",
+          "toName": "FailedForward",
+          "troops": 64800,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "211369396",
+          "fromName": "Viggo Leif",
+          "troops": 99500,
+          "lead": true
+        },
+        {
+          "fromId": "211500263",
+          "fromName": "Ironsoul",
+          "troops": 73125,
+          "lead": false
+        },
+        {
+          "fromId": "213007599",
+          "fromName": "Rhivlad",
+          "troops": 60008,
+          "lead": false
+        },
+        {
+          "fromId": "214179411",
+          "fromName": "Jacob",
+          "troops": 59400,
+          "lead": false
+        },
+        {
+          "fromId": "210664929",
+          "fromName": "Lizzie",
+          "troops": 49740,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 341773,
+      "garrisonLeadId": "211369396",
+      "garrisonLeadName": "Viggo Leif"
+    },
+    {
+      "playerId": "210271966",
+      "playerName": "Kakashi",
+      "troopCount": 306000,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "213237471",
+          "toName": "RAJA",
+          "troops": 61200,
+          "lead": false
+        },
+        {
+          "toId": "213532513",
+          "toName": "Lord of the Dung",
+          "troops": 61200,
+          "lead": false
+        },
+        {
+          "toId": "211992333",
+          "toName": "Ricky",
+          "troops": 61200,
+          "lead": false
+        },
+        {
+          "toId": "213630389",
+          "toName": "febreze86usa1",
+          "troops": 61200,
+          "lead": false
+        },
+        {
+          "toId": "213433522",
+          "toName": "WinnerWinner",
+          "troops": 61200,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "213221049",
+          "fromName": "DJJerryJay",
+          "troops": 100000,
+          "lead": true
+        },
+        {
+          "fromId": "211926746",
+          "fromName": "高雄誌宏",
+          "troops": 72450,
+          "lead": false
+        },
+        {
+          "fromId": "213286186",
+          "fromName": "Alhail1608mani",
+          "troops": 62500,
+          "lead": false
+        },
+        {
+          "fromId": "210501088",
+          "fromName": "Ketrod",
+          "troops": 55200,
+          "lead": false
+        },
+        {
+          "fromId": "212139465",
+          "fromName": "Milliemae123",
+          "troops": 49667,
+          "lead": false
+        },
+        {
+          "fromId": "213270250",
+          "fromName": "BLOTzSOFAKINGDOM",
+          "troops": 22900,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 362717,
+      "garrisonLeadId": "213221049",
+      "garrisonLeadName": "DJJerryJay"
+    },
+    {
+      "playerId": "210304500",
+      "playerName": "HunTerFreaK",
+      "troopCount": 230000,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "210435468",
+          "toName": "DarkFury",
+          "troops": 57500,
+          "lead": false
+        },
+        {
+          "toId": "210468511",
+          "toName": "astutotigre396",
+          "troops": 57500,
+          "lead": false
+        },
+        {
+          "toId": "212417687",
+          "toName": "LMDFALLING",
+          "troops": 57500,
+          "lead": false
+        },
+        {
+          "toId": "213302384",
+          "toName": "Trebz",
+          "troops": 57500,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "211402206",
+          "fromName": "stevedods187",
+          "troops": 60067,
+          "lead": true
+        },
+        {
+          "fromId": "211369396",
+          "fromName": "Viggo Leif",
+          "troops": 99500,
+          "lead": false
+        },
+        {
+          "fromId": "211926746",
+          "fromName": "高雄誌宏",
+          "troops": 72450,
+          "lead": false
+        },
+        {
+          "fromId": "213646752",
+          "fromName": "otopupulo",
+          "troops": 62383,
+          "lead": false
+        },
+        {
+          "fromId": "213630389",
+          "fromName": "febreze86usa1",
+          "troops": 48350,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 342750,
+      "garrisonLeadId": "211402206",
+      "garrisonLeadName": "stevedods187"
+    },
+    {
+      "playerId": "210370280",
+      "playerName": "aadarsh god",
+      "troopCount": 333600,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "212811179",
+          "toName": "CrispyChip",
+          "troops": 83400,
+          "lead": false
+        },
+        {
+          "toId": "209894842",
+          "toName": "Calypso",
+          "troops": 83400,
+          "lead": false
+        },
+        {
+          "toId": "211500263",
+          "toName": "Ironsoul",
+          "troops": 83400,
+          "lead": false
+        },
+        {
+          "toId": "213532513",
+          "toName": "Lord of the Dung",
+          "troops": 83400,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "211631473",
+          "fromName": "Dennis Reynolds",
+          "troops": 72333,
+          "lead": true
+        },
+        {
+          "fromId": "211992333",
+          "fromName": "Ricky",
+          "troops": 78117,
+          "lead": false
+        },
+        {
+          "fromId": "211926746",
+          "fromName": "高雄誌宏",
+          "troops": 72450,
+          "lead": false
+        },
+        {
+          "fromId": "209796180",
+          "fromName": "Siegfried",
+          "troops": 57250,
+          "lead": false
+        },
+        {
+          "fromId": "212139465",
+          "fromName": "Milliemae123",
+          "troops": 49667,
+          "lead": false
+        },
+        {
+          "fromId": "212811179",
+          "fromName": "CrispyChip",
+          "troops": 44600,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 374417,
+      "garrisonLeadId": "211631473",
+      "garrisonLeadName": "Dennis Reynolds"
+    },
+    {
+      "playerId": "210386252",
+      "playerName": "Liv",
+      "troopCount": 313400,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "211189295",
+          "toName": "Charly_TQ",
+          "troops": 52234,
+          "lead": false
+        },
+        {
+          "toId": "211631473",
+          "toName": "Dennis Reynolds",
+          "troops": 52234,
+          "lead": false
+        },
+        {
+          "toId": "213007599",
+          "toName": "Rhivlad",
+          "troops": 52233,
+          "lead": false
+        },
+        {
+          "toId": "209796180",
+          "toName": "Siegfried",
+          "troops": 52233,
+          "lead": false
+        },
+        {
+          "toId": "209812591",
+          "toName": "joel",
+          "troops": 52233,
+          "lead": false
+        },
+        {
+          "toId": "213597838",
+          "toName": "DreamoFilipino",
+          "troops": 52233,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "211402206",
+          "fromName": "stevedods187",
+          "troops": 60066,
+          "lead": true
+        },
+        {
+          "fromId": "211549979",
+          "fromName": "Hardy Cox",
+          "troops": 100000,
+          "lead": false
+        },
+        {
+          "fromId": "211484455",
+          "fromName": "Kexxs",
+          "troops": 65834,
+          "lead": false
+        },
+        {
+          "fromId": "214179411",
+          "fromName": "Jacob",
+          "troops": 59400,
+          "lead": false
+        },
+        {
+          "fromId": "213630389",
+          "fromName": "febreze86usa1",
+          "troops": 48350,
+          "lead": false
+        },
+        {
+          "fromId": "212417687",
+          "fromName": "LMDFALLING",
+          "troops": 46333,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 379983,
+      "garrisonLeadId": "211402206",
+      "garrisonLeadName": "stevedods187"
+    },
+    {
+      "playerId": "210419464",
+      "playerName": "kerker",
+      "troopCount": 270300,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "211484455",
+          "toName": "Kexxs",
+          "troops": 54060,
+          "lead": false
+        },
+        {
+          "toId": "211320277",
+          "toName": "Big Cat",
+          "troops": 54060,
+          "lead": false
+        },
+        {
+          "toId": "213187952",
+          "toName": "Freazy",
+          "troops": 54060,
+          "lead": false
+        },
+        {
+          "toId": "211500263",
+          "toName": "Ironsoul",
+          "troops": 54060,
+          "lead": false
+        },
+        {
+          "toId": "212139465",
+          "toName": "Milliemae123",
+          "troops": 54060,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "213286186",
+          "fromName": "Alhail1608mani",
+          "troops": 62500,
+          "lead": true
+        },
+        {
+          "fromId": "227159579",
+          "fromName": "Macdaddydil",
+          "troops": 100000,
+          "lead": false
+        },
+        {
+          "fromId": "210091339",
+          "fromName": "Efknit",
+          "troops": 63189,
+          "lead": false
+        },
+        {
+          "fromId": "210124609",
+          "fromName": "BananaheadPrime",
+          "troops": 56517,
+          "lead": false
+        },
+        {
+          "fromId": "219377584",
+          "fromName": "West",
+          "troops": 50500,
+          "lead": false
+        },
+        {
+          "fromId": "211189295",
+          "fromName": "Charly_TQ",
+          "troops": 46433,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 379139,
+      "garrisonLeadId": "213286186",
+      "garrisonLeadName": "Alhail1608mani"
+    },
+    {
+      "playerId": "210435468",
+      "playerName": "DarkFury",
+      "troopCount": 213000,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "211926746",
+          "toName": "高雄誌宏",
+          "troops": 35500,
+          "lead": false
+        },
+        {
+          "toId": "211467402",
+          "toName": "iceman shah",
+          "troops": 35500,
+          "lead": false
+        },
+        {
+          "toId": "210566708",
+          "toName": "Shridhar",
+          "troops": 35500,
+          "lead": false
+        },
+        {
+          "toId": "210926991",
+          "toName": "queenclaw",
+          "troops": 35500,
+          "lead": false
+        },
+        {
+          "toId": "213876083",
+          "toName": "Darntootin",
+          "troops": 35500,
+          "lead": false
+        },
+        {
+          "toId": "213614439",
+          "toName": "HeroineKate",
+          "troops": 35500,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "210943706",
+          "fromName": "Lord William B",
+          "troops": 61000,
+          "lead": true
+        },
+        {
+          "fromId": "211402545",
+          "fromName": "Wild Dog",
+          "troops": 95100,
+          "lead": false
+        },
+        {
+          "fromId": "211467402",
+          "fromName": "iceman shah",
+          "troops": 65400,
+          "lead": false
+        },
+        {
+          "fromId": "210304500",
+          "fromName": "HunTerFreaK",
+          "troops": 57500,
+          "lead": false
+        },
+        {
+          "fromId": "210664929",
+          "fromName": "Lizzie",
+          "troops": 49740,
+          "lead": false
+        },
+        {
+          "fromId": "209894842",
+          "fromName": "Calypso",
+          "troops": 45433,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 374173,
+      "garrisonLeadId": "210943706",
+      "garrisonLeadName": "Lord William B"
+    },
+    {
+      "playerId": "210468094",
+      "playerName": "LordyMcLordFace",
+      "troopCount": 287000,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "211484455",
+          "toName": "Kexxs",
+          "troops": 47834,
+          "lead": false
+        },
+        {
+          "toId": "210926991",
+          "toName": "queenclaw",
+          "troops": 47834,
+          "lead": false
+        },
+        {
+          "toId": "210664511",
+          "toName": "LotusEater",
+          "troops": 47833,
+          "lead": false
+        },
+        {
+          "toId": "210943706",
+          "toName": "Lord William B",
+          "troops": 47833,
+          "lead": false
+        },
+        {
+          "toId": "209927780",
+          "toName": "MuffinMan",
+          "troops": 47833,
+          "lead": false
+        },
+        {
+          "toId": "212876528",
+          "toName": "Shanks",
+          "troops": 47833,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "211467402",
+          "fromName": "iceman shah",
+          "troops": 65400,
+          "lead": true
+        },
+        {
+          "fromId": "213777938",
+          "fromName": "Luty",
+          "troops": 82425,
+          "lead": false
+        },
+        {
+          "fromId": "211484455",
+          "fromName": "Kexxs",
+          "troops": 65834,
+          "lead": false
+        },
+        {
+          "fromId": "214179411",
+          "fromName": "Jacob",
+          "troops": 59400,
+          "lead": false
+        },
+        {
+          "fromId": "213892446",
+          "fromName": "Brook",
+          "troops": 50980,
+          "lead": false
+        },
+        {
+          "fromId": "210648634",
+          "fromName": "purpdaderp13",
+          "troops": 36867,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 360906,
+      "garrisonLeadId": "211467402",
+      "garrisonLeadName": "iceman shah"
+    },
+    {
+      "playerId": "210468511",
+      "playerName": "astutotigre396",
+      "troopCount": 413382,
+      "troopsRemaining": 13382,
+      "outgoing": [
+        {
+          "toId": "213859392",
+          "toName": "Moonsong",
+          "troops": 100000,
+          "lead": false
+        },
+        {
+          "toId": "209878301",
+          "toName": "Satinsaber",
+          "troops": 100000,
+          "lead": false
+        },
+        {
+          "toId": "210566708",
+          "toName": "Shridhar",
+          "troops": 100000,
+          "lead": false
+        },
+        {
+          "toId": "210599003",
+          "toName": "Coolets",
+          "troops": 100000,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "209731209",
+          "fromName": "RWS",
+          "troops": 89761,
+          "lead": true
+        },
+        {
+          "fromId": "211926746",
+          "fromName": "高雄誌宏",
+          "troops": 72450,
+          "lead": false
+        },
+        {
+          "fromId": "211320277",
+          "fromName": "Big Cat",
+          "troops": 66833,
+          "lead": false
+        },
+        {
+          "fromId": "210304500",
+          "fromName": "HunTerFreaK",
+          "troops": 57500,
+          "lead": false
+        },
+        {
+          "fromId": "210664929",
+          "fromName": "Lizzie",
+          "troops": 49740,
+          "lead": false
+        },
+        {
+          "fromId": "212417687",
+          "fromName": "LMDFALLING",
+          "troops": 46333,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 382617,
+      "garrisonLeadId": "209731209",
+      "garrisonLeadName": "RWS"
+    },
+    {
+      "playerId": "210501088",
+      "playerName": "Ketrod",
+      "troopCount": 276000,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "211500263",
+          "toName": "Ironsoul",
+          "troops": 55200,
+          "lead": false
+        },
+        {
+          "toId": "209796180",
+          "toName": "Siegfried",
+          "troops": 55200,
+          "lead": false
+        },
+        {
+          "toId": "210271966",
+          "toName": "Kakashi",
+          "troops": 55200,
+          "lead": false
+        },
+        {
+          "toId": "210664929",
+          "toName": "Lizzie",
+          "troops": 55200,
+          "lead": false
+        },
+        {
+          "toId": "211992333",
+          "toName": "Ricky",
+          "troops": 55200,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "211402206",
+          "fromName": "stevedods187",
+          "troops": 60067,
+          "lead": true
+        },
+        {
+          "fromId": "212876528",
+          "fromName": "Shanks",
+          "troops": 97500,
+          "lead": false
+        },
+        {
+          "fromId": "211500263",
+          "fromName": "Ironsoul",
+          "troops": 73125,
+          "lead": false
+        },
+        {
+          "fromId": "210124609",
+          "fromName": "BananaheadPrime",
+          "troops": 56517,
+          "lead": false
+        },
+        {
+          "fromId": "213614439",
+          "fromName": "HeroineKate",
+          "troops": 54200,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 341409,
+      "garrisonLeadId": "211402206",
+      "garrisonLeadName": "stevedods187"
+    },
+    {
+      "playerId": "210566708",
+      "playerName": "Shridhar",
+      "troopCount": 271500,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "213892446",
+          "toName": "Brook",
+          "troops": 54300,
+          "lead": false
+        },
+        {
+          "toId": "219377584",
+          "toName": "West",
+          "troops": 54300,
+          "lead": false
+        },
+        {
+          "toId": "211467402",
+          "toName": "iceman shah",
+          "troops": 54300,
+          "lead": false
+        },
+        {
+          "toId": "211369396",
+          "toName": "Viggo Leif",
+          "troops": 54300,
+          "lead": false
+        },
+        {
+          "toId": "210713813",
+          "toName": "Pooch McDog",
+          "troops": 54300,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "209927780",
+          "fromName": "MuffinMan",
+          "troops": 65666,
+          "lead": true
+        },
+        {
+          "fromId": "210468511",
+          "fromName": "astutotigre396",
+          "troops": 100000,
+          "lead": false
+        },
+        {
+          "fromId": "211484455",
+          "fromName": "Kexxs",
+          "troops": 65833,
+          "lead": false
+        },
+        {
+          "fromId": "214179411",
+          "fromName": "Jacob",
+          "troops": 59400,
+          "lead": false
+        },
+        {
+          "fromId": "209812591",
+          "fromName": "joel",
+          "troops": 47140,
+          "lead": false
+        },
+        {
+          "fromId": "210435468",
+          "fromName": "DarkFury",
+          "troops": 35500,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 373539,
+      "garrisonLeadId": "209927780",
+      "garrisonLeadName": "MuffinMan"
+    },
+    {
+      "playerId": "210599003",
+      "playerName": "Coolets",
+      "troopCount": 349100,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "213597838",
+          "toName": "DreamoFilipino",
+          "troops": 69820,
+          "lead": false
+        },
+        {
+          "toId": "212876528",
+          "toName": "Shanks",
+          "troops": 69820,
+          "lead": false
+        },
+        {
+          "toId": "213777938",
+          "toName": "Luty",
+          "troops": 69820,
+          "lead": false
+        },
+        {
+          "toId": "214179411",
+          "toName": "Jacob",
+          "troops": 69820,
+          "lead": false
+        },
+        {
+          "toId": "211320277",
+          "toName": "Big Cat",
+          "troops": 69820,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "213187952",
+          "fromName": "Freazy",
+          "troops": 72500,
+          "lead": true
+        },
+        {
+          "fromId": "210468511",
+          "fromName": "astutotigre396",
+          "troops": 100000,
+          "lead": false
+        },
+        {
+          "fromId": "213302384",
+          "fromName": "Trebz",
+          "troops": 65840,
+          "lead": false
+        },
+        {
+          "fromId": "210845284",
+          "fromName": "FailedForward",
+          "troops": 58000,
+          "lead": false
+        },
+        {
+          "fromId": "210664929",
+          "fromName": "Lizzie",
+          "troops": 49740,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 346080,
+      "garrisonLeadId": "213187952",
+      "garrisonLeadName": "Freazy"
+    },
+    {
+      "playerId": "210648634",
+      "playerName": "purpdaderp13",
+      "troopCount": 221200,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "210468094",
+          "toName": "LordyMcLordFace",
+          "troops": 36867,
+          "lead": false
+        },
+        {
+          "toId": "211484455",
+          "toName": "Kexxs",
+          "troops": 36867,
+          "lead": false
+        },
+        {
+          "toId": "212254395",
+          "toName": "korus",
+          "troops": 36867,
+          "lead": false
+        },
+        {
+          "toId": "211353390",
+          "toName": "coolghost",
+          "troops": 36867,
+          "lead": false
+        },
+        {
+          "toId": "213630389",
+          "toName": "febreze86usa1",
+          "troops": 36866,
+          "lead": false
+        },
+        {
+          "toId": "209796180",
+          "toName": "Siegfried",
+          "troops": 36866,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "210713813",
+          "fromName": "Pooch McDog",
+          "troops": 75667,
+          "lead": true
+        },
+        {
+          "fromId": "212876528",
+          "fromName": "Shanks",
+          "troops": 97500,
+          "lead": false
+        },
+        {
+          "fromId": "213237471",
+          "fromName": "RAJA",
+          "troops": 63200,
+          "lead": false
+        },
+        {
+          "fromId": "213433522",
+          "fromName": "WinnerWinner",
+          "troops": 60000,
+          "lead": false
+        },
+        {
+          "fromId": "212139465",
+          "fromName": "Milliemae123",
+          "troops": 49666,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 346033,
+      "garrisonLeadId": "210713813",
+      "garrisonLeadName": "Pooch McDog"
+    },
+    {
+      "playerId": "210664511",
+      "playerName": "LotusEater",
+      "troopCount": 314200,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "210926991",
+          "toName": "queenclaw",
+          "troops": 52367,
+          "lead": false
+        },
+        {
+          "toId": "209731209",
+          "toName": "RWS",
+          "troops": 52367,
+          "lead": false
+        },
+        {
+          "toId": "212876528",
+          "toName": "Shanks",
+          "troops": 52367,
+          "lead": false
+        },
+        {
+          "toId": "213630389",
+          "toName": "febreze86usa1",
+          "troops": 52367,
+          "lead": false
+        },
+        {
+          "toId": "212008429",
+          "toName": "IvH3AD5H0TvI",
+          "troops": 52366,
+          "lead": false
+        },
+        {
+          "toId": "213237471",
+          "toName": "RAJA",
+          "troops": 52366,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "209731209",
+          "fromName": "RWS",
+          "troops": 89762,
+          "lead": true
+        },
+        {
+          "fromId": "211992333",
+          "fromName": "Ricky",
+          "troops": 78117,
+          "lead": false
+        },
+        {
+          "fromId": "213302384",
+          "fromName": "Trebz",
+          "troops": 65840,
+          "lead": false
+        },
+        {
+          "fromId": "210926991",
+          "fromName": "queenclaw",
+          "troops": 59833,
+          "lead": false
+        },
+        {
+          "fromId": "210468094",
+          "fromName": "LordyMcLordFace",
+          "troops": 47833,
+          "lead": false
+        },
+        {
+          "fromId": "213532513",
+          "fromName": "Lord of the Dung",
+          "troops": 20000,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 361385,
+      "garrisonLeadId": "209731209",
+      "garrisonLeadName": "RWS"
+    },
+    {
+      "playerId": "210664929",
+      "playerName": "Lizzie",
+      "troopCount": 248700,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "210435468",
+          "toName": "DarkFury",
+          "troops": 49740,
+          "lead": false
+        },
+        {
+          "toId": "210468511",
+          "toName": "astutotigre396",
+          "troops": 49740,
+          "lead": false
+        },
+        {
+          "toId": "213614439",
+          "toName": "HeroineKate",
+          "troops": 49740,
+          "lead": false
+        },
+        {
+          "toId": "210271712",
+          "toName": "yepghany",
+          "troops": 49740,
+          "lead": false
+        },
+        {
+          "toId": "210599003",
+          "toName": "Coolets",
+          "troops": 49740,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "213221049",
+          "fromName": "DJJerryJay",
+          "troops": 100000,
+          "lead": true
+        },
+        {
+          "fromId": "211631473",
+          "fromName": "Dennis Reynolds",
+          "troops": 72334,
+          "lead": false
+        },
+        {
+          "fromId": "211320277",
+          "fromName": "Big Cat",
+          "troops": 66833,
+          "lead": false
+        },
+        {
+          "fromId": "210501088",
+          "fromName": "Ketrod",
+          "troops": 55200,
+          "lead": false
+        },
+        {
+          "fromId": "209911019",
+          "fromName": "RenTheBoss",
+          "troops": 49000,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 343367,
+      "garrisonLeadId": "213221049",
+      "garrisonLeadName": "DJJerryJay"
+    },
+    {
+      "playerId": "210713813",
+      "playerName": "Pooch McDog",
+      "troopCount": 454000,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "210648634",
+          "toName": "purpdaderp13",
+          "troops": 75667,
+          "lead": true
+        },
+        {
+          "toId": "213237471",
+          "toName": "RAJA",
+          "troops": 75667,
+          "lead": true
+        },
+        {
+          "toId": "213876083",
+          "toName": "Darntootin",
+          "troops": 75666,
+          "lead": true
+        },
+        {
+          "toId": "210926991",
+          "toName": "queenclaw",
+          "troops": 75666,
+          "lead": true
+        },
+        {
+          "toId": "213892446",
+          "toName": "Brook",
+          "troops": 75667,
+          "lead": false
+        },
+        {
+          "toId": "227159579",
+          "toName": "Macdaddydil",
+          "troops": 75667,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "212254395",
+          "fromName": "korus",
+          "troops": 138333,
+          "lead": true
+        },
+        {
+          "fromId": "211484455",
+          "fromName": "Kexxs",
+          "troops": 65833,
+          "lead": false
+        },
+        {
+          "fromId": "210566708",
+          "fromName": "Shridhar",
+          "troops": 54300,
+          "lead": false
+        },
+        {
+          "fromId": "212417687",
+          "fromName": "LMDFALLING",
+          "troops": 46333,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 304799,
+      "garrisonLeadId": "212254395",
+      "garrisonLeadName": "korus"
+    },
+    {
+      "playerId": "210845284",
+      "playerName": "FailedForward",
+      "troopCount": 348000,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "213270250",
+          "toName": "BLOTzSOFAKINGDOM",
+          "troops": 58000,
+          "lead": false
+        },
+        {
+          "toId": "211353390",
+          "toName": "coolghost",
+          "troops": 58000,
+          "lead": false
+        },
+        {
+          "toId": "212008429",
+          "toName": "IvH3AD5H0TvI",
+          "troops": 58000,
+          "lead": false
+        },
+        {
+          "toId": "214179411",
+          "toName": "Jacob",
+          "troops": 58000,
+          "lead": false
+        },
+        {
+          "toId": "210599003",
+          "toName": "Coolets",
+          "troops": 58000,
+          "lead": false
+        },
+        {
+          "toId": "212352520",
+          "toName": "Yoyomann",
+          "troops": 58000,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "212352520",
+          "fromName": "Yoyomann",
+          "troops": 86667,
+          "lead": true
+        },
+        {
+          "fromId": "213187952",
+          "fromName": "Freazy",
+          "troops": 72500,
+          "lead": false
+        },
+        {
+          "fromId": "213302384",
+          "fromName": "Trebz",
+          "troops": 65840,
+          "lead": false
+        },
+        {
+          "fromId": "210271712",
+          "fromName": "yepghany",
+          "troops": 64800,
+          "lead": false
+        },
+        {
+          "fromId": "213892446",
+          "fromName": "Brook",
+          "troops": 50980,
+          "lead": false
+        },
+        {
+          "fromId": "213532513",
+          "fromName": "Lord of the Dung",
+          "troops": 20000,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 360787,
+      "garrisonLeadId": "212352520",
+      "garrisonLeadName": "Yoyomann"
+    },
+    {
+      "playerId": "210926991",
+      "playerName": "queenclaw",
+      "troopCount": 359000,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "213221049",
+          "toName": "DJJerryJay",
+          "troops": 59834,
+          "lead": false
+        },
+        {
+          "toId": "212876528",
+          "toName": "Shanks",
+          "troops": 59834,
+          "lead": false
+        },
+        {
+          "toId": "211549979",
+          "toName": "Hardy Cox",
+          "troops": 59833,
+          "lead": false
+        },
+        {
+          "toId": "213237471",
+          "toName": "RAJA",
+          "troops": 59833,
+          "lead": false
+        },
+        {
+          "toId": "210664511",
+          "toName": "LotusEater",
+          "troops": 59833,
+          "lead": false
+        },
+        {
+          "toId": "211402545",
+          "toName": "Wild Dog",
+          "troops": 59833,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "210713813",
+          "fromName": "Pooch McDog",
+          "troops": 75666,
+          "lead": true
+        },
+        {
+          "fromId": "227159579",
+          "fromName": "Macdaddydil",
+          "troops": 100000,
+          "lead": false
+        },
+        {
+          "fromId": "210091339",
+          "fromName": "Efknit",
+          "troops": 63188,
+          "lead": false
+        },
+        {
+          "fromId": "210664511",
+          "fromName": "LotusEater",
+          "troops": 52367,
+          "lead": false
+        },
+        {
+          "fromId": "210468094",
+          "fromName": "LordyMcLordFace",
+          "troops": 47834,
+          "lead": false
+        },
+        {
+          "fromId": "210435468",
+          "fromName": "DarkFury",
+          "troops": 35500,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 374555,
+      "garrisonLeadId": "210713813",
+      "garrisonLeadName": "Pooch McDog"
+    },
+    {
+      "playerId": "210943706",
+      "playerName": "Lord William B",
+      "troopCount": 366000,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "210435468",
+          "toName": "DarkFury",
+          "troops": 61000,
+          "lead": true
+        },
+        {
+          "toId": "211926746",
+          "toName": "高雄誌宏",
+          "troops": 61000,
+          "lead": true
+        },
+        {
+          "toId": "213007599",
+          "toName": "Rhivlad",
+          "troops": 61000,
+          "lead": true
+        },
+        {
+          "toId": "212876528",
+          "toName": "Shanks",
+          "troops": 61000,
+          "lead": true
+        },
+        {
+          "toId": "212139465",
+          "toName": "Milliemae123",
+          "troops": 61000,
+          "lead": false
+        },
+        {
+          "toId": "211369396",
+          "toName": "Viggo Leif",
+          "troops": 61000,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "213859392",
+          "fromName": "Moonsong",
+          "troops": 130834,
+          "lead": true
+        },
+        {
+          "fromId": "211402206",
+          "fromName": "stevedods187",
+          "troops": 60067,
+          "lead": false
+        },
+        {
+          "fromId": "210124609",
+          "fromName": "BananaheadPrime",
+          "troops": 56516,
+          "lead": false
+        },
+        {
+          "fromId": "210468094",
+          "fromName": "LordyMcLordFace",
+          "troops": 47833,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 295250,
+      "garrisonLeadId": "213859392",
+      "garrisonLeadName": "Moonsong"
+    },
+    {
+      "playerId": "211189295",
+      "playerName": "Charly_TQ",
+      "troopCount": 278600,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "211467402",
+          "toName": "iceman shah",
+          "troops": 46434,
+          "lead": false
+        },
+        {
+          "toId": "209829293",
+          "toName": "GH0§T",
+          "troops": 46434,
+          "lead": false
+        },
+        {
+          "toId": "211369396",
+          "toName": "Viggo Leif",
+          "troops": 46433,
+          "lead": false
+        },
+        {
+          "toId": "211992333",
+          "toName": "Ricky",
+          "troops": 46433,
+          "lead": false
+        },
+        {
+          "toId": "210419464",
+          "toName": "kerker",
+          "troops": 46433,
+          "lead": false
+        },
+        {
+          "toId": "213007599",
+          "toName": "Rhivlad",
+          "troops": 46433,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "213221049",
+          "fromName": "DJJerryJay",
+          "troops": 100000,
+          "lead": true
+        },
+        {
+          "fromId": "209829293",
+          "fromName": "GH0§T",
+          "troops": 76667,
+          "lead": false
+        },
+        {
+          "fromId": "213646752",
+          "fromName": "otopupulo",
+          "troops": 62384,
+          "lead": false
+        },
+        {
+          "fromId": "210386252",
+          "fromName": "Liv",
+          "troops": 52234,
+          "lead": false
+        },
+        {
+          "fromId": "209911019",
+          "fromName": "RenTheBoss",
+          "troops": 49000,
+          "lead": false
+        },
+        {
+          "fromId": "213532513",
+          "fromName": "Lord of the Dung",
+          "troops": 20000,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 360285,
+      "garrisonLeadId": "213221049",
+      "garrisonLeadName": "DJJerryJay"
+    },
+    {
+      "playerId": "211320277",
+      "playerName": "Big Cat",
+      "troopCount": 401000,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "213859392",
+          "toName": "Moonsong",
+          "troops": 66834,
+          "lead": false
+        },
+        {
+          "toId": "213876083",
+          "toName": "Darntootin",
+          "troops": 66834,
+          "lead": false
+        },
+        {
+          "toId": "210468511",
+          "toName": "astutotigre396",
+          "troops": 66833,
+          "lead": false
+        },
+        {
+          "toId": "211484455",
+          "toName": "Kexxs",
+          "troops": 66833,
+          "lead": false
+        },
+        {
+          "toId": "210664929",
+          "toName": "Lizzie",
+          "troops": 66833,
+          "lead": false
+        },
+        {
+          "toId": "209731209",
+          "toName": "RWS",
+          "troops": 66833,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "212352520",
+          "fromName": "Yoyomann",
+          "troops": 86667,
+          "lead": true
+        },
+        {
+          "fromId": "213777938",
+          "fromName": "Luty",
+          "troops": 82425,
+          "lead": false
+        },
+        {
+          "fromId": "210599003",
+          "fromName": "Coolets",
+          "troops": 69820,
+          "lead": false
+        },
+        {
+          "fromId": "210419464",
+          "fromName": "kerker",
+          "troops": 54060,
+          "lead": false
+        },
+        {
+          "fromId": "212008429",
+          "fromName": "IvH3AD5H0TvI",
+          "troops": 52166,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 345138,
+      "garrisonLeadId": "212352520",
+      "garrisonLeadName": "Yoyomann"
+    },
+    {
+      "playerId": "211353390",
+      "playerName": "coolghost",
+      "troopCount": 276500,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "212254395",
+          "toName": "korus",
+          "troops": 69125,
+          "lead": false
+        },
+        {
+          "toId": "211926746",
+          "toName": "高雄誌宏",
+          "troops": 69125,
+          "lead": false
+        },
+        {
+          "toId": "213433522",
+          "toName": "WinnerWinner",
+          "troops": 69125,
+          "lead": false
+        },
+        {
+          "toId": "213302384",
+          "toName": "Trebz",
+          "troops": 69125,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "211467402",
+          "fromName": "iceman shah",
+          "troops": 65400,
+          "lead": true
+        },
+        {
+          "fromId": "211402545",
+          "fromName": "Wild Dog",
+          "troops": 95100,
+          "lead": false
+        },
+        {
+          "fromId": "209927780",
+          "fromName": "MuffinMan",
+          "troops": 65667,
+          "lead": false
+        },
+        {
+          "fromId": "210845284",
+          "fromName": "FailedForward",
+          "troops": 58000,
+          "lead": false
+        },
+        {
+          "fromId": "213614439",
+          "fromName": "HeroineKate",
+          "troops": 54200,
+          "lead": false
+        },
+        {
+          "fromId": "210648634",
+          "fromName": "purpdaderp13",
+          "troops": 36867,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 375234,
+      "garrisonLeadId": "211467402",
+      "garrisonLeadName": "iceman shah"
+    },
+    {
+      "playerId": "211369396",
+      "playerName": "Viggo Leif",
+      "troopCount": 597000,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "210124609",
+          "toName": "BananaheadPrime",
+          "troops": 99500,
+          "lead": true
+        },
+        {
+          "toId": "210271712",
+          "toName": "yepghany",
+          "troops": 99500,
+          "lead": true
+        },
+        {
+          "toId": "213597838",
+          "toName": "DreamoFilipino",
+          "troops": 99500,
+          "lead": true
+        },
+        {
+          "toId": "210091339",
+          "toName": "Efknit",
+          "troops": 99500,
+          "lead": true
+        },
+        {
+          "toId": "211467402",
+          "toName": "iceman shah",
+          "troops": 99500,
+          "lead": true
+        },
+        {
+          "toId": "210304500",
+          "toName": "HunTerFreaK",
+          "troops": 99500,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "213859392",
+          "fromName": "Moonsong",
+          "troops": 130833,
+          "lead": true
+        },
+        {
+          "fromId": "210943706",
+          "fromName": "Lord William B",
+          "troops": 61000,
+          "lead": false
+        },
+        {
+          "fromId": "210566708",
+          "fromName": "Shridhar",
+          "troops": 54300,
+          "lead": false
+        },
+        {
+          "fromId": "211189295",
+          "fromName": "Charly_TQ",
+          "troops": 46433,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 292566,
+      "garrisonLeadId": "213859392",
+      "garrisonLeadName": "Moonsong"
+    },
+    {
+      "playerId": "211402206",
+      "playerName": "stevedods187",
+      "troopCount": 360400,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "210304500",
+          "toName": "HunTerFreaK",
+          "troops": 60067,
+          "lead": true
+        },
+        {
+          "toId": "210501088",
+          "toName": "Ketrod",
+          "troops": 60067,
+          "lead": true
+        },
+        {
+          "toId": "210386252",
+          "toName": "Liv",
+          "troops": 60066,
+          "lead": true
+        },
+        {
+          "toId": "213777938",
+          "toName": "Luty",
+          "troops": 60066,
+          "lead": true
+        },
+        {
+          "toId": "219377584",
+          "toName": "West",
+          "troops": 60067,
+          "lead": false
+        },
+        {
+          "toId": "210943706",
+          "toName": "Lord William B",
+          "troops": 60067,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "212254395",
+          "fromName": "korus",
+          "troops": 138333,
+          "lead": true
+        },
+        {
+          "fromId": "210091339",
+          "fromName": "Efknit",
+          "troops": 63188,
+          "lead": false
+        },
+        {
+          "fromId": "212008429",
+          "fromName": "IvH3AD5H0TvI",
+          "troops": 52167,
+          "lead": false
+        },
+        {
+          "fromId": "209812591",
+          "fromName": "joel",
+          "troops": 47140,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 300828,
+      "garrisonLeadId": "212254395",
+      "garrisonLeadName": "korus"
+    },
+    {
+      "playerId": "211402545",
+      "playerName": "Wild Dog",
+      "troopCount": 380400,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "210435468",
+          "toName": "DarkFury",
+          "troops": 95100,
+          "lead": false
+        },
+        {
+          "toId": "211353390",
+          "toName": "coolghost",
+          "troops": 95100,
+          "lead": false
+        },
+        {
+          "toId": "213614439",
+          "toName": "HeroineKate",
+          "troops": 95100,
+          "lead": false
+        },
+        {
+          "toId": "213237471",
+          "toName": "RAJA",
+          "troops": 95100,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "209731209",
+          "fromName": "RWS",
+          "troops": 89761,
+          "lead": true
+        },
+        {
+          "fromId": "211631473",
+          "fromName": "Dennis Reynolds",
+          "troops": 72334,
+          "lead": false
+        },
+        {
+          "fromId": "209829293",
+          "fromName": "GH0§T",
+          "troops": 76666,
+          "lead": false
+        },
+        {
+          "fromId": "210926991",
+          "fromName": "queenclaw",
+          "troops": 59833,
+          "lead": false
+        },
+        {
+          "fromId": "219377584",
+          "fromName": "West",
+          "troops": 50500,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 349094,
+      "garrisonLeadId": "209731209",
+      "garrisonLeadName": "RWS"
+    },
+    {
+      "playerId": "211467402",
+      "playerName": "iceman shah",
+      "troopCount": 392400,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "210468094",
+          "toName": "LordyMcLordFace",
+          "troops": 65400,
+          "lead": true
+        },
+        {
+          "toId": "211353390",
+          "toName": "coolghost",
+          "troops": 65400,
+          "lead": true
+        },
+        {
+          "toId": "212008429",
+          "toName": "IvH3AD5H0TvI",
+          "troops": 65400,
+          "lead": true
+        },
+        {
+          "toId": "210435468",
+          "toName": "DarkFury",
+          "troops": 65400,
+          "lead": false
+        },
+        {
+          "toId": "211500263",
+          "toName": "Ironsoul",
+          "troops": 65400,
+          "lead": false
+        },
+        {
+          "toId": "213859392",
+          "toName": "Moonsong",
+          "troops": 65400,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "211369396",
+          "fromName": "Viggo Leif",
+          "troops": 99500,
+          "lead": true
+        },
+        {
+          "fromId": "213187952",
+          "fromName": "Freazy",
+          "troops": 72500,
+          "lead": false
+        },
+        {
+          "fromId": "210271712",
+          "fromName": "yepghany",
+          "troops": 64800,
+          "lead": false
+        },
+        {
+          "fromId": "210566708",
+          "fromName": "Shridhar",
+          "troops": 54300,
+          "lead": false
+        },
+        {
+          "fromId": "211189295",
+          "fromName": "Charly_TQ",
+          "troops": 46434,
+          "lead": false
+        },
+        {
+          "fromId": "210435468",
+          "fromName": "DarkFury",
+          "troops": 35500,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 373034,
+      "garrisonLeadId": "211369396",
+      "garrisonLeadName": "Viggo Leif"
+    },
+    {
+      "playerId": "211484455",
+      "playerName": "Kexxs",
+      "troopCount": 395000,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "210468094",
+          "toName": "LordyMcLordFace",
+          "troops": 65834,
+          "lead": false
+        },
+        {
+          "toId": "210386252",
+          "toName": "Liv",
+          "troops": 65834,
+          "lead": false
+        },
+        {
+          "toId": "210566708",
+          "toName": "Shridhar",
+          "troops": 65833,
+          "lead": false
+        },
+        {
+          "toId": "227159579",
+          "toName": "Macdaddydil",
+          "troops": 65833,
+          "lead": false
+        },
+        {
+          "toId": "210091339",
+          "toName": "Efknit",
+          "troops": 65833,
+          "lead": false
+        },
+        {
+          "toId": "210713813",
+          "toName": "Pooch McDog",
+          "troops": 65833,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "213187952",
+          "fromName": "Freazy",
+          "troops": 72500,
+          "lead": true
+        },
+        {
+          "fromId": "213597838",
+          "fromName": "DreamoFilipino",
+          "troops": 95000,
+          "lead": false
+        },
+        {
+          "fromId": "211320277",
+          "fromName": "Big Cat",
+          "troops": 66833,
+          "lead": false
+        },
+        {
+          "fromId": "210419464",
+          "fromName": "kerker",
+          "troops": 54060,
+          "lead": false
+        },
+        {
+          "fromId": "210468094",
+          "fromName": "LordyMcLordFace",
+          "troops": 47834,
+          "lead": false
+        },
+        {
+          "fromId": "210648634",
+          "fromName": "purpdaderp13",
+          "troops": 36867,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 373094,
+      "garrisonLeadId": "213187952",
+      "garrisonLeadName": "Freazy"
+    },
+    {
+      "playerId": "211500263",
+      "playerName": "Ironsoul",
+      "troopCount": 292500,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "209812591",
+          "toName": "joel",
+          "troops": 73125,
+          "lead": false
+        },
+        {
+          "toId": "210271712",
+          "toName": "yepghany",
+          "troops": 73125,
+          "lead": false
+        },
+        {
+          "toId": "213007599",
+          "toName": "Rhivlad",
+          "troops": 73125,
+          "lead": false
+        },
+        {
+          "toId": "210501088",
+          "toName": "Ketrod",
+          "troops": 73125,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "211992333",
+          "fromName": "Ricky",
+          "troops": 78117,
+          "lead": true
+        },
+        {
+          "fromId": "210370280",
+          "fromName": "aadarsh god",
+          "troops": 83400,
+          "lead": false
+        },
+        {
+          "fromId": "211467402",
+          "fromName": "iceman shah",
+          "troops": 65400,
+          "lead": false
+        },
+        {
+          "fromId": "210501088",
+          "fromName": "Ketrod",
+          "troops": 55200,
+          "lead": false
+        },
+        {
+          "fromId": "210419464",
+          "fromName": "kerker",
+          "troops": 54060,
+          "lead": false
+        },
+        {
+          "fromId": "212811179",
+          "fromName": "CrispyChip",
+          "troops": 44600,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 380777,
+      "garrisonLeadId": "211992333",
+      "garrisonLeadName": "Ricky"
+    },
+    {
+      "playerId": "211549979",
+      "playerName": "Hardy Cox",
+      "troopCount": 437921,
+      "troopsRemaining": 37921,
+      "outgoing": [
+        {
+          "toId": "210386252",
+          "toName": "Liv",
+          "troops": 100000,
+          "lead": false
+        },
+        {
+          "toId": "209911019",
+          "toName": "RenTheBoss",
+          "troops": 100000,
+          "lead": false
+        },
+        {
+          "toId": "213302384",
+          "toName": "Trebz",
+          "troops": 100000,
+          "lead": false
+        },
+        {
+          "toId": "219377584",
+          "toName": "West",
+          "troops": 100000,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "211992333",
+          "fromName": "Ricky",
+          "troops": 78116,
+          "lead": true
+        },
+        {
+          "fromId": "209829293",
+          "fromName": "GH0§T",
+          "troops": 76667,
+          "lead": false
+        },
+        {
+          "fromId": "213876083",
+          "fromName": "Darntootin",
+          "troops": 71500,
+          "lead": false
+        },
+        {
+          "fromId": "210926991",
+          "fromName": "queenclaw",
+          "troops": 59833,
+          "lead": false
+        },
+        {
+          "fromId": "213892446",
+          "fromName": "Brook",
+          "troops": 50980,
+          "lead": false
+        },
+        {
+          "fromId": "212417687",
+          "fromName": "LMDFALLING",
+          "troops": 46333,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 383429,
+      "garrisonLeadId": "211992333",
+      "garrisonLeadName": "Ricky"
+    },
+    {
+      "playerId": "211631473",
+      "playerName": "Dennis Reynolds",
+      "troopCount": 434000,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "213270250",
+          "toName": "BLOTzSOFAKINGDOM",
+          "troops": 72333,
+          "lead": true
+        },
+        {
+          "toId": "212417687",
+          "toName": "LMDFALLING",
+          "troops": 72333,
+          "lead": true
+        },
+        {
+          "toId": "210370280",
+          "toName": "aadarsh god",
+          "troops": 72333,
+          "lead": true
+        },
+        {
+          "toId": "213614439",
+          "toName": "HeroineKate",
+          "troops": 72333,
+          "lead": true
+        },
+        {
+          "toId": "211402545",
+          "toName": "Wild Dog",
+          "troops": 72334,
+          "lead": false
+        },
+        {
+          "toId": "210664929",
+          "toName": "Lizzie",
+          "troops": 72334,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "212254395",
+          "fromName": "korus",
+          "troops": 138333,
+          "lead": true
+        },
+        {
+          "fromId": "213646752",
+          "fromName": "otopupulo",
+          "troops": 62383,
+          "lead": false
+        },
+        {
+          "fromId": "210386252",
+          "fromName": "Liv",
+          "troops": 52234,
+          "lead": false
+        },
+        {
+          "fromId": "209894842",
+          "fromName": "Calypso",
+          "troops": 45434,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 298384,
+      "garrisonLeadId": "212254395",
+      "garrisonLeadName": "korus"
+    },
+    {
+      "playerId": "211713743",
+      "playerName": "orage",
+      "troopCount": 384900,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "213270250",
+          "toName": "BLOTzSOFAKINGDOM",
+          "troops": 76980,
+          "lead": false
+        },
+        {
+          "toId": "214179411",
+          "toName": "Jacob",
+          "troops": 76980,
+          "lead": false
+        },
+        {
+          "toId": "210091339",
+          "toName": "Efknit",
+          "troops": 76980,
+          "lead": false
+        },
+        {
+          "toId": "213646752",
+          "toName": "otopupulo",
+          "troops": 76980,
+          "lead": false
+        },
+        {
+          "toId": "209894842",
+          "toName": "Calypso",
+          "troops": 76980,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "209927780",
+          "fromName": "MuffinMan",
+          "troops": 65667,
+          "lead": true
+        },
+        {
+          "fromId": "227159579",
+          "fromName": "Macdaddydil",
+          "troops": 100000,
+          "lead": false
+        },
+        {
+          "fromId": "210271712",
+          "fromName": "yepghany",
+          "troops": 64800,
+          "lead": false
+        },
+        {
+          "fromId": "213433522",
+          "fromName": "WinnerWinner",
+          "troops": 60000,
+          "lead": false
+        },
+        {
+          "fromId": "219377584",
+          "fromName": "West",
+          "troops": 50500,
+          "lead": false
+        },
+        {
+          "fromId": "213532513",
+          "fromName": "Lord of the Dung",
+          "troops": 20000,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 360967,
+      "garrisonLeadId": "209927780",
+      "garrisonLeadName": "MuffinMan"
+    },
+    {
+      "playerId": "211926746",
+      "playerName": "高雄誌宏",
+      "troopCount": 289800,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "210468511",
+          "toName": "astutotigre396",
+          "troops": 72450,
+          "lead": false
+        },
+        {
+          "toId": "210271966",
+          "toName": "Kakashi",
+          "troops": 72450,
+          "lead": false
+        },
+        {
+          "toId": "210370280",
+          "toName": "aadarsh god",
+          "troops": 72450,
+          "lead": false
+        },
+        {
+          "toId": "210304500",
+          "toName": "HunTerFreaK",
+          "troops": 72450,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "210943706",
+          "fromName": "Lord William B",
+          "troops": 61000,
+          "lead": true
+        },
+        {
+          "fromId": "213597838",
+          "fromName": "DreamoFilipino",
+          "troops": 95000,
+          "lead": false
+        },
+        {
+          "fromId": "211353390",
+          "fromName": "coolghost",
+          "troops": 69125,
+          "lead": false
+        },
+        {
+          "fromId": "213007599",
+          "fromName": "Rhivlad",
+          "troops": 60007,
+          "lead": false
+        },
+        {
+          "fromId": "209911019",
+          "fromName": "RenTheBoss",
+          "troops": 49000,
+          "lead": false
+        },
+        {
+          "fromId": "210435468",
+          "fromName": "DarkFury",
+          "troops": 35500,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 369632,
+      "garrisonLeadId": "210943706",
+      "garrisonLeadName": "Lord William B"
+    },
+    {
+      "playerId": "211992333",
+      "playerName": "Ricky",
+      "troopCount": 468700,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "211500263",
+          "toName": "Ironsoul",
+          "troops": 78117,
+          "lead": true
+        },
+        {
+          "toId": "211549979",
+          "toName": "Hardy Cox",
+          "troops": 78116,
+          "lead": true
+        },
+        {
+          "toId": "213892446",
+          "toName": "Brook",
+          "troops": 78116,
+          "lead": true
+        },
+        {
+          "toId": "210370280",
+          "toName": "aadarsh god",
+          "troops": 78117,
+          "lead": false
+        },
+        {
+          "toId": "209829293",
+          "toName": "GH0§T",
+          "troops": 78117,
+          "lead": false
+        },
+        {
+          "toId": "210664511",
+          "toName": "LotusEater",
+          "troops": 78117,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "212254395",
+          "fromName": "korus",
+          "troops": 138334,
+          "lead": true
+        },
+        {
+          "fromId": "210271966",
+          "fromName": "Kakashi",
+          "troops": 61200,
+          "lead": false
+        },
+        {
+          "fromId": "210501088",
+          "fromName": "Ketrod",
+          "troops": 55200,
+          "lead": false
+        },
+        {
+          "fromId": "211189295",
+          "fromName": "Charly_TQ",
+          "troops": 46433,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 301167,
+      "garrisonLeadId": "212254395",
+      "garrisonLeadName": "korus"
+    },
+    {
+      "playerId": "212008429",
+      "playerName": "IvH3AD5H0TvI",
+      "troopCount": 313000,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "213532513",
+          "toName": "Lord of the Dung",
+          "troops": 52167,
+          "lead": false
+        },
+        {
+          "toId": "211402206",
+          "toName": "stevedods187",
+          "troops": 52167,
+          "lead": false
+        },
+        {
+          "toId": "213892446",
+          "toName": "Brook",
+          "troops": 52167,
+          "lead": false
+        },
+        {
+          "toId": "213876083",
+          "toName": "Darntootin",
+          "troops": 52167,
+          "lead": false
+        },
+        {
+          "toId": "209878301",
+          "toName": "Satinsaber",
+          "troops": 52166,
+          "lead": false
+        },
+        {
+          "toId": "211320277",
+          "toName": "Big Cat",
+          "troops": 52166,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "211467402",
+          "fromName": "iceman shah",
+          "troops": 65400,
+          "lead": true
+        },
+        {
+          "fromId": "213597838",
+          "fromName": "DreamoFilipino",
+          "troops": 95000,
+          "lead": false
+        },
+        {
+          "fromId": "213876083",
+          "fromName": "Darntootin",
+          "troops": 71500,
+          "lead": false
+        },
+        {
+          "fromId": "210845284",
+          "fromName": "FailedForward",
+          "troops": 58000,
+          "lead": false
+        },
+        {
+          "fromId": "210664511",
+          "fromName": "LotusEater",
+          "troops": 52366,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 342266,
+      "garrisonLeadId": "211467402",
+      "garrisonLeadName": "iceman shah"
+    },
+    {
+      "playerId": "212139465",
+      "playerName": "Milliemae123",
+      "troopCount": 298000,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "210370280",
+          "toName": "aadarsh god",
+          "troops": 49667,
+          "lead": false
+        },
+        {
+          "toId": "219377584",
+          "toName": "West",
+          "troops": 49667,
+          "lead": false
+        },
+        {
+          "toId": "210271966",
+          "toName": "Kakashi",
+          "troops": 49667,
+          "lead": false
+        },
+        {
+          "toId": "213859392",
+          "toName": "Moonsong",
+          "troops": 49667,
+          "lead": false
+        },
+        {
+          "toId": "210648634",
+          "toName": "purpdaderp13",
+          "troops": 49666,
+          "lead": false
+        },
+        {
+          "toId": "212352520",
+          "toName": "Yoyomann",
+          "troops": 49666,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "213221049",
+          "fromName": "DJJerryJay",
+          "troops": 100000,
+          "lead": true
+        },
+        {
+          "fromId": "213876083",
+          "fromName": "Darntootin",
+          "troops": 71500,
+          "lead": false
+        },
+        {
+          "fromId": "210943706",
+          "fromName": "Lord William B",
+          "troops": 61000,
+          "lead": false
+        },
+        {
+          "fromId": "213614439",
+          "fromName": "HeroineKate",
+          "troops": 54200,
+          "lead": false
+        },
+        {
+          "fromId": "210419464",
+          "fromName": "kerker",
+          "troops": 54060,
+          "lead": false
+        },
+        {
+          "fromId": "213270250",
+          "fromName": "BLOTzSOFAKINGDOM",
+          "troops": 22900,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 363660,
+      "garrisonLeadId": "213221049",
+      "garrisonLeadName": "DJJerryJay"
+    },
+    {
+      "playerId": "212254395",
+      "playerName": "korus",
+      "troopCount": 830000,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "211992333",
+          "toName": "Ricky",
+          "troops": 138334,
+          "lead": true
+        },
+        {
+          "toId": "209927780",
+          "toName": "MuffinMan",
+          "troops": 138334,
+          "lead": true
+        },
+        {
+          "toId": "211402206",
+          "toName": "stevedods187",
+          "troops": 138333,
+          "lead": true
+        },
+        {
+          "toId": "211631473",
+          "toName": "Dennis Reynolds",
+          "troops": 138333,
+          "lead": true
+        },
+        {
+          "toId": "213187952",
+          "toName": "Freazy",
+          "troops": 138333,
+          "lead": true
+        },
+        {
+          "toId": "210713813",
+          "toName": "Pooch McDog",
+          "troops": 138333,
+          "lead": true
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "213221049",
+          "fromName": "DJJerryJay",
+          "troops": 100000,
+          "lead": false
+        },
+        {
+          "fromId": "211353390",
+          "fromName": "coolghost",
+          "troops": 69125,
+          "lead": false
+        },
+        {
+          "fromId": "213237471",
+          "fromName": "RAJA",
+          "troops": 63200,
+          "lead": false
+        },
+        {
+          "fromId": "209796180",
+          "fromName": "Siegfried",
+          "troops": 57250,
+          "lead": false
+        },
+        {
+          "fromId": "213630389",
+          "fromName": "febreze86usa1",
+          "troops": 48350,
+          "lead": false
+        },
+        {
+          "fromId": "210648634",
+          "fromName": "purpdaderp13",
+          "troops": 36867,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 374792,
+      "garrisonLeadName": ""
+    },
+    {
+      "playerId": "212352520",
+      "playerName": "Yoyomann",
+      "troopCount": 520000,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "209812591",
+          "toName": "joel",
+          "troops": 86667,
+          "lead": true
+        },
+        {
+          "toId": "210845284",
+          "toName": "FailedForward",
+          "troops": 86667,
+          "lead": true
+        },
+        {
+          "toId": "211320277",
+          "toName": "Big Cat",
+          "troops": 86667,
+          "lead": true
+        },
+        {
+          "toId": "209829293",
+          "toName": "GH0§T",
+          "troops": 86666,
+          "lead": true
+        },
+        {
+          "toId": "214179411",
+          "toName": "Jacob",
+          "troops": 86666,
+          "lead": true
+        },
+        {
+          "toId": "213007599",
+          "toName": "Rhivlad",
+          "troops": 86667,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "213859392",
+          "fromName": "Moonsong",
+          "troops": 130833,
+          "lead": true
+        },
+        {
+          "fromId": "213286186",
+          "fromName": "Alhail1608mani",
+          "troops": 62500,
+          "lead": false
+        },
+        {
+          "fromId": "210845284",
+          "fromName": "FailedForward",
+          "troops": 58000,
+          "lead": false
+        },
+        {
+          "fromId": "212139465",
+          "fromName": "Milliemae123",
+          "troops": 49666,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 300999,
+      "garrisonLeadId": "213859392",
+      "garrisonLeadName": "Moonsong"
+    },
+    {
+      "playerId": "212417687",
+      "playerName": "LMDFALLING",
+      "troopCount": 278000,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "210124609",
+          "toName": "BananaheadPrime",
+          "troops": 46334,
+          "lead": false
+        },
+        {
+          "toId": "213187952",
+          "toName": "Freazy",
+          "troops": 46334,
+          "lead": false
+        },
+        {
+          "toId": "210713813",
+          "toName": "Pooch McDog",
+          "troops": 46333,
+          "lead": false
+        },
+        {
+          "toId": "210386252",
+          "toName": "Liv",
+          "troops": 46333,
+          "lead": false
+        },
+        {
+          "toId": "210468511",
+          "toName": "astutotigre396",
+          "troops": 46333,
+          "lead": false
+        },
+        {
+          "toId": "211549979",
+          "toName": "Hardy Cox",
+          "troops": 46333,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "211631473",
+          "fromName": "Dennis Reynolds",
+          "troops": 72333,
+          "lead": true
+        },
+        {
+          "fromId": "212876528",
+          "fromName": "Shanks",
+          "troops": 97500,
+          "lead": false
+        },
+        {
+          "fromId": "213646752",
+          "fromName": "otopupulo",
+          "troops": 62384,
+          "lead": false
+        },
+        {
+          "fromId": "210304500",
+          "fromName": "HunTerFreaK",
+          "troops": 57500,
+          "lead": false
+        },
+        {
+          "fromId": "209878301",
+          "fromName": "Satinsaber",
+          "troops": 50000,
+          "lead": false
+        },
+        {
+          "fromId": "213532513",
+          "fromName": "Lord of the Dung",
+          "troops": 20000,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 359717,
+      "garrisonLeadId": "211631473",
+      "garrisonLeadName": "Dennis Reynolds"
+    },
+    {
+      "playerId": "212811179",
+      "playerName": "CrispyChip",
+      "troopCount": 223000,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "213221049",
+          "toName": "DJJerryJay",
+          "troops": 44600,
+          "lead": false
+        },
+        {
+          "toId": "213270250",
+          "toName": "BLOTzSOFAKINGDOM",
+          "troops": 44600,
+          "lead": false
+        },
+        {
+          "toId": "210370280",
+          "toName": "aadarsh god",
+          "troops": 44600,
+          "lead": false
+        },
+        {
+          "toId": "211500263",
+          "toName": "Ironsoul",
+          "troops": 44600,
+          "lead": false
+        },
+        {
+          "toId": "213892446",
+          "toName": "Brook",
+          "troops": 44600,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "210091339",
+          "fromName": "Efknit",
+          "troops": 63188,
+          "lead": true
+        },
+        {
+          "fromId": "210370280",
+          "fromName": "aadarsh god",
+          "troops": 83400,
+          "lead": false
+        },
+        {
+          "fromId": "213302384",
+          "fromName": "Trebz",
+          "troops": 65840,
+          "lead": false
+        },
+        {
+          "fromId": "213433522",
+          "fromName": "WinnerWinner",
+          "troops": 60000,
+          "lead": false
+        },
+        {
+          "fromId": "210124609",
+          "fromName": "BananaheadPrime",
+          "troops": 56516,
+          "lead": false
+        },
+        {
+          "fromId": "209812591",
+          "fromName": "joel",
+          "troops": 47140,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 376084,
+      "garrisonLeadId": "210091339",
+      "garrisonLeadName": "Efknit"
+    },
+    {
+      "playerId": "212876528",
+      "playerName": "Shanks",
+      "troopCount": 390000,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "210501088",
+          "toName": "Ketrod",
+          "troops": 97500,
+          "lead": false
+        },
+        {
+          "toId": "213630389",
+          "toName": "febreze86usa1",
+          "troops": 97500,
+          "lead": false
+        },
+        {
+          "toId": "212417687",
+          "toName": "LMDFALLING",
+          "troops": 97500,
+          "lead": false
+        },
+        {
+          "toId": "210648634",
+          "toName": "purpdaderp13",
+          "troops": 97500,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "210943706",
+          "fromName": "Lord William B",
+          "troops": 61000,
+          "lead": true
+        },
+        {
+          "fromId": "209731209",
+          "fromName": "RWS",
+          "troops": 89762,
+          "lead": false
+        },
+        {
+          "fromId": "210599003",
+          "fromName": "Coolets",
+          "troops": 69820,
+          "lead": false
+        },
+        {
+          "fromId": "210926991",
+          "fromName": "queenclaw",
+          "troops": 59834,
+          "lead": false
+        },
+        {
+          "fromId": "210664511",
+          "fromName": "LotusEater",
+          "troops": 52367,
+          "lead": false
+        },
+        {
+          "fromId": "210468094",
+          "fromName": "LordyMcLordFace",
+          "troops": 47833,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 380616,
+      "garrisonLeadId": "210943706",
+      "garrisonLeadName": "Lord William B"
+    },
+    {
+      "playerId": "213007599",
+      "playerName": "Rhivlad",
+      "troopCount": 300037,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "210271712",
+          "toName": "yepghany",
+          "troops": 60008,
+          "lead": false
+        },
+        {
+          "toId": "213187952",
+          "toName": "Freazy",
+          "troops": 60008,
+          "lead": false
+        },
+        {
+          "toId": "211926746",
+          "toName": "高雄誌宏",
+          "troops": 60007,
+          "lead": false
+        },
+        {
+          "toId": "213614439",
+          "toName": "HeroineKate",
+          "troops": 60007,
+          "lead": false
+        },
+        {
+          "toId": "213859392",
+          "toName": "Moonsong",
+          "troops": 60007,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "210943706",
+          "fromName": "Lord William B",
+          "troops": 61000,
+          "lead": true
+        },
+        {
+          "fromId": "212352520",
+          "fromName": "Yoyomann",
+          "troops": 86667,
+          "lead": false
+        },
+        {
+          "fromId": "211500263",
+          "fromName": "Ironsoul",
+          "troops": 73125,
+          "lead": false
+        },
+        {
+          "fromId": "213237471",
+          "fromName": "RAJA",
+          "troops": 63200,
+          "lead": false
+        },
+        {
+          "fromId": "210386252",
+          "fromName": "Liv",
+          "troops": 52233,
+          "lead": false
+        },
+        {
+          "fromId": "211189295",
+          "fromName": "Charly_TQ",
+          "troops": 46433,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 382658,
+      "garrisonLeadId": "210943706",
+      "garrisonLeadName": "Lord William B"
+    },
+    {
+      "playerId": "213187952",
+      "playerName": "Freazy",
+      "troopCount": 435000,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "209894842",
+          "toName": "Calypso",
+          "troops": 72500,
+          "lead": true
+        },
+        {
+          "toId": "219377584",
+          "toName": "West",
+          "troops": 72500,
+          "lead": true
+        },
+        {
+          "toId": "210599003",
+          "toName": "Coolets",
+          "troops": 72500,
+          "lead": true
+        },
+        {
+          "toId": "211484455",
+          "toName": "Kexxs",
+          "troops": 72500,
+          "lead": true
+        },
+        {
+          "toId": "210845284",
+          "toName": "FailedForward",
+          "troops": 72500,
+          "lead": false
+        },
+        {
+          "toId": "211467402",
+          "toName": "iceman shah",
+          "troops": 72500,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "212254395",
+          "fromName": "korus",
+          "troops": 138333,
+          "lead": true
+        },
+        {
+          "fromId": "213007599",
+          "fromName": "Rhivlad",
+          "troops": 60008,
+          "lead": false
+        },
+        {
+          "fromId": "210419464",
+          "fromName": "kerker",
+          "troops": 54060,
+          "lead": false
+        },
+        {
+          "fromId": "212417687",
+          "fromName": "LMDFALLING",
+          "troops": 46334,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 298735,
+      "garrisonLeadId": "212254395",
+      "garrisonLeadName": "korus"
+    },
+    {
+      "playerId": "213221049",
+      "playerName": "DJJerryJay",
+      "troopCount": 626000,
+      "troopsRemaining": 26000,
+      "outgoing": [
+        {
+          "toId": "210664929",
+          "toName": "Lizzie",
+          "troops": 100000,
+          "lead": true
+        },
+        {
+          "toId": "210271966",
+          "toName": "Kakashi",
+          "troops": 100000,
+          "lead": true
+        },
+        {
+          "toId": "211189295",
+          "toName": "Charly_TQ",
+          "troops": 100000,
+          "lead": true
+        },
+        {
+          "toId": "213646752",
+          "toName": "otopupulo",
+          "troops": 100000,
+          "lead": true
+        },
+        {
+          "toId": "212139465",
+          "toName": "Milliemae123",
+          "troops": 100000,
+          "lead": true
+        },
+        {
+          "toId": "212254395",
+          "toName": "korus",
+          "troops": 100000,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "213859392",
+          "fromName": "Moonsong",
+          "troops": 130833,
+          "lead": true
+        },
+        {
+          "fromId": "210926991",
+          "fromName": "queenclaw",
+          "troops": 59834,
+          "lead": false
+        },
+        {
+          "fromId": "213892446",
+          "fromName": "Brook",
+          "troops": 50980,
+          "lead": false
+        },
+        {
+          "fromId": "212811179",
+          "fromName": "CrispyChip",
+          "troops": 44600,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 286247,
+      "garrisonLeadId": "213859392",
+      "garrisonLeadName": "Moonsong"
+    },
+    {
+      "playerId": "213237471",
+      "playerName": "RAJA",
+      "troopCount": 316000,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "209911019",
+          "toName": "RenTheBoss",
+          "troops": 63200,
+          "lead": false
+        },
+        {
+          "toId": "212254395",
+          "toName": "korus",
+          "troops": 63200,
+          "lead": false
+        },
+        {
+          "toId": "210648634",
+          "toName": "purpdaderp13",
+          "troops": 63200,
+          "lead": false
+        },
+        {
+          "toId": "213286186",
+          "toName": "Alhail1608mani",
+          "troops": 63200,
+          "lead": false
+        },
+        {
+          "toId": "213007599",
+          "toName": "Rhivlad",
+          "troops": 63200,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "210713813",
+          "fromName": "Pooch McDog",
+          "troops": 75667,
+          "lead": true
+        },
+        {
+          "fromId": "211402545",
+          "fromName": "Wild Dog",
+          "troops": 95100,
+          "lead": false
+        },
+        {
+          "fromId": "210271966",
+          "fromName": "Kakashi",
+          "troops": 61200,
+          "lead": false
+        },
+        {
+          "fromId": "210926991",
+          "fromName": "queenclaw",
+          "troops": 59833,
+          "lead": false
+        },
+        {
+          "fromId": "210664511",
+          "fromName": "LotusEater",
+          "troops": 52366,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 344166,
+      "garrisonLeadId": "210713813",
+      "garrisonLeadName": "Pooch McDog"
+    },
+    {
+      "playerId": "213270250",
+      "playerName": "BLOTzSOFAKINGDOM",
+      "troopCount": 137400,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "209894842",
+          "toName": "Calypso",
+          "troops": 22900,
+          "lead": false
+        },
+        {
+          "toId": "214179411",
+          "toName": "Jacob",
+          "troops": 22900,
+          "lead": false
+        },
+        {
+          "toId": "210271966",
+          "toName": "Kakashi",
+          "troops": 22900,
+          "lead": false
+        },
+        {
+          "toId": "209829293",
+          "toName": "GH0§T",
+          "troops": 22900,
+          "lead": false
+        },
+        {
+          "toId": "213646752",
+          "toName": "otopupulo",
+          "troops": 22900,
+          "lead": false
+        },
+        {
+          "toId": "212139465",
+          "toName": "Milliemae123",
+          "troops": 22900,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "211631473",
+          "fromName": "Dennis Reynolds",
+          "troops": 72333,
+          "lead": true
+        },
+        {
+          "fromId": "211713743",
+          "fromName": "orage",
+          "troops": 76980,
+          "lead": false
+        },
+        {
+          "fromId": "209927780",
+          "fromName": "MuffinMan",
+          "troops": 65667,
+          "lead": false
+        },
+        {
+          "fromId": "210845284",
+          "fromName": "FailedForward",
+          "troops": 58000,
+          "lead": false
+        },
+        {
+          "fromId": "209878301",
+          "fromName": "Satinsaber",
+          "troops": 50000,
+          "lead": false
+        },
+        {
+          "fromId": "212811179",
+          "fromName": "CrispyChip",
+          "troops": 44600,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 367580,
+      "garrisonLeadId": "211631473",
+      "garrisonLeadName": "Dennis Reynolds"
+    },
+    {
+      "playerId": "213286186",
+      "playerName": "Alhail1608mani",
+      "troopCount": 375000,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "209911019",
+          "toName": "RenTheBoss",
+          "troops": 62500,
+          "lead": true
+        },
+        {
+          "toId": "209878301",
+          "toName": "Satinsaber",
+          "troops": 62500,
+          "lead": true
+        },
+        {
+          "toId": "210419464",
+          "toName": "kerker",
+          "troops": 62500,
+          "lead": true
+        },
+        {
+          "toId": "213614439",
+          "toName": "HeroineKate",
+          "troops": 62500,
+          "lead": false
+        },
+        {
+          "toId": "210271966",
+          "toName": "Kakashi",
+          "troops": 62500,
+          "lead": false
+        },
+        {
+          "toId": "212352520",
+          "toName": "Yoyomann",
+          "troops": 62500,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "213859392",
+          "fromName": "Moonsong",
+          "troops": 130834,
+          "lead": true
+        },
+        {
+          "fromId": "213237471",
+          "fromName": "RAJA",
+          "troops": 63200,
+          "lead": false
+        },
+        {
+          "fromId": "219377584",
+          "fromName": "West",
+          "troops": 50500,
+          "lead": false
+        },
+        {
+          "fromId": "209812591",
+          "fromName": "joel",
+          "troops": 47140,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 291674,
+      "garrisonLeadId": "213859392",
+      "garrisonLeadName": "Moonsong"
+    },
+    {
+      "playerId": "213302384",
+      "playerName": "Trebz",
+      "troopCount": 329200,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "212811179",
+          "toName": "CrispyChip",
+          "troops": 65840,
+          "lead": false
+        },
+        {
+          "toId": "210845284",
+          "toName": "FailedForward",
+          "troops": 65840,
+          "lead": false
+        },
+        {
+          "toId": "209878301",
+          "toName": "Satinsaber",
+          "troops": 65840,
+          "lead": false
+        },
+        {
+          "toId": "210664511",
+          "toName": "LotusEater",
+          "troops": 65840,
+          "lead": false
+        },
+        {
+          "toId": "210599003",
+          "toName": "Coolets",
+          "troops": 65840,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "209927780",
+          "fromName": "MuffinMan",
+          "troops": 65666,
+          "lead": true
+        },
+        {
+          "fromId": "211549979",
+          "fromName": "Hardy Cox",
+          "troops": 100000,
+          "lead": false
+        },
+        {
+          "fromId": "211353390",
+          "fromName": "coolghost",
+          "troops": 69125,
+          "lead": false
+        },
+        {
+          "fromId": "210304500",
+          "fromName": "HunTerFreaK",
+          "troops": 57500,
+          "lead": false
+        },
+        {
+          "fromId": "219377584",
+          "fromName": "West",
+          "troops": 50500,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 342791,
+      "garrisonLeadId": "209927780",
+      "garrisonLeadName": "MuffinMan"
+    },
+    {
+      "playerId": "213433522",
+      "playerName": "WinnerWinner",
+      "troopCount": 360000,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "213646752",
+          "toName": "otopupulo",
+          "troops": 60000,
+          "lead": false
+        },
+        {
+          "toId": "212811179",
+          "toName": "CrispyChip",
+          "troops": 60000,
+          "lead": false
+        },
+        {
+          "toId": "209911019",
+          "toName": "RenTheBoss",
+          "troops": 60000,
+          "lead": false
+        },
+        {
+          "toId": "211713743",
+          "toName": "orage",
+          "troops": 60000,
+          "lead": false
+        },
+        {
+          "toId": "213597838",
+          "toName": "DreamoFilipino",
+          "troops": 60000,
+          "lead": false
+        },
+        {
+          "toId": "210648634",
+          "toName": "purpdaderp13",
+          "troops": 60000,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "209731209",
+          "fromName": "RWS",
+          "troops": 89761,
+          "lead": true
+        },
+        {
+          "fromId": "213876083",
+          "fromName": "Darntootin",
+          "troops": 71500,
+          "lead": false
+        },
+        {
+          "fromId": "211353390",
+          "fromName": "coolghost",
+          "troops": 69125,
+          "lead": false
+        },
+        {
+          "fromId": "210271966",
+          "fromName": "Kakashi",
+          "troops": 61200,
+          "lead": false
+        },
+        {
+          "fromId": "209878301",
+          "fromName": "Satinsaber",
+          "troops": 50000,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 341586,
+      "garrisonLeadId": "209731209",
+      "garrisonLeadName": "RWS"
+    },
+    {
+      "playerId": "213532513",
+      "playerName": "Lord of the Dung",
+      "troopCount": 100000,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "212417687",
+          "toName": "LMDFALLING",
+          "troops": 20000,
+          "lead": false
+        },
+        {
+          "toId": "211189295",
+          "toName": "Charly_TQ",
+          "troops": 20000,
+          "lead": false
+        },
+        {
+          "toId": "210845284",
+          "toName": "FailedForward",
+          "troops": 20000,
+          "lead": false
+        },
+        {
+          "toId": "211713743",
+          "toName": "orage",
+          "troops": 20000,
+          "lead": false
+        },
+        {
+          "toId": "210664511",
+          "toName": "LotusEater",
+          "troops": 20000,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "213597838",
+          "fromName": "DreamoFilipino",
+          "troops": 95000,
+          "lead": true
+        },
+        {
+          "fromId": "210370280",
+          "fromName": "aadarsh god",
+          "troops": 83400,
+          "lead": false
+        },
+        {
+          "fromId": "210271966",
+          "fromName": "Kakashi",
+          "troops": 61200,
+          "lead": false
+        },
+        {
+          "fromId": "212008429",
+          "fromName": "IvH3AD5H0TvI",
+          "troops": 52167,
+          "lead": false
+        },
+        {
+          "fromId": "213892446",
+          "fromName": "Brook",
+          "troops": 50980,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 342747,
+      "garrisonLeadId": "213597838",
+      "garrisonLeadName": "DreamoFilipino"
+    },
+    {
+      "playerId": "213597838",
+      "playerName": "DreamoFilipino",
+      "troopCount": 475000,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "213532513",
+          "toName": "Lord of the Dung",
+          "troops": 95000,
+          "lead": true
+        },
+        {
+          "toId": "227159579",
+          "toName": "Macdaddydil",
+          "troops": 95000,
+          "lead": true
+        },
+        {
+          "toId": "211926746",
+          "toName": "高雄誌宏",
+          "troops": 95000,
+          "lead": false
+        },
+        {
+          "toId": "212008429",
+          "toName": "IvH3AD5H0TvI",
+          "troops": 95000,
+          "lead": false
+        },
+        {
+          "toId": "211484455",
+          "toName": "Kexxs",
+          "troops": 95000,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "211369396",
+          "fromName": "Viggo Leif",
+          "troops": 99500,
+          "lead": true
+        },
+        {
+          "fromId": "210599003",
+          "fromName": "Coolets",
+          "troops": 69820,
+          "lead": false
+        },
+        {
+          "fromId": "210091339",
+          "fromName": "Efknit",
+          "troops": 63189,
+          "lead": false
+        },
+        {
+          "fromId": "213433522",
+          "fromName": "WinnerWinner",
+          "troops": 60000,
+          "lead": false
+        },
+        {
+          "fromId": "210386252",
+          "fromName": "Liv",
+          "troops": 52233,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 344742,
+      "garrisonLeadId": "211369396",
+      "garrisonLeadName": "Viggo Leif"
+    },
+    {
+      "playerId": "213614439",
+      "playerName": "HeroineKate",
+      "troopCount": 325200,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "212139465",
+          "toName": "Milliemae123",
+          "troops": 54200,
+          "lead": false
+        },
+        {
+          "toId": "209812591",
+          "toName": "joel",
+          "troops": 54200,
+          "lead": false
+        },
+        {
+          "toId": "210124609",
+          "toName": "BananaheadPrime",
+          "troops": 54200,
+          "lead": false
+        },
+        {
+          "toId": "209927780",
+          "toName": "MuffinMan",
+          "troops": 54200,
+          "lead": false
+        },
+        {
+          "toId": "211353390",
+          "toName": "coolghost",
+          "troops": 54200,
+          "lead": false
+        },
+        {
+          "toId": "210501088",
+          "toName": "Ketrod",
+          "troops": 54200,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "211631473",
+          "fromName": "Dennis Reynolds",
+          "troops": 72333,
+          "lead": true
+        },
+        {
+          "fromId": "211402545",
+          "fromName": "Wild Dog",
+          "troops": 95100,
+          "lead": false
+        },
+        {
+          "fromId": "213286186",
+          "fromName": "Alhail1608mani",
+          "troops": 62500,
+          "lead": false
+        },
+        {
+          "fromId": "213007599",
+          "fromName": "Rhivlad",
+          "troops": 60007,
+          "lead": false
+        },
+        {
+          "fromId": "210664929",
+          "fromName": "Lizzie",
+          "troops": 49740,
+          "lead": false
+        },
+        {
+          "fromId": "210435468",
+          "fromName": "DarkFury",
+          "troops": 35500,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 375180,
+      "garrisonLeadId": "211631473",
+      "garrisonLeadName": "Dennis Reynolds"
+    },
+    {
+      "playerId": "213630389",
+      "playerName": "febreze86usa1",
+      "troopCount": 193400,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "210386252",
+          "toName": "Liv",
+          "troops": 48350,
+          "lead": false
+        },
+        {
+          "toId": "212254395",
+          "toName": "korus",
+          "troops": 48350,
+          "lead": false
+        },
+        {
+          "toId": "214179411",
+          "toName": "Jacob",
+          "troops": 48350,
+          "lead": false
+        },
+        {
+          "toId": "210304500",
+          "toName": "HunTerFreaK",
+          "troops": 48350,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "210091339",
+          "fromName": "Efknit",
+          "troops": 63188,
+          "lead": true
+        },
+        {
+          "fromId": "212876528",
+          "fromName": "Shanks",
+          "troops": 97500,
+          "lead": false
+        },
+        {
+          "fromId": "210271712",
+          "fromName": "yepghany",
+          "troops": 64800,
+          "lead": false
+        },
+        {
+          "fromId": "210271966",
+          "fromName": "Kakashi",
+          "troops": 61200,
+          "lead": false
+        },
+        {
+          "fromId": "210664511",
+          "fromName": "LotusEater",
+          "troops": 52367,
+          "lead": false
+        },
+        {
+          "fromId": "210648634",
+          "fromName": "purpdaderp13",
+          "troops": 36866,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 375921,
+      "garrisonLeadId": "210091339",
+      "garrisonLeadName": "Efknit"
+    },
+    {
+      "playerId": "213646752",
+      "playerName": "otopupulo",
+      "troopCount": 374300,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "212417687",
+          "toName": "LMDFALLING",
+          "troops": 62384,
+          "lead": false
+        },
+        {
+          "toId": "211189295",
+          "toName": "Charly_TQ",
+          "troops": 62384,
+          "lead": false
+        },
+        {
+          "toId": "211631473",
+          "toName": "Dennis Reynolds",
+          "troops": 62383,
+          "lead": false
+        },
+        {
+          "toId": "213876083",
+          "toName": "Darntootin",
+          "troops": 62383,
+          "lead": false
+        },
+        {
+          "toId": "209878301",
+          "toName": "Satinsaber",
+          "troops": 62383,
+          "lead": false
+        },
+        {
+          "toId": "210304500",
+          "toName": "HunTerFreaK",
+          "troops": 62383,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "213221049",
+          "fromName": "DJJerryJay",
+          "troops": 100000,
+          "lead": true
+        },
+        {
+          "fromId": "211713743",
+          "fromName": "orage",
+          "troops": 76980,
+          "lead": false
+        },
+        {
+          "fromId": "213433522",
+          "fromName": "WinnerWinner",
+          "troops": 60000,
+          "lead": false
+        },
+        {
+          "fromId": "210124609",
+          "fromName": "BananaheadPrime",
+          "troops": 56517,
+          "lead": false
+        },
+        {
+          "fromId": "209812591",
+          "fromName": "joel",
+          "troops": 47140,
+          "lead": false
+        },
+        {
+          "fromId": "213270250",
+          "fromName": "BLOTzSOFAKINGDOM",
+          "troops": 22900,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 363537,
+      "garrisonLeadId": "213221049",
+      "garrisonLeadName": "DJJerryJay"
+    },
+    {
+      "playerId": "213777938",
+      "playerName": "Luty",
+      "troopCount": 329700,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "210468094",
+          "toName": "LordyMcLordFace",
+          "troops": 82425,
+          "lead": false
+        },
+        {
+          "toId": "213876083",
+          "toName": "Darntootin",
+          "troops": 82425,
+          "lead": false
+        },
+        {
+          "toId": "211320277",
+          "toName": "Big Cat",
+          "troops": 82425,
+          "lead": false
+        },
+        {
+          "toId": "210124609",
+          "toName": "BananaheadPrime",
+          "troops": 82425,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "211402206",
+          "fromName": "stevedods187",
+          "troops": 60066,
+          "lead": true
+        },
+        {
+          "fromId": "227159579",
+          "fromName": "Macdaddydil",
+          "troops": 100000,
+          "lead": false
+        },
+        {
+          "fromId": "210599003",
+          "fromName": "Coolets",
+          "troops": 69820,
+          "lead": false
+        },
+        {
+          "fromId": "209796180",
+          "fromName": "Siegfried",
+          "troops": 57250,
+          "lead": false
+        },
+        {
+          "fromId": "219377584",
+          "fromName": "West",
+          "troops": 50500,
+          "lead": false
+        },
+        {
+          "fromId": "209894842",
+          "fromName": "Calypso",
+          "troops": 45433,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 383069,
+      "garrisonLeadId": "211402206",
+      "garrisonLeadName": "stevedods187"
+    },
+    {
+      "playerId": "213859392",
+      "playerName": "Moonsong",
+      "troopCount": 785000,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "213286186",
+          "toName": "Alhail1608mani",
+          "troops": 130834,
+          "lead": true
+        },
+        {
+          "toId": "210943706",
+          "toName": "Lord William B",
+          "troops": 130834,
+          "lead": true
+        },
+        {
+          "toId": "209731209",
+          "toName": "RWS",
+          "troops": 130833,
+          "lead": true
+        },
+        {
+          "toId": "213221049",
+          "toName": "DJJerryJay",
+          "troops": 130833,
+          "lead": true
+        },
+        {
+          "toId": "212352520",
+          "toName": "Yoyomann",
+          "troops": 130833,
+          "lead": true
+        },
+        {
+          "toId": "211369396",
+          "toName": "Viggo Leif",
+          "troops": 130833,
+          "lead": true
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "210468511",
+          "fromName": "astutotigre396",
+          "troops": 100000,
+          "lead": false
+        },
+        {
+          "fromId": "211320277",
+          "fromName": "Big Cat",
+          "troops": 66834,
+          "lead": false
+        },
+        {
+          "fromId": "211467402",
+          "fromName": "iceman shah",
+          "troops": 65400,
+          "lead": false
+        },
+        {
+          "fromId": "213007599",
+          "fromName": "Rhivlad",
+          "troops": 60007,
+          "lead": false
+        },
+        {
+          "fromId": "212139465",
+          "fromName": "Milliemae123",
+          "troops": 49667,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 341908,
+      "garrisonLeadName": ""
+    },
+    {
+      "playerId": "213876083",
+      "playerName": "Darntootin",
+      "troopCount": 357500,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "213433522",
+          "toName": "WinnerWinner",
+          "troops": 71500,
+          "lead": false
+        },
+        {
+          "toId": "212139465",
+          "toName": "Milliemae123",
+          "troops": 71500,
+          "lead": false
+        },
+        {
+          "toId": "211549979",
+          "toName": "Hardy Cox",
+          "troops": 71500,
+          "lead": false
+        },
+        {
+          "toId": "212008429",
+          "toName": "IvH3AD5H0TvI",
+          "troops": 71500,
+          "lead": false
+        },
+        {
+          "toId": "209829293",
+          "toName": "GH0§T",
+          "troops": 71500,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "210713813",
+          "fromName": "Pooch McDog",
+          "troops": 75666,
+          "lead": true
+        },
+        {
+          "fromId": "213777938",
+          "fromName": "Luty",
+          "troops": 82425,
+          "lead": false
+        },
+        {
+          "fromId": "211320277",
+          "fromName": "Big Cat",
+          "troops": 66834,
+          "lead": false
+        },
+        {
+          "fromId": "213646752",
+          "fromName": "otopupulo",
+          "troops": 62383,
+          "lead": false
+        },
+        {
+          "fromId": "212008429",
+          "fromName": "IvH3AD5H0TvI",
+          "troops": 52167,
+          "lead": false
+        },
+        {
+          "fromId": "210435468",
+          "fromName": "DarkFury",
+          "troops": 35500,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 374975,
+      "garrisonLeadId": "210713813",
+      "garrisonLeadName": "Pooch McDog"
+    },
+    {
+      "playerId": "213892446",
+      "playerName": "Brook",
+      "troopCount": 254900,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "213221049",
+          "toName": "DJJerryJay",
+          "troops": 50980,
+          "lead": false
+        },
+        {
+          "toId": "210468094",
+          "toName": "LordyMcLordFace",
+          "troops": 50980,
+          "lead": false
+        },
+        {
+          "toId": "211549979",
+          "toName": "Hardy Cox",
+          "troops": 50980,
+          "lead": false
+        },
+        {
+          "toId": "210845284",
+          "toName": "FailedForward",
+          "troops": 50980,
+          "lead": false
+        },
+        {
+          "toId": "213532513",
+          "toName": "Lord of the Dung",
+          "troops": 50980,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "211992333",
+          "fromName": "Ricky",
+          "troops": 78116,
+          "lead": true
+        },
+        {
+          "fromId": "210713813",
+          "fromName": "Pooch McDog",
+          "troops": 75667,
+          "lead": false
+        },
+        {
+          "fromId": "209829293",
+          "fromName": "GH0§T",
+          "troops": 76667,
+          "lead": false
+        },
+        {
+          "fromId": "210566708",
+          "fromName": "Shridhar",
+          "troops": 54300,
+          "lead": false
+        },
+        {
+          "fromId": "212008429",
+          "fromName": "IvH3AD5H0TvI",
+          "troops": 52167,
+          "lead": false
+        },
+        {
+          "fromId": "212811179",
+          "fromName": "CrispyChip",
+          "troops": 44600,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 381517,
+      "garrisonLeadId": "211992333",
+      "garrisonLeadName": "Ricky"
+    },
+    {
+      "playerId": "214179411",
+      "playerName": "Jacob",
+      "troopCount": 356400,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "210468094",
+          "toName": "LordyMcLordFace",
+          "troops": 59400,
+          "lead": false
+        },
+        {
+          "toId": "210386252",
+          "toName": "Liv",
+          "troops": 59400,
+          "lead": false
+        },
+        {
+          "toId": "210566708",
+          "toName": "Shridhar",
+          "troops": 59400,
+          "lead": false
+        },
+        {
+          "toId": "210271712",
+          "toName": "yepghany",
+          "troops": 59400,
+          "lead": false
+        },
+        {
+          "toId": "227159579",
+          "toName": "Macdaddydil",
+          "troops": 59400,
+          "lead": false
+        },
+        {
+          "toId": "210091339",
+          "toName": "Efknit",
+          "troops": 59400,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "212352520",
+          "fromName": "Yoyomann",
+          "troops": 86666,
+          "lead": true
+        },
+        {
+          "fromId": "211713743",
+          "fromName": "orage",
+          "troops": 76980,
+          "lead": false
+        },
+        {
+          "fromId": "210599003",
+          "fromName": "Coolets",
+          "troops": 69820,
+          "lead": false
+        },
+        {
+          "fromId": "210845284",
+          "fromName": "FailedForward",
+          "troops": 58000,
+          "lead": false
+        },
+        {
+          "fromId": "213630389",
+          "fromName": "febreze86usa1",
+          "troops": 48350,
+          "lead": false
+        },
+        {
+          "fromId": "213270250",
+          "fromName": "BLOTzSOFAKINGDOM",
+          "troops": 22900,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 362716,
+      "garrisonLeadId": "212352520",
+      "garrisonLeadName": "Yoyomann"
+    },
+    {
+      "playerId": "219377584",
+      "playerName": "West",
+      "troopCount": 303000,
+      "troopsRemaining": 0,
+      "outgoing": [
+        {
+          "toId": "213286186",
+          "toName": "Alhail1608mani",
+          "troops": 50500,
+          "lead": false
+        },
+        {
+          "toId": "210419464",
+          "toName": "kerker",
+          "troops": 50500,
+          "lead": false
+        },
+        {
+          "toId": "213777938",
+          "toName": "Luty",
+          "troops": 50500,
+          "lead": false
+        },
+        {
+          "toId": "211713743",
+          "toName": "orage",
+          "troops": 50500,
+          "lead": false
+        },
+        {
+          "toId": "213302384",
+          "toName": "Trebz",
+          "troops": 50500,
+          "lead": false
+        },
+        {
+          "toId": "211402545",
+          "toName": "Wild Dog",
+          "troops": 50500,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "213187952",
+          "fromName": "Freazy",
+          "troops": 72500,
+          "lead": true
+        },
+        {
+          "fromId": "211549979",
+          "fromName": "Hardy Cox",
+          "troops": 100000,
+          "lead": false
+        },
+        {
+          "fromId": "211402206",
+          "fromName": "stevedods187",
+          "troops": 60067,
+          "lead": false
+        },
+        {
+          "fromId": "210566708",
+          "fromName": "Shridhar",
+          "troops": 54300,
+          "lead": false
+        },
+        {
+          "fromId": "212139465",
+          "fromName": "Milliemae123",
+          "troops": 49667,
+          "lead": false
+        },
+        {
+          "fromId": "209894842",
+          "fromName": "Calypso",
+          "troops": 45433,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 381967,
+      "garrisonLeadId": "213187952",
+      "garrisonLeadName": "Freazy"
+    },
+    {
+      "playerId": "227159579",
+      "playerName": "Macdaddydil",
+      "troopCount": 505510,
+      "troopsRemaining": 105510,
+      "outgoing": [
+        {
+          "toId": "213777938",
+          "toName": "Luty",
+          "troops": 100000,
+          "lead": false
+        },
+        {
+          "toId": "210419464",
+          "toName": "kerker",
+          "troops": 100000,
+          "lead": false
+        },
+        {
+          "toId": "211713743",
+          "toName": "orage",
+          "troops": 100000,
+          "lead": false
+        },
+        {
+          "toId": "210926991",
+          "toName": "queenclaw",
+          "troops": 100000,
+          "lead": false
+        }
+      ],
+      "incoming": [
+        {
+          "fromId": "213597838",
+          "fromName": "DreamoFilipino",
+          "troops": 95000,
+          "lead": true
+        },
+        {
+          "fromId": "210713813",
+          "fromName": "Pooch McDog",
+          "troops": 75667,
+          "lead": false
+        },
+        {
+          "fromId": "211484455",
+          "fromName": "Kexxs",
+          "troops": 65833,
+          "lead": false
+        },
+        {
+          "fromId": "214179411",
+          "fromName": "Jacob",
+          "troops": 59400,
+          "lead": false
+        },
+        {
+          "fromId": "209878301",
+          "fromName": "Satinsaber",
+          "troops": 50000,
+          "lead": false
+        }
+      ],
+      "incomingTotal": 345900,
+      "garrisonLeadId": "213597838",
+      "garrisonLeadName": "DreamoFilipino"
+    }
+  ],
+  "warnings": [
+    "210468511 still has troops at home.",
+    "211549979 still has troops at home.",
+    "213221049 still has troops at home.",
+    "227159579 still has troops at home."
+  ],
+  "warningCodes": []
+}

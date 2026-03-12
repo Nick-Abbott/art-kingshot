@@ -245,8 +245,9 @@ function getLeaderPenaltyMultiplier(leadCount: number): number {
   return 1 - (1 - LEADER_PENALTY_MIN) * eased;
 }
 
-function isLeadEligible(sender: AnnotatedMember, targetPower: number): boolean {
-  return sender.whale || sender.power >= targetPower * 1.25;
+function isLeadEligible(sender: AnnotatedMember, target: AnnotatedMember): boolean {
+  if (target.whale) return false;
+  return sender.whale || sender.power >= target.power * 1.25;
 }
 
 function generateAssignments(members: Member[]): AssignmentResult {
@@ -321,7 +322,7 @@ function generateAssignments(members: Member[]): AssignmentResult {
     let bestScore = Number.POSITIVE_INFINITY;
     for (const sender of annotated) {
       if (sender.playerId === target.playerId) continue;
-      if (!isLeadEligible(sender, target.power)) continue;
+      if (!isLeadEligible(sender, target)) continue;
       const sizes = marchSizesBySender.get(sender.playerId) || [];
       if (sizes.length === 0) continue;
       const leadCount = leaderCountById.get(sender.playerId) || 0;
@@ -372,7 +373,7 @@ function generateAssignments(members: Member[]): AssignmentResult {
     let bestScore = currentScore;
     for (const sender of annotated) {
       if (sender.playerId === target.playerId) continue;
-      if (!isLeadEligible(sender, target.power)) continue;
+      if (!isLeadEligible(sender, target)) continue;
       const sizes = marchSizesBySender.get(sender.playerId) || [];
       if (sender.playerId !== current.senderId && sizes.length === 0) continue;
       const leadCount = leaderCountById.get(sender.playerId) || 0;
