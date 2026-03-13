@@ -1,8 +1,8 @@
 import type { AllianceSettings } from "./types";
 
 export const DEFAULT_ALLIANCE_SETTINGS: AllianceSettings = {
-  bearTimes: {
-    bear1: "01:00",
-    bear2: "12:00",
+  bearNextTimes: {
+    bear1: "2026-01-01T01:00:00.000Z",
+    bear2: "2026-01-01T12:00:00.000Z",
   },
 };

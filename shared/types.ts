@@ -35,7 +35,7 @@ export type Alliance = {
 };
 
 export type AllianceSettings = {
-  bearTimes: {
+  bearNextTimes: {
     bear1: string;
     bear2: string;
   };

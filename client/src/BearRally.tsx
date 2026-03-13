@@ -17,7 +17,7 @@ import BearGroupCard from "./components/bear/BearGroupCard";
 import BearHeader from "./components/bear/BearHeader";
 import BearSignupCard from "./components/bear/BearSignupCard";
 import { DEFAULT_ALLIANCE_SETTINGS } from "@shared/allianceConfig";
-import { utcTimeToLocalLabel } from "./utils/time";
+import { nextUtcDateTime, utcDateTimeToLocalLabel } from "./utils/time";
 
 type Props = {
   profileId: string;
@@ -77,14 +77,27 @@ function BearRally({ profileId, profile, canManage }: Props) {
     () => eligibleMembersQuery.data ?? [],
     [eligibleMembersQuery.data]
   );
-  const bearTimes = allianceSettingsQuery.data?.bearTimes ?? DEFAULT_ALLIANCE_SETTINGS.bearTimes;
+  const bearNextTimes =
+    allianceSettingsQuery.data?.bearNextTimes ?? DEFAULT_ALLIANCE_SETTINGS.bearNextTimes;
   const bear1Label = useMemo(
-    () => t("bear.bear1", { time: utcTimeToLocalLabel(bearTimes.bear1) }),
-    [bearTimes.bear1, t]
+    () => {
+      const nextBear = nextUtcDateTime(bearNextTimes.bear1);
+      const timeLabel = nextBear
+        ? utcDateTimeToLocalLabel(nextBear.toISOString())
+        : utcDateTimeToLocalLabel(bearNextTimes.bear1);
+      return t("bear.bear1", { time: timeLabel });
+    },
+    [bearNextTimes.bear1, t]
   );
   const bear2Label = useMemo(
-    () => t("bear.bear2", { time: utcTimeToLocalLabel(bearTimes.bear2) }),
-    [bearTimes.bear2, t]
+    () => {
+      const nextBear = nextUtcDateTime(bearNextTimes.bear2);
+      const timeLabel = nextBear
+        ? utcDateTimeToLocalLabel(nextBear.toISOString())
+        : utcDateTimeToLocalLabel(bearNextTimes.bear2);
+      return t("bear.bear2", { time: timeLabel });
+    },
+    [bearNextTimes.bear2, t]
   );
   const adminOptions = useMemo(() => {
     const options: { playerId: string; playerName: string }[] = [];

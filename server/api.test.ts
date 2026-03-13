@@ -8,6 +8,8 @@ import Database from "better-sqlite3";
 import { createApp } from "./index";
 import type { ApiErrorPayload } from "../shared/types";
 
+const tmpDirs: string[] = [];
+
 type ServerHandle = {
   httpServer: import("node:http").Server;
   port: number;
@@ -86,8 +88,15 @@ function tmpDbPath() {
   const baseDir = path.join(process.cwd(), "data");
   fs.mkdirSync(baseDir, { recursive: true });
   const dir = fs.mkdtempSync(path.join(baseDir, "test-"));
+  tmpDirs.push(dir);
   return path.join(dir, "test.sqlite");
 }
+
+test.after(() => {
+  for (const dir of tmpDirs) {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
 
 function getPayload<T>(response: JsonResponse): T {
   return response.data.data as T;
@@ -378,25 +387,30 @@ test("alliance settings return defaults and update", async () => {
       profileHeaders
     );
     assert.equal(initialSettings.status, 200);
-    const initialPayload = getPayload<{ settings: { bearTimes: { bear1: string; bear2: string } } }>(
-      initialSettings
-    );
-    assert.equal(initialPayload.settings.bearTimes.bear1, "01:00");
-    assert.equal(initialPayload.settings.bearTimes.bear2, "12:00");
+    const initialPayload = getPayload<{
+      settings: { bearNextTimes: { bear1: string; bear2: string } };
+    }>(initialSettings);
+    assert.equal(initialPayload.settings.bearNextTimes.bear1, "2026-01-01T01:00:00.000Z");
+    assert.equal(initialPayload.settings.bearNextTimes.bear2, "2026-01-01T12:00:00.000Z");
 
     const updateSettings = await requestJson(
       port,
       "PUT",
       "/api/alliance/settings",
       { ...profileHeaders, "Content-Type": "application/json" },
-      JSON.stringify({ bearTimes: { bear1: "02:30", bear2: "14:45" } })
+      JSON.stringify({
+        bearNextTimes: {
+          bear1: "2025-01-02T02:30:00.000Z",
+          bear2: "2025-01-02T14:45:00.000Z"
+        }
+      })
     );
     assert.equal(updateSettings.status, 200);
-    const updatePayload = getPayload<{ settings: { bearTimes: { bear1: string; bear2: string } } }>(
-      updateSettings
-    );
-    assert.equal(updatePayload.settings.bearTimes.bear1, "02:30");
-    assert.equal(updatePayload.settings.bearTimes.bear2, "14:45");
+    const updatePayload = getPayload<{
+      settings: { bearNextTimes: { bear1: string; bear2: string } };
+    }>(updateSettings);
+    assert.equal(updatePayload.settings.bearNextTimes.bear1, "2025-01-02T02:30:00.000Z");
+    assert.equal(updatePayload.settings.bearNextTimes.bear2, "2025-01-02T14:45:00.000Z");
 
     const refreshed = await requestJson(
       port,
@@ -405,11 +419,11 @@ test("alliance settings return defaults and update", async () => {
       profileHeaders
     );
     assert.equal(refreshed.status, 200);
-    const refreshedPayload = getPayload<{ settings: { bearTimes: { bear1: string; bear2: string } } }>(
-      refreshed
-    );
-    assert.equal(refreshedPayload.settings.bearTimes.bear1, "02:30");
-    assert.equal(refreshedPayload.settings.bearTimes.bear2, "14:45");
+    const refreshedPayload = getPayload<{
+      settings: { bearNextTimes: { bear1: string; bear2: string } };
+    }>(refreshed);
+    assert.equal(refreshedPayload.settings.bearNextTimes.bear1, "2025-01-02T02:30:00.000Z");
+    assert.equal(refreshedPayload.settings.bearNextTimes.bear2, "2025-01-02T14:45:00.000Z");
   } finally {
     httpServer.close();
   }

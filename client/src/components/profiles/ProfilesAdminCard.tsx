@@ -14,8 +14,9 @@ type Props = {
   addPlayerSuccess: string;
   deleteError: string;
   showAllianceSettings: boolean;
-  settingsBear1Time: string;
-  settingsBear2Time: string;
+  timeMode: "local" | "utc";
+  settingsBear1NextTime: string;
+  settingsBear2NextTime: string;
   settingsBusy: boolean;
   settingsError: string;
   settingsSuccess: string;
@@ -25,8 +26,9 @@ type Props = {
   onRejectProfile: (profile: Profile) => void;
   onSetRole: (profile: Profile, role: "member" | "alliance_admin") => void;
   onDeleteAlliance: () => void;
-  onSettingsBear1TimeChange: (value: string) => void;
-  onSettingsBear2TimeChange: (value: string) => void;
+  onTimeModeChange: (mode: "local" | "utc") => void;
+  onSettingsBear1NextTimeChange: (value: string) => void;
+  onSettingsBear2NextTimeChange: (value: string) => void;
   onSubmitAllianceSettings: (event: React.FormEvent<HTMLFormElement>) => void;
 };
 
@@ -46,8 +48,9 @@ function ProfilesAdminCard({
   addPlayerSuccess,
   deleteError,
   showAllianceSettings,
-  settingsBear1Time,
-  settingsBear2Time,
+  timeMode,
+  settingsBear1NextTime,
+  settingsBear2NextTime,
   settingsBusy,
   settingsError,
   settingsSuccess,
@@ -57,8 +60,9 @@ function ProfilesAdminCard({
   onRejectProfile,
   onSetRole,
   onDeleteAlliance,
-  onSettingsBear1TimeChange,
-  onSettingsBear2TimeChange,
+  onTimeModeChange,
+  onSettingsBear1NextTimeChange,
+  onSettingsBear2NextTimeChange,
   onSubmitAllianceSettings
 }: Props) {
   const [memberSearch, setMemberSearch] = useState("");
@@ -138,29 +142,46 @@ function ProfilesAdminCard({
             <h3 className="ui-section-title">{t("profiles.allianceSettingsTitle")}</h3>
             <p className="ui-section-subtitle">{t("profiles.allianceSettingsSubtitle")}</p>
           </div>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <span className="text-sm font-semibold text-muted">
+              {t("profiles.timeModeLabel")}
+            </span>
+            <div className="ui-pill ui-pill-muted gap-2 px-3">
+              <span className="min-w-[3.75rem] text-center">
+                {timeMode === "local" ? t("profiles.timeModeLocal") : t("profiles.timeModeUtc")}
+              </span>
+              <button
+                className="ui-icon-button h-9 w-9"
+                data-testid="profiles-time-mode-toggle"
+                type="button"
+                aria-label={t("profiles.timeModeToggle")}
+                onClick={() => onTimeModeChange(timeMode === "local" ? "utc" : "local")}
+              >
+                <span className="text-lg leading-none" aria-hidden="true">⇄</span>
+              </button>
+            </div>
+          </div>
           <form
             className="mt-4 grid gap-3 nav:grid-cols-[repeat(2,minmax(0,1fr))_auto] nav:items-end"
             onSubmit={onSubmitAllianceSettings}
           >
             <label className="ui-field">
-              {t("profiles.bear1TimeLabel")}
+              {t("profiles.bear1NextTimeLabel")}
               <input
                 className="ui-input"
-                type="time"
-                step={60}
-                value={settingsBear1Time}
-                onChange={(event) => onSettingsBear1TimeChange(event.target.value)}
+                type="datetime-local"
+                value={settingsBear1NextTime}
+                onChange={(event) => onSettingsBear1NextTimeChange(event.target.value)}
                 required
               />
             </label>
             <label className="ui-field">
-              {t("profiles.bear2TimeLabel")}
+              {t("profiles.bear2NextTimeLabel")}
               <input
                 className="ui-input"
-                type="time"
-                step={60}
-                value={settingsBear2Time}
-                onChange={(event) => onSettingsBear2TimeChange(event.target.value)}
+                type="datetime-local"
+                value={settingsBear2NextTime}
+                onChange={(event) => onSettingsBear2NextTimeChange(event.target.value)}
                 required
               />
             </label>

@@ -272,7 +272,7 @@ export function createQueries(db: Database) {
   );
   const deleteAllianceById = db.prepare("DELETE FROM alliances WHERE id = ?");
   const insertAlliance = db.prepare(
-    "INSERT INTO alliances (id, name, kingdomId, createdAt) VALUES (?, ?, ?, ?)"
+    "INSERT INTO alliances (id, name, kingdomId, config, createdAt) VALUES (?, ?, ?, ?, ?)"
   );
   const countActiveProfilesByAlliance = db.prepare(
     "SELECT COUNT(1) AS count FROM profiles WHERE allianceId = ? AND status = 'active'"
@@ -579,13 +579,29 @@ export function createQueries(db: Database) {
     })();
   }
 
+  function buildDefaultAllianceConfig(): string {
+    const now = new Date();
+    const year = now.getUTCFullYear();
+    const month = now.getUTCMonth();
+    const day = now.getUTCDate();
+    const bear1 = new Date(Date.UTC(year, month, day, 1, 0, 0, 0)).toISOString();
+    const bear2 = new Date(Date.UTC(year, month, day, 12, 0, 0, 0)).toISOString();
+    return JSON.stringify({
+      bearNextTimes: {
+        bear1,
+        bear2,
+      },
+    });
+  }
+
   function insertAllianceRow(
     id: string,
     name: string,
     kingdomId: number,
     createdAt: number
   ): RunResult {
-    return insertAlliance.run(id, name, kingdomId, createdAt);
+    const config = buildDefaultAllianceConfig();
+    return insertAlliance.run(id, name, kingdomId, config, createdAt);
   }
 
   function countActiveProfiles(allianceId: string): number {

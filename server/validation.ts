@@ -51,13 +51,21 @@ const BearPayloadSchema = z.object({
 });
 
 const AllianceSettingsSchema = z.object({
-  bearTimes: z.object({
+  bearNextTimes: z.object({
     bear1: z.string(),
     bear2: z.string(),
   }),
 });
 
-const TIME_24H_REGEX = /^([01]\\d|2[0-3]):[0-5]\\d$/;
+const ISO_UTC_REGEX = /^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(?::\\d{2}(?:\\.\\d{3})?)?Z$/;
+
+function parseUtcDateTime(value: string): string | null {
+  const trimmed = value.trim();
+  if (!ISO_UTC_REGEX.test(trimmed)) return null;
+  const parsed = Date.parse(trimmed);
+  if (!Number.isFinite(parsed)) return null;
+  return new Date(parsed).toISOString();
+}
 
 export function parseBearPayload(
   payload: unknown
@@ -115,19 +123,23 @@ export function parseAllianceSettingsPayload(
     return { ok: false, error: "Invalid alliance settings payload." };
   }
 
-  const bear1 = parsed.data.bearTimes.bear1.trim();
-  const bear2 = parsed.data.bearTimes.bear2.trim();
-
-  if (!TIME_24H_REGEX.test(bear1) || !TIME_24H_REGEX.test(bear2)) {
-    return { ok: false, error: "bearTimes must be in HH:mm (24h) format." };
+  const bear1Next = parsed.data.bearNextTimes.bear1.trim();
+  const bear2Next = parsed.data.bearNextTimes.bear2.trim();
+  if (!bear1Next || !bear2Next) {
+    return { ok: false, error: "bearNextTimes must include bear1 and bear2." };
+  }
+  const nextBear1 = parseUtcDateTime(bear1Next);
+  const nextBear2 = parseUtcDateTime(bear2Next);
+  if (!nextBear1 || !nextBear2) {
+    return { ok: false, error: "bearNextTimes must be ISO UTC date-times." };
   }
 
   return {
     ok: true,
     data: {
-      bearTimes: {
-        bear1,
-        bear2,
+      bearNextTimes: {
+        bear1: nextBear1,
+        bear2: nextBear2,
       },
     },
   };

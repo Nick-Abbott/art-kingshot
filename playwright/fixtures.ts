@@ -1,6 +1,7 @@
 import { test as base } from "@playwright/test";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
+import { rm } from "node:fs/promises";
 import * as net from "node:net";
 import * as path from "node:path";
 
@@ -107,6 +108,11 @@ export const test = base.extend<{ app: AppFixture }>({
       await Promise.all([
         once(serverProc, "exit").catch(() => undefined),
         once(clientProc, "exit").catch(() => undefined),
+      ]);
+      await Promise.all([
+        rm(dbPath, { force: true }),
+        rm(`${dbPath}-wal`, { force: true }),
+        rm(`${dbPath}-shm`, { force: true }),
       ]);
     },
     { scope: "worker" },

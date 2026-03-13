@@ -4,9 +4,14 @@ import { DEFAULT_ALLIANCE_SETTINGS } from "../../shared/allianceConfig";
 import type { AllianceSettings } from "../../shared/types";
 import type { RouteContext } from "../types";
 
-const TIME_24H_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/;
+const ISO_UTC_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{3})?)?Z$/;
 
 type ConfigObject = Record<string, unknown>;
+
+function isValidUtcDateTime(value: string): boolean {
+  if (!ISO_UTC_REGEX.test(value)) return false;
+  return Number.isFinite(Date.parse(value));
+}
 
 function parseConfig(configText: string | null): ConfigObject {
   if (!configText) return {};
@@ -23,21 +28,23 @@ function parseConfig(configText: string | null): ConfigObject {
 
 function resolveSettings(config: ConfigObject): AllianceSettings {
   const settings: AllianceSettings = {
-    bearTimes: {
-      bear1: DEFAULT_ALLIANCE_SETTINGS.bearTimes.bear1,
-      bear2: DEFAULT_ALLIANCE_SETTINGS.bearTimes.bear2,
+    bearNextTimes: {
+      bear1: DEFAULT_ALLIANCE_SETTINGS.bearNextTimes.bear1,
+      bear2: DEFAULT_ALLIANCE_SETTINGS.bearNextTimes.bear2,
     },
   };
 
-  const bearTimes = config.bearTimes;
-  if (bearTimes && typeof bearTimes === "object") {
-    const bear1 = (bearTimes as { bear1?: unknown }).bear1;
-    const bear2 = (bearTimes as { bear2?: unknown }).bear2;
-    if (typeof bear1 === "string" && TIME_24H_REGEX.test(bear1)) {
-      settings.bearTimes.bear1 = bear1;
-    }
-    if (typeof bear2 === "string" && TIME_24H_REGEX.test(bear2)) {
-      settings.bearTimes.bear2 = bear2;
+  const bearNextTimes = config.bearNextTimes;
+  if (bearNextTimes && typeof bearNextTimes === "object") {
+    const bear1 = (bearNextTimes as { bear1?: unknown }).bear1;
+    const bear2 = (bearNextTimes as { bear2?: unknown }).bear2;
+    if (typeof bear1 === "string" && typeof bear2 === "string") {
+      if (isValidUtcDateTime(bear1) && isValidUtcDateTime(bear2)) {
+        settings.bearNextTimes = {
+          bear1,
+          bear2,
+        };
+      }
     }
   }
 
@@ -82,11 +89,13 @@ export default function allianceSettingsRoutes(ctx: RouteContext) {
       }
 
       const existing = parseConfig(ctx.queries.getAllianceConfig(allianceId));
-      const nextConfig = {
+      const nextConfig: ConfigObject & {
+        bearNextTimes: { bear1: string; bear2: string };
+      } = {
         ...existing,
-        bearTimes: {
-          bear1: parsed.data.bearTimes.bear1,
-          bear2: parsed.data.bearTimes.bear2,
+        bearNextTimes: {
+          bear1: parsed.data.bearNextTimes.bear1,
+          bear2: parsed.data.bearNextTimes.bear2,
         },
       };
 

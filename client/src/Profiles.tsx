@@ -26,12 +26,8 @@ import ProfilesCreateCard from "./components/profiles/ProfilesCreateCard";
 import ProfilesCurrentCard from "./components/profiles/ProfilesCurrentCard";
 import ProfilesHeader from "./components/profiles/ProfilesHeader";
 import ProfilesJoinCard from "./components/profiles/ProfilesJoinCard";
-import { DEFAULT_ALLIANCE_SETTINGS } from "@shared/allianceConfig";
-import {
-  isValidTime,
-  localTimeToUtcHHmm,
-  utcTimeToLocalHHmm
-} from "./utils/time";
+import { parseDateTimeInputToUtcIso } from "./utils/time";
+import { useAdminBearTimeSettings } from "./hooks/useAdminBearTimeSettings";
 
 type Props = {
   user: User | null;
@@ -54,7 +50,7 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
       updateAssignmentDmOptIn(payload.profileId, payload.enabled)
   });
   const settingsMutation = useMutation({
-    mutationFn: (settings: { bearTimes: { bear1: string; bear2: string } }) =>
+    mutationFn: (settings: { bearNextTimes: { bear1: string; bear2: string } }) =>
       updateAllianceSettings(selectedProfileId, settings)
   });
   const [form, setForm] = useState(emptyForm);
@@ -73,13 +69,6 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
     Boolean(selectedProfile?.botOptInAssignments)
   );
   const [dmOptInError, setDmOptInError] = useState("");
-  const [settingsBear1Time, setSettingsBear1Time] = useState(
-    utcTimeToLocalHHmm(DEFAULT_ALLIANCE_SETTINGS.bearTimes.bear1)
-  );
-  const [settingsBear2Time, setSettingsBear2Time] = useState(
-    utcTimeToLocalHHmm(DEFAULT_ALLIANCE_SETTINGS.bearTimes.bear2)
-  );
-  const [settingsDirty, setSettingsDirty] = useState(false);
   const [settingsError, setSettingsError] = useState("");
   const [settingsSuccess, setSettingsSuccess] = useState("");
   const canManage =
@@ -111,6 +100,22 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
   const loadingAdmin = allianceProfilesQuery.isLoading;
   const dmOptInBusy = assignmentOptInMutation.isPending;
   const settingsBusy = settingsMutation.isPending;
+  const {
+    timeMode,
+    setTimeMode,
+    bear1Input: settingsBear1NextTime,
+    bear2Input: settingsBear2NextTime,
+    setBear1Input: setSettingsBear1NextTime,
+    setBear2Input: setSettingsBear2NextTime,
+    markClean: markSettingsClean
+  } = useAdminBearTimeSettings({
+    enabled: canManageSettings,
+    settings: allianceSettingsQuery.data,
+    onChange: () => {
+      setSettingsError("");
+      setSettingsSuccess("");
+    }
+  });
 
   useEffect(() => {
     setJoinError("");
@@ -126,29 +131,18 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
     setAddLookupStatus("");
     setSettingsError("");
     setSettingsSuccess("");
-    setSettingsDirty(false);
-    setSettingsBear1Time(
-      utcTimeToLocalHHmm(DEFAULT_ALLIANCE_SETTINGS.bearTimes.bear1)
-    );
-    setSettingsBear2Time(
-      utcTimeToLocalHHmm(DEFAULT_ALLIANCE_SETTINGS.bearTimes.bear2)
-    );
+    markSettingsClean();
     if (!selectedProfile || selectedProfile.allianceId) {
       return;
     }
-  }, [selectedProfile]);
+  }, [
+    markSettingsClean,
+    selectedProfile
+  ]);
 
   useEffect(() => {
     setDmOptIn(Boolean(selectedProfile?.botOptInAssignments));
   }, [selectedProfile?.botOptInAssignments]);
-
-  useEffect(() => {
-    if (!canManageSettings || settingsDirty) return;
-    const settings = allianceSettingsQuery.data;
-    if (!settings) return;
-    setSettingsBear1Time(utcTimeToLocalHHmm(settings.bearTimes.bear1));
-    setSettingsBear2Time(utcTimeToLocalHHmm(settings.bearTimes.bear2));
-  }, [allianceSettingsQuery.data, canManageSettings, settingsDirty]);
 
   function handleDmOptInChange(nextValue: boolean) {
     if (!selectedProfile) return;
@@ -176,19 +170,8 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
     );
   }
 
-  function handleSettingsBear1TimeChange(value: string) {
-    setSettingsBear1Time(value);
-    setSettingsDirty(true);
-    setSettingsError("");
-    setSettingsSuccess("");
-  }
-
-  function handleSettingsBear2TimeChange(value: string) {
-    setSettingsBear2Time(value);
-    setSettingsDirty(true);
-    setSettingsError("");
-    setSettingsSuccess("");
-  }
+  const handleSettingsBear1NextTimeChange = setSettingsBear1NextTime;
+  const handleSettingsBear2NextTimeChange = setSettingsBear2NextTime;
 
   function submitAllianceSettings(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -196,20 +179,16 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
     setSettingsError("");
     setSettingsSuccess("");
 
-    if (!isValidTime(settingsBear1Time) || !isValidTime(settingsBear2Time)) {
-      setSettingsError(t("profiles.errors.timeInvalid"));
+    const bear1NextUtc = parseDateTimeInputToUtcIso(settingsBear1NextTime, timeMode);
+    const bear2NextUtc = parseDateTimeInputToUtcIso(settingsBear2NextTime, timeMode);
+    if (!bear1NextUtc || !bear2NextUtc) {
+      setSettingsError(t("profiles.errors.nextTimeInvalid"));
       return;
     }
-
-    const bear1Utc = localTimeToUtcHHmm(settingsBear1Time);
-    const bear2Utc = localTimeToUtcHHmm(settingsBear2Time);
-    if (!bear1Utc || !bear2Utc) {
-      setSettingsError(t("profiles.errors.timeInvalid"));
-      return;
-    }
-
     settingsMutation.mutate(
-      { bearTimes: { bear1: bear1Utc, bear2: bear2Utc } },
+      {
+        bearNextTimes: { bear1: bear1NextUtc, bear2: bear2NextUtc }
+      },
       {
         onSuccess: (settings) => {
           if (!settings) {
@@ -220,9 +199,7 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
             allianceSettingsQueryKey(selectedProfileId),
             settings
           );
-          setSettingsBear1Time(utcTimeToLocalHHmm(settings.bearTimes.bear1));
-          setSettingsBear2Time(utcTimeToLocalHHmm(settings.bearTimes.bear2));
-          setSettingsDirty(false);
+          markSettingsClean();
           setSettingsSuccess(t("profiles.settingsSaved"));
         },
         onError: () => {
@@ -533,8 +510,9 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
             addPlayerSuccess={addPlayerSuccess}
             deleteError={deleteError}
             showAllianceSettings={canManageSettings}
-            settingsBear1Time={settingsBear1Time}
-            settingsBear2Time={settingsBear2Time}
+            timeMode={timeMode}
+            settingsBear1NextTime={settingsBear1NextTime}
+            settingsBear2NextTime={settingsBear2NextTime}
             settingsBusy={settingsBusy}
             settingsError={settingsError}
             settingsSuccess={settingsSuccess}
@@ -544,8 +522,9 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
             onRejectProfile={rejectProfile}
             onSetRole={setRole}
             onDeleteAlliance={handleDeleteAlliance}
-            onSettingsBear1TimeChange={handleSettingsBear1TimeChange}
-            onSettingsBear2TimeChange={handleSettingsBear2TimeChange}
+            onTimeModeChange={setTimeMode}
+            onSettingsBear1NextTimeChange={handleSettingsBear1NextTimeChange}
+            onSettingsBear2NextTimeChange={handleSettingsBear2NextTimeChange}
             onSubmitAllianceSettings={submitAllianceSettings}
           />
         )}
