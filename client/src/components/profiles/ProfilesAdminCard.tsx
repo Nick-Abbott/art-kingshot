@@ -17,6 +17,7 @@ type Props = {
   timeMode: "local" | "utc";
   settingsBear1NextTime: string;
   settingsBear2NextTime: string;
+  settingsVikingNextTime: string;
   settingsBusy: boolean;
   settingsError: string;
   settingsSuccess: string;
@@ -29,6 +30,7 @@ type Props = {
   onTimeModeChange: (mode: "local" | "utc") => void;
   onSettingsBear1NextTimeChange: (value: string) => void;
   onSettingsBear2NextTimeChange: (value: string) => void;
+  onSettingsVikingNextTimeChange: (value: string) => void;
   onSubmitAllianceSettings: (event: React.FormEvent<HTMLFormElement>) => void;
 };
 
@@ -51,6 +53,7 @@ function ProfilesAdminCard({
   timeMode,
   settingsBear1NextTime,
   settingsBear2NextTime,
+  settingsVikingNextTime,
   settingsBusy,
   settingsError,
   settingsSuccess,
@@ -63,6 +66,7 @@ function ProfilesAdminCard({
   onTimeModeChange,
   onSettingsBear1NextTimeChange,
   onSettingsBear2NextTimeChange,
+  onSettingsVikingNextTimeChange,
   onSubmitAllianceSettings
 }: Props) {
   const [memberSearch, setMemberSearch] = useState("");
@@ -162,7 +166,7 @@ function ProfilesAdminCard({
             </div>
           </div>
           <form
-            className="mt-4 grid gap-3 nav:grid-cols-[repeat(2,minmax(0,1fr))_auto] nav:items-end"
+            className="mt-4 grid gap-3 nav:grid-cols-[repeat(3,minmax(0,1fr))_auto] nav:items-end"
             onSubmit={onSubmitAllianceSettings}
           >
             <label className="ui-field">
@@ -182,6 +186,16 @@ function ProfilesAdminCard({
                 type="datetime-local"
                 value={settingsBear2NextTime}
                 onChange={(event) => onSettingsBear2NextTimeChange(event.target.value)}
+                required
+              />
+            </label>
+            <label className="ui-field">
+              {t("profiles.vikingNextTimeLabel")}
+              <input
+                className="ui-input"
+                type="datetime-local"
+                value={settingsVikingNextTime}
+                onChange={(event) => onSettingsVikingNextTimeChange(event.target.value)}
                 required
               />
             </label>

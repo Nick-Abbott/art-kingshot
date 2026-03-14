@@ -20,6 +20,13 @@ import VikingInstructionsCard from "./components/viking/VikingInstructionsCard";
 import VikingRosterCard from "./components/viking/VikingRosterCard";
 import VikingSearchCard from "./components/viking/VikingSearchCard";
 import VikingSignupCard from "./components/viking/VikingSignupCard";
+import { useAllianceSettingsQuery } from "./hooks/useAllianceSettingsQuery";
+import { DEFAULT_ALLIANCE_SETTINGS } from "@shared/allianceConfig";
+import {
+  normalizeUtcDateTimeToWeekday,
+  nextUtcDateTimeWithOffset,
+  utcDateTimeToLocalLabel
+} from "./utils/time";
 
 type VikingForm = {
   troopCount: string;
@@ -34,6 +41,9 @@ const emptyForm: VikingForm = {
   marchCount: "4",
   power: ""
 };
+
+const VIKING_INTERVAL_MS = 14 * 24 * 60 * 60 * 1000;
+const VIKING_THURSDAY_OFFSET_MS = 2 * 24 * 60 * 60 * 1000;
 
 function formatNumber(value: number) {
   return new Intl.NumberFormat().format(value);
@@ -61,6 +71,7 @@ function VikingVengeance({ profileId, profile, canManage }: Props) {
   const updateProfileMutation = useUpdateProfileMutation();
   const queryClient = useQueryClient();
   const eligibleMembersQuery = useEligibleMembersQuery(profileId, canManage);
+  const allianceSettingsQuery = useAllianceSettingsQuery(profileId, Boolean(profileId));
   const eligibleMembers = useMemo(
     () => eligibleMembersQuery.data ?? [],
     [eligibleMembersQuery.data]
@@ -84,6 +95,47 @@ function VikingVengeance({ profileId, profile, canManage }: Props) {
   }, [eligibleMembers, profile]);
 
   const memberCount = members.length;
+  const vikingNextTime =
+    allianceSettingsQuery.data?.vikingNextTime ?? DEFAULT_ALLIANCE_SETTINGS.vikingNextTime;
+  const normalizedVikingBase = useMemo(
+    () => normalizeUtcDateTimeToWeekday(vikingNextTime, 2),
+    [vikingNextTime]
+  );
+  const normalizedVikingBaseIso = normalizedVikingBase?.toISOString() ?? vikingNextTime;
+  const nextVikingTuesday = useMemo(
+    () => nextUtcDateTimeWithOffset(normalizedVikingBaseIso, 0, VIKING_INTERVAL_MS),
+    [normalizedVikingBaseIso]
+  );
+  const nextVikingThursday = useMemo(
+    () =>
+      nextUtcDateTimeWithOffset(
+        normalizedVikingBaseIso,
+        VIKING_THURSDAY_OFFSET_MS,
+        VIKING_INTERVAL_MS
+      ),
+    [normalizedVikingBaseIso]
+  );
+  const vikingNextEvent = useMemo(() => {
+    const thursdayFallback = (() => {
+      const base = Date.parse(normalizedVikingBaseIso);
+      if (!Number.isFinite(base)) return vikingNextTime;
+      return new Date(base + VIKING_THURSDAY_OFFSET_MS).toISOString();
+    })();
+    const tuesdayDate = nextVikingTuesday ?? new Date(normalizedVikingBaseIso);
+    const thursdayDate = nextVikingThursday ?? new Date(thursdayFallback);
+    const next =
+      tuesdayDate.getTime() <= thursdayDate.getTime() ? tuesdayDate : thursdayDate;
+    return utcDateTimeToLocalLabel(next.toISOString());
+  }, [
+    nextVikingThursday,
+    nextVikingTuesday,
+    normalizedVikingBaseIso,
+    vikingNextTime
+  ]);
+  const vikingNextEventLabel = useMemo(
+    () => t("viking.nextEvent", { time: vikingNextEvent }),
+    [t, vikingNextEvent]
+  );
 
   const sortedMembers = useMemo(() => {
     const copy = [...members];
@@ -460,6 +512,8 @@ function VikingVengeance({ profileId, profile, canManage }: Props) {
       <VikingHeader
         t={t}
         memberCount={memberCount}
+        nextEventsLabel={t("viking.nextEventLabel")}
+        nextEvents={vikingNextEventLabel}
         onReset={resetAll}
         busy={busy}
         canManage={canManage}

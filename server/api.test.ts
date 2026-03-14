@@ -388,10 +388,11 @@ test("alliance settings return defaults and update", async () => {
     );
     assert.equal(initialSettings.status, 200);
     const initialPayload = getPayload<{
-      settings: { bearNextTimes: { bear1: string; bear2: string } };
+      settings: { bearNextTimes: { bear1: string; bear2: string }; vikingNextTime: string };
     }>(initialSettings);
     assert.equal(initialPayload.settings.bearNextTimes.bear1, "2026-01-01T01:00:00.000Z");
     assert.equal(initialPayload.settings.bearNextTimes.bear2, "2026-01-01T12:00:00.000Z");
+    assert.equal(initialPayload.settings.vikingNextTime, "2026-03-10T02:00:00.000Z");
 
     const updateSettings = await requestJson(
       port,
@@ -402,15 +403,17 @@ test("alliance settings return defaults and update", async () => {
         bearNextTimes: {
           bear1: "2025-01-02T02:30:00.000Z",
           bear2: "2025-01-02T14:45:00.000Z"
-        }
+        },
+        vikingNextTime: "2025-01-07T03:15:00.000Z"
       })
     );
     assert.equal(updateSettings.status, 200);
     const updatePayload = getPayload<{
-      settings: { bearNextTimes: { bear1: string; bear2: string } };
+      settings: { bearNextTimes: { bear1: string; bear2: string }; vikingNextTime: string };
     }>(updateSettings);
     assert.equal(updatePayload.settings.bearNextTimes.bear1, "2025-01-02T02:30:00.000Z");
     assert.equal(updatePayload.settings.bearNextTimes.bear2, "2025-01-02T14:45:00.000Z");
+    assert.equal(updatePayload.settings.vikingNextTime, "2025-01-07T03:15:00.000Z");
 
     const refreshed = await requestJson(
       port,
@@ -420,10 +423,11 @@ test("alliance settings return defaults and update", async () => {
     );
     assert.equal(refreshed.status, 200);
     const refreshedPayload = getPayload<{
-      settings: { bearNextTimes: { bear1: string; bear2: string } };
+      settings: { bearNextTimes: { bear1: string; bear2: string }; vikingNextTime: string };
     }>(refreshed);
     assert.equal(refreshedPayload.settings.bearNextTimes.bear1, "2025-01-02T02:30:00.000Z");
     assert.equal(refreshedPayload.settings.bearNextTimes.bear2, "2025-01-02T14:45:00.000Z");
+    assert.equal(refreshedPayload.settings.vikingNextTime, "2025-01-07T03:15:00.000Z");
   } finally {
     httpServer.close();
   }

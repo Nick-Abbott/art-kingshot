@@ -39,6 +39,7 @@ export type AllianceSettings = {
     bear1: string;
     bear2: string;
   };
+  vikingNextTime: string;
 };
 
 export type Profile = {

@@ -50,8 +50,10 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
       updateAssignmentDmOptIn(payload.profileId, payload.enabled)
   });
   const settingsMutation = useMutation({
-    mutationFn: (settings: { bearNextTimes: { bear1: string; bear2: string } }) =>
-      updateAllianceSettings(selectedProfileId, settings)
+    mutationFn: (settings: {
+      bearNextTimes: { bear1: string; bear2: string };
+      vikingNextTime: string;
+    }) => updateAllianceSettings(selectedProfileId, settings)
   });
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState("");
@@ -105,8 +107,10 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
     setTimeMode,
     bear1Input: settingsBear1NextTime,
     bear2Input: settingsBear2NextTime,
+    vikingInput: settingsVikingNextTime,
     setBear1Input: setSettingsBear1NextTime,
     setBear2Input: setSettingsBear2NextTime,
+    setVikingInput: setSettingsVikingNextTime,
     markClean: markSettingsClean
   } = useAdminBearTimeSettings({
     enabled: canManageSettings,
@@ -172,6 +176,7 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
 
   const handleSettingsBear1NextTimeChange = setSettingsBear1NextTime;
   const handleSettingsBear2NextTimeChange = setSettingsBear2NextTime;
+  const handleSettingsVikingNextTimeChange = setSettingsVikingNextTime;
 
   function submitAllianceSettings(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -181,13 +186,15 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
 
     const bear1NextUtc = parseDateTimeInputToUtcIso(settingsBear1NextTime, timeMode);
     const bear2NextUtc = parseDateTimeInputToUtcIso(settingsBear2NextTime, timeMode);
-    if (!bear1NextUtc || !bear2NextUtc) {
+    const vikingNextUtc = parseDateTimeInputToUtcIso(settingsVikingNextTime, timeMode);
+    if (!bear1NextUtc || !bear2NextUtc || !vikingNextUtc) {
       setSettingsError(t("profiles.errors.nextTimeInvalid"));
       return;
     }
     settingsMutation.mutate(
       {
-        bearNextTimes: { bear1: bear1NextUtc, bear2: bear2NextUtc }
+        bearNextTimes: { bear1: bear1NextUtc, bear2: bear2NextUtc },
+        vikingNextTime: vikingNextUtc
       },
       {
         onSuccess: (settings) => {
@@ -513,6 +520,7 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
             timeMode={timeMode}
             settingsBear1NextTime={settingsBear1NextTime}
             settingsBear2NextTime={settingsBear2NextTime}
+            settingsVikingNextTime={settingsVikingNextTime}
             settingsBusy={settingsBusy}
             settingsError={settingsError}
             settingsSuccess={settingsSuccess}
@@ -525,6 +533,7 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
             onTimeModeChange={setTimeMode}
             onSettingsBear1NextTimeChange={handleSettingsBear1NextTimeChange}
             onSettingsBear2NextTimeChange={handleSettingsBear2NextTimeChange}
+            onSettingsVikingNextTimeChange={handleSettingsVikingNextTimeChange}
             onSubmitAllianceSettings={submitAllianceSettings}
           />
         )}

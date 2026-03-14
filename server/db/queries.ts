@@ -586,11 +586,13 @@ export function createQueries(db: Database) {
     const day = now.getUTCDate();
     const bear1 = new Date(Date.UTC(year, month, day, 1, 0, 0, 0)).toISOString();
     const bear2 = new Date(Date.UTC(year, month, day, 12, 0, 0, 0)).toISOString();
+    const vikingNextTime = "2026-03-10T02:00:00.000Z";
     return JSON.stringify({
       bearNextTimes: {
         bear1,
         bear2,
       },
+      vikingNextTime,
     });
   }
 

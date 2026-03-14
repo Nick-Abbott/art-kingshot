@@ -4,12 +4,22 @@ import type { TFunction } from "i18next";
 type Props = {
   t: TFunction;
   memberCount: number;
+  nextEventsLabel: string;
+  nextEvents: string;
   onReset: () => void;
   busy: boolean;
   canManage: boolean;
 };
 
-function VikingHeader({ t, memberCount, onReset, busy, canManage }: Props) {
+function VikingHeader({
+  t,
+  memberCount,
+  nextEventsLabel,
+  nextEvents,
+  onReset,
+  busy,
+  canManage
+}: Props) {
   return (
     <header className="relative z-[1] mb-8 flex flex-col gap-6 nav:flex-row nav:items-start nav:justify-between">
       <div>
@@ -23,7 +33,7 @@ function VikingHeader({ t, memberCount, onReset, busy, canManage }: Props) {
           {t("viking.subtitle")}
         </p>
       </div>
-      <div className="ui-card-compact grid gap-4 nav:min-w-[240px] nav:grid-cols-2">
+      <div className="ui-card-compact grid gap-4 nav:min-w-[320px]">
         <div>
           <p className="text-xs uppercase tracking-[0.08em] text-muted">
             {t("viking.signedUp")}
@@ -34,14 +44,14 @@ function VikingHeader({ t, memberCount, onReset, busy, canManage }: Props) {
         </div>
         <div>
           <p className="text-xs uppercase tracking-[0.08em] text-muted">
-            {t("viking.minimumIncoming")}
+            {nextEventsLabel}
           </p>
-          <p className="text-2xl font-semibold" data-testid="viking-minimum-incoming">
-            200k
+          <p className="text-sm font-semibold text-ink" data-testid="viking-next-events">
+            {nextEvents}
           </p>
         </div>
         <button
-          className="ui-button-ghost w-full text-xs uppercase tracking-[0.1em] nav:col-span-2"
+          className="ui-button-ghost w-full text-xs uppercase tracking-[0.1em]"
           data-testid="viking-reset-event"
           type="button"
           onClick={onReset}

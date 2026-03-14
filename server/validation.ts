@@ -55,6 +55,7 @@ const AllianceSettingsSchema = z.object({
     bear1: z.string(),
     bear2: z.string(),
   }),
+  vikingNextTime: z.string(),
 });
 
 const ISO_UTC_REGEX = /^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(?::\\d{2}(?:\\.\\d{3})?)?Z$/;
@@ -125,13 +126,21 @@ export function parseAllianceSettingsPayload(
 
   const bear1Next = parsed.data.bearNextTimes.bear1.trim();
   const bear2Next = parsed.data.bearNextTimes.bear2.trim();
+  const vikingNext = parsed.data.vikingNextTime.trim();
   if (!bear1Next || !bear2Next) {
     return { ok: false, error: "bearNextTimes must include bear1 and bear2." };
   }
+  if (!vikingNext) {
+    return { ok: false, error: "vikingNextTime must be provided." };
+  }
   const nextBear1 = parseUtcDateTime(bear1Next);
   const nextBear2 = parseUtcDateTime(bear2Next);
+  const nextViking = parseUtcDateTime(vikingNext);
   if (!nextBear1 || !nextBear2) {
     return { ok: false, error: "bearNextTimes must be ISO UTC date-times." };
+  }
+  if (!nextViking) {
+    return { ok: false, error: "vikingNextTime must be an ISO UTC date-time." };
   }
 
   return {
@@ -141,6 +150,7 @@ export function parseAllianceSettingsPayload(
         bear1: nextBear1,
         bear2: nextBear2,
       },
+      vikingNextTime: nextViking,
     },
   };
 }

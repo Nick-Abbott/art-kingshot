@@ -32,6 +32,7 @@ function resolveSettings(config: ConfigObject): AllianceSettings {
       bear1: DEFAULT_ALLIANCE_SETTINGS.bearNextTimes.bear1,
       bear2: DEFAULT_ALLIANCE_SETTINGS.bearNextTimes.bear2,
     },
+    vikingNextTime: DEFAULT_ALLIANCE_SETTINGS.vikingNextTime,
   };
 
   const bearNextTimes = config.bearNextTimes;
@@ -46,6 +47,11 @@ function resolveSettings(config: ConfigObject): AllianceSettings {
         };
       }
     }
+  }
+
+  const vikingNextTime = config.vikingNextTime;
+  if (typeof vikingNextTime === "string" && isValidUtcDateTime(vikingNextTime)) {
+    settings.vikingNextTime = vikingNextTime;
   }
 
   return settings;
@@ -91,12 +97,14 @@ export default function allianceSettingsRoutes(ctx: RouteContext) {
       const existing = parseConfig(ctx.queries.getAllianceConfig(allianceId));
       const nextConfig: ConfigObject & {
         bearNextTimes: { bear1: string; bear2: string };
+        vikingNextTime: string;
       } = {
         ...existing,
         bearNextTimes: {
           bear1: parsed.data.bearNextTimes.bear1,
           bear2: parsed.data.bearNextTimes.bear2,
         },
+        vikingNextTime: parsed.data.vikingNextTime,
       };
 
       ctx.queries.updateAllianceConfig(allianceId, JSON.stringify(nextConfig));

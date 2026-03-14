@@ -159,3 +159,32 @@ export function nextUtcDateTime(value: string, intervalMs = 2 * 24 * 60 * 60 * 1
   if (Number.isNaN(next.getTime())) return null;
   return next;
 }
+
+export function nextUtcDateTimeWithOffset(
+  value: string,
+  offsetMs: number,
+  intervalMs: number
+): Date | null {
+  const base = Date.parse(value);
+  if (!Number.isFinite(base)) return null;
+  const start = base + offsetMs;
+  const now = Date.now();
+  if (start >= now) return new Date(start);
+  const steps = Math.ceil((now - start) / intervalMs);
+  const next = new Date(start + steps * intervalMs);
+  if (Number.isNaN(next.getTime())) return null;
+  return next;
+}
+
+export function normalizeUtcDateTimeToWeekday(
+  value: string,
+  targetDay: number
+): Date | null {
+  const base = Date.parse(value);
+  if (!Number.isFinite(base)) return null;
+  if (!Number.isFinite(targetDay) || targetDay < 0 || targetDay > 6) return null;
+  const date = new Date(base);
+  const day = date.getUTCDay();
+  const offsetDays = (targetDay - day + 7) % 7;
+  return new Date(base + offsetDays * 24 * 60 * 60 * 1000);
+}
