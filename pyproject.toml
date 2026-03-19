@@ -7,7 +7,17 @@ name = "art-kingshot-screenshot-processor"
 version = "0.1.0"
 description = "Screenshot processing utilities for ART Kingshot app."
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+  "fastapi",
+  "uvicorn",
+  "python-multipart",
+  "numpy",
+  "opencv-python",
+  "torch",
+  "torchvision",
+  "ultralytics",
+  "pytesseract",
+]
 
 [tool.setuptools.packages.find]
 where = ["."]
