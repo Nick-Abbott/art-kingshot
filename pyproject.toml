@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "art-kingshot-screenshot-processor"
+version = "0.1.0"
+description = "Screenshot processing utilities for ART Kingshot app."
+requires-python = ">=3.10"
+dependencies = []
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["screenshotProcessor*"]

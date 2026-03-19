@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import sys
 import tempfile
 from pathlib import Path
 
@@ -10,10 +9,9 @@ import numpy as np
 from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.responses import JSONResponse
 
-ROOT_DIR = Path(__file__).resolve().parent
-sys.path.append(str(ROOT_DIR))
+from screenshotProcessor.pipeline import ScreenshotProcessor
 
-from process_screenshot import ScreenshotProcessor  # noqa: E402
+ROOT_DIR = Path(__file__).resolve().parent
 
 
 def _decode_image(data: bytes) -> cv2.Mat:

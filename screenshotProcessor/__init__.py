@@ -1,0 +1,1 @@
+"""Screenshot processing utilities."""
