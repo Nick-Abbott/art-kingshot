@@ -1428,8 +1428,13 @@ test("bot endpoints resolve discord user and enforce ownership", async () => {
     assert.equal(assignments.status, 200);
     const assignmentsPayload = getPayload<{
       assignment: { playerId: string } | null;
+      vikingNextTime?: string;
     }>(assignments);
     assert.equal(assignmentsPayload.assignment?.playerId, playerId);
+    assert.equal(
+      assignmentsPayload.vikingNextTime,
+      "2026-03-10T02:00:00.000Z"
+    );
 
     const remove = await requestJson(
       port,

@@ -39,11 +39,27 @@ const instructionsLines = [
   "Assignments are calculated assuming equalized marches and consistent march counts.",
 ];
 
-export function buildAssignmentsHeader(mention?: string): string {
+function formatDiscordTimestamp(value?: string): string | null {
+  if (!value) return null;
+  const parsed = Date.parse(value);
+  if (!Number.isFinite(parsed)) return null;
+  const seconds = Math.floor(parsed / 1000);
+  return `<t:${seconds}:F> (<t:${seconds}:R>)`;
+}
+
+export function buildAssignmentsHeader(
+  mention?: string,
+  vikingNextTime?: string
+): string {
   const intro = mention
     ? `${mention}, here are your Viking assignments:`
     : "Here are your Viking assignments:";
-  return [intro, ...instructionsLines].join("\n");
+  const eventTime = formatDiscordTimestamp(vikingNextTime);
+  const lines = [intro];
+  if (eventTime) {
+    lines.push(`Event time: ${eventTime}`);
+  }
+  return [...lines, ...instructionsLines].join("\n");
 }
 
 export function buildAssignmentsMessage(
@@ -127,6 +143,7 @@ export async function handleVikingsCommand(
         incoming: Array<{ fromName?: string; fromId?: string; troops: number; lead?: boolean }>;
         incomingTotal: number;
       } | null;
+      vikingNextTime?: string;
     }>(
       apiOptions,
       `/api/bot/vikings/assignments?profileId=${encodeURIComponent(profileId)}`
@@ -141,7 +158,8 @@ export async function handleVikingsCommand(
 
     const assignment = result.data.assignment;
     const header = buildAssignmentsHeader(
-      output === "channel" ? `<@${interaction.user.id}>` : undefined
+      output === "channel" ? `<@${interaction.user.id}>` : undefined,
+      result.data.vikingNextTime
     );
     const message = buildAssignmentsMessage(assignment, header);
     if (output === "channel") {

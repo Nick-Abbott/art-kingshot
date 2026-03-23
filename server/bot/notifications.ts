@@ -12,13 +12,31 @@ type NotificationSender = {
   logger: Pick<typeof console, "error">;
 };
 
+type AssignmentEnvelope = {
+  assignment?: Parameters<typeof buildAssignmentsMessage>[0];
+  vikingNextTime?: string;
+};
+
+function isAssignmentEnvelope(payload: unknown): payload is AssignmentEnvelope {
+  return !!payload && typeof payload === "object" && "assignment" in payload;
+}
+
 export async function processAssignmentNotification(
   notification: Notification,
   sender: NotificationSender
 ): Promise<void> {
-  const header = buildAssignmentsHeader();
   try {
-    const assignment = JSON.parse(notification.payload) as Parameters<typeof buildAssignmentsMessage>[0];
+    const parsed = JSON.parse(notification.payload) as
+      | AssignmentEnvelope
+      | Parameters<typeof buildAssignmentsMessage>[0];
+    const assignment = isAssignmentEnvelope(parsed) ? parsed.assignment : parsed;
+    if (!assignment) {
+      throw new Error("Assignment payload missing.");
+    }
+    const header = buildAssignmentsHeader(
+      undefined,
+      isAssignmentEnvelope(parsed) ? parsed.vikingNextTime : undefined
+    );
     const message = buildAssignmentsMessage(assignment, header);
     await sender.sendDm(notification.discordId, message);
     await sender.updateStatus(notification.id, "sent");

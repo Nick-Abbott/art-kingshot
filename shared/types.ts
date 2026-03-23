@@ -208,6 +208,7 @@ export type ResultsPayload = {
 export type BotAssignmentsPayload = {
   results: AssignmentResult | null;
   assignment: AssignmentMember | null;
+  vikingNextTime?: string;
 };
 
 export type LookupPayload = {

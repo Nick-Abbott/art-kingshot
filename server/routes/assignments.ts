@@ -1,6 +1,7 @@
 import express from "express";
 import type { Request, Response } from "express";
 import type { RouteContext } from "../types";
+import { getAllianceSettingsFromConfig } from "../utils/allianceSettings";
 
 export default function assignmentsRoutes(ctx: RouteContext) {
   const router = express.Router();
@@ -25,6 +26,9 @@ export default function assignmentsRoutes(ctx: RouteContext) {
           const byPlayerId = new Map(
             run.members.map((member) => [member.playerId, member])
           );
+          const settings = getAllianceSettingsFromConfig(
+            ctx.queries.getAllianceConfig(allianceId)
+          );
           const now = Date.now();
           for (const recipient of recipients) {
             const assignment = byPlayerId.get(recipient.playerId);
@@ -34,7 +38,10 @@ export default function assignmentsRoutes(ctx: RouteContext) {
               allianceId,
               recipient.playerId,
               recipient.discordId,
-              JSON.stringify(assignment),
+              JSON.stringify({
+                assignment,
+                vikingNextTime: settings.vikingNextTime,
+              }),
               "pending",
               now,
               now

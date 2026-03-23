@@ -7,6 +7,7 @@ import type {
   Profile,
 } from "../../shared/types";
 import type { RouteContext } from "../types";
+import { getAllianceSettingsFromConfig } from "../utils/allianceSettings";
 import { parsePlayerLookup } from "../utils/playerLookup";
 
 type BotAuth = {
@@ -550,7 +551,14 @@ export default function botRoutes(ctx: RouteContext) {
           results.members.find((member) => member.playerId === profile.playerId) ??
           null;
       }
-      ctx.ok(res, { results, assignment });
+      const settings = getAllianceSettingsFromConfig(
+        ctx.queries.getAllianceConfig(profile.allianceId)
+      );
+      ctx.ok(res, {
+        results,
+        assignment,
+        vikingNextTime: settings.vikingNextTime,
+      });
     }
   );
 
