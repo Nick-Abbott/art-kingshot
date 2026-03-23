@@ -1,9 +1,11 @@
 import type { Database, RunResult } from "better-sqlite3";
 import type {
   Alliance,
+  AllianceRole,
   BearMember,
   EligibleMember,
   Profile,
+  ProfileStatus,
   User,
 } from "../../shared/types";
 
@@ -18,7 +20,61 @@ type AllianceGuildRow = {
   guildId: string;
 };
 
+type ProfileRow = {
+  id: string;
+  userId: string | null;
+  playerId: string | null;
+  playerName: string | null;
+  playerAvatar: string | null;
+  kingdomId: number | null;
+  allianceId: string | null;
+  status: ProfileStatus;
+  role: AllianceRole;
+  troopCount: number | null;
+  marchCount: number | null;
+  power: number | null;
+  rallySize: number | null;
+  botOptInAssignments: number;
+  allianceName?: string | null;
+  userDisplayName?: string | null;
+};
+
+type EligibleMemberRow = {
+  playerId: string;
+  playerName: string | null;
+  troopCount: number | null;
+  marchCount: number | null;
+  power: number | null;
+};
+
+type BearMemberRow = {
+  playerId: string;
+  playerName: string;
+  rallySize: number;
+  bearGroup?: string;
+};
+
 export function createQueries(db: Database) {
+  const troopCountExpr =
+    "json_extract(profiles.troopsSnapshot, '$.header.totalTroops')";
+  const marchCountExpr =
+    "json_extract(profiles.troopsSnapshot, '$.header.marchQueues')";
+
+  function buildTroopsSnapshot(
+    troopCount: number | null,
+    marchCount: number | null
+  ): string | null {
+    if (troopCount == null && marchCount == null) return null;
+    return JSON.stringify({
+      header: {
+        totalTroops: troopCount,
+        marchQueues: marchCount,
+        infirmaryCapacity: 0,
+      },
+      troops: [],
+    });
+  }
+
   const selectUserByDiscordId = db.prepare(
     "SELECT id, discordId, displayName, avatar, isAppAdmin FROM users WHERE discordId = ?"
   );
@@ -41,8 +97,8 @@ export function createQueries(db: Database) {
             profiles.allianceId,
             profiles.status,
             profiles.role,
-            profiles.troopCount,
-            profiles.marchCount,
+            ${troopCountExpr} AS troopCount,
+            ${marchCountExpr} AS marchCount,
             profiles.power,
             profiles.rallySize,
             profiles.botOptInAssignments,
@@ -61,8 +117,8 @@ export function createQueries(db: Database) {
             profiles.allianceId,
             profiles.status,
             profiles.role,
-            profiles.troopCount,
-            profiles.marchCount,
+            ${troopCountExpr} AS troopCount,
+            ${marchCountExpr} AS marchCount,
             profiles.power,
             profiles.rallySize,
             profiles.botOptInAssignments,
@@ -72,7 +128,22 @@ export function createQueries(db: Database) {
      WHERE profiles.id = ?`
   );
   const selectProfileByPlayerId = db.prepare(
-    "SELECT * FROM profiles WHERE playerId = ?"
+    `SELECT profiles.id,
+            profiles.userId,
+            profiles.playerId,
+            profiles.playerName,
+            profiles.playerAvatar,
+            profiles.kingdomId,
+            profiles.allianceId,
+            profiles.status,
+            profiles.role,
+            ${troopCountExpr} AS troopCount,
+            ${marchCountExpr} AS marchCount,
+            profiles.power,
+            profiles.rallySize,
+            profiles.botOptInAssignments
+     FROM profiles
+     WHERE profiles.playerId = ?`
   );
   const insertProfile = db.prepare(
     `INSERT INTO profiles (
@@ -85,8 +156,8 @@ export function createQueries(db: Database) {
        allianceId,
        status,
        role,
-       troopCount,
-       marchCount,
+       troopsSnapshot,
+       troopsSnapshotUpdatedAt,
        power,
        rallySize,
        createdAt,
@@ -102,8 +173,8 @@ export function createQueries(db: Database) {
          allianceId = ?,
          status = ?,
          role = ?,
-         troopCount = ?,
-         marchCount = ?,
+         troopsSnapshot = ?,
+         troopsSnapshotUpdatedAt = ?,
          power = ?,
          rallySize = ?,
          updatedAt = ?
@@ -117,8 +188,8 @@ export function createQueries(db: Database) {
          kingdomId = ?,
          status = 'pending',
          role = 'member',
-         troopCount = ?,
-         marchCount = ?,
+         troopsSnapshot = ?,
+         troopsSnapshotUpdatedAt = ?,
          power = ?,
          rallySize = ?,
          updatedAt = ?
@@ -130,8 +201,8 @@ export function createQueries(db: Database) {
          playerName = ?,
          playerAvatar = ?,
          kingdomId = ?,
-         troopCount = ?,
-         marchCount = ?,
+         troopsSnapshot = ?,
+         troopsSnapshotUpdatedAt = ?,
          power = ?,
          rallySize = ?,
          updatedAt = ?
@@ -181,8 +252,8 @@ export function createQueries(db: Database) {
             profiles.allianceId,
             profiles.status,
             profiles.role,
-            profiles.troopCount,
-            profiles.marchCount,
+            ${troopCountExpr} AS troopCount,
+            ${marchCountExpr} AS marchCount,
             profiles.power,
             profiles.rallySize,
             profiles.botOptInAssignments,
@@ -194,8 +265,8 @@ export function createQueries(db: Database) {
   const selectEligibleMembers = db.prepare(
     `SELECT playerId,
             playerName,
-            troopCount,
-            marchCount,
+            ${troopCountExpr} AS troopCount,
+            ${marchCountExpr} AS marchCount,
             power
      FROM profiles
      WHERE allianceId = ?
@@ -245,11 +316,18 @@ export function createQueries(db: Database) {
   );
   const updateProfileStatsFromMember = db.prepare(
     `UPDATE profiles
-     SET troopCount = ?,
-         marchCount = ?,
+     SET troopsSnapshot = ?,
+         troopsSnapshotUpdatedAt = CAST(strftime('%s','now') AS INTEGER) * 1000,
          power = ?,
          playerName = ?
      WHERE allianceId = ? AND playerId = ?`
+  );
+  const updateProfileTroopsSnapshot = db.prepare(
+    `UPDATE profiles
+     SET troopsSnapshot = ?,
+         troopsSnapshotUpdatedAt = ?,
+         updatedAt = ?
+     WHERE id = ?`
   );
   const deleteMemberByPlayer = db.prepare(
     "DELETE FROM members WHERE allianceId = ? AND playerId = ?"
@@ -376,7 +454,7 @@ export function createQueries(db: Database) {
     return normalizeUser(selectUserById.get(id) as User | undefined);
   }
 
-  function normalizeProfile(row: Profile | undefined): Profile | null {
+  function normalizeProfile(row: ProfileRow | undefined): Profile | null {
     if (!row) return null;
     return {
       ...row,
@@ -385,15 +463,17 @@ export function createQueries(db: Database) {
   }
 
   function getProfileById(id: string): Profile | null {
-    return normalizeProfile(selectProfileById.get(id) as Profile | undefined);
+    return normalizeProfile(selectProfileById.get(id) as ProfileRow | undefined);
   }
 
   function getProfileByPlayerId(playerId: string): Profile | null {
-    return normalizeProfile(selectProfileByPlayerId.get(playerId) as Profile | undefined);
+    return normalizeProfile(
+      selectProfileByPlayerId.get(playerId) as ProfileRow | undefined
+    );
   }
 
   function getProfilesByUser(userId: string): Profile[] {
-    const rows = (selectProfilesByUser.all(userId) as Profile[]) || [];
+    const rows = (selectProfilesByUser.all(userId) as ProfileRow[]) || [];
     return rows.map((row) => ({
       ...row,
       botOptInAssignments: Boolean(row.botOptInAssignments),
@@ -438,7 +518,7 @@ export function createQueries(db: Database) {
   }
 
   function listAllianceProfiles(allianceId: string): Profile[] {
-    const rows = (selectAllianceProfiles.all(allianceId) as Profile[]) || [];
+    const rows = (selectAllianceProfiles.all(allianceId) as ProfileRow[]) || [];
     return rows.map((row) => ({
       ...row,
       botOptInAssignments: Boolean(row.botOptInAssignments),
@@ -446,18 +526,25 @@ export function createQueries(db: Database) {
   }
 
   function listEligibleMembers(allianceId: string): EligibleMember[] {
-    return (selectEligibleMembers.all(allianceId, allianceId) as EligibleMember[]) || [];
+    return (
+      (selectEligibleMembers.all(allianceId, allianceId) as EligibleMemberRow[]) || []
+    );
   }
 
   function listEligibleBearMembers(allianceId: string): BearMember[] {
-    return (selectEligibleBearMembers.all(allianceId, allianceId) as BearMember[]) || [];
+    return (
+      (selectEligibleBearMembers.all(allianceId, allianceId) as BearMemberRow[]) ||
+      []
+    );
   }
 
   function listBearGroupMembers(
     allianceId: string,
     group: string
   ): BearMember[] {
-    return (selectBearGroupMembers.all(allianceId, group) as BearMember[]) || [];
+    return (
+      (selectBearGroupMembers.all(allianceId, group) as BearMemberRow[]) || []
+    );
   }
 
   function getBearMemberByPlayer(
@@ -466,7 +553,7 @@ export function createQueries(db: Database) {
   ): (BearMember & { bearGroup: string }) | null {
     return (
       (selectBearMemberByPlayer.get(allianceId, playerId) as
-        | (BearMember & { bearGroup: string })
+        | (BearMemberRow & { bearGroup: string })
         | undefined) ?? null
     );
   }
@@ -521,9 +608,9 @@ export function createQueries(db: Database) {
     allianceId: string,
     playerId: string
   ): RunResult {
+    const troopsSnapshot = buildTroopsSnapshot(troopCount, marchCount);
     return updateProfileStatsFromMember.run(
-      troopCount,
-      marchCount,
+      troopsSnapshot,
       power,
       playerName,
       allianceId,
@@ -586,13 +673,16 @@ export function createQueries(db: Database) {
     const day = now.getUTCDate();
     const bear1 = new Date(Date.UTC(year, month, day, 1, 0, 0, 0)).toISOString();
     const bear2 = new Date(Date.UTC(year, month, day, 12, 0, 0, 0)).toISOString();
-    const vikingNextTime = "2026-03-10T02:00:00.000Z";
+    const vikingNextTimes = {
+      viking1: "2026-03-10T02:00:00.000Z",
+      viking2: "2026-03-12T02:00:00.000Z",
+    };
     return JSON.stringify({
       bearNextTimes: {
         bear1,
         bear2,
       },
-      vikingNextTime,
+      vikingNextTimes,
     });
   }
 
@@ -829,6 +919,8 @@ export function createQueries(db: Database) {
     createdAt: number,
     updatedAt: number
   ): RunResult {
+    const troopsSnapshot = buildTroopsSnapshot(troopCount, marchCount);
+    const troopsSnapshotUpdatedAt = troopsSnapshot ? updatedAt : null;
     return insertProfile.run(
       id,
       userId,
@@ -839,8 +931,8 @@ export function createQueries(db: Database) {
       allianceId,
       status,
       role,
-      troopCount,
-      marchCount,
+      troopsSnapshot,
+      troopsSnapshotUpdatedAt,
       power,
       rallySize,
       createdAt,
@@ -863,6 +955,8 @@ export function createQueries(db: Database) {
     updatedAt: number,
     id: string
   ): RunResult {
+    const troopsSnapshot = buildTroopsSnapshot(troopCount, marchCount);
+    const troopsSnapshotUpdatedAt = troopsSnapshot ? updatedAt : null;
     return updateProfile.run(
       playerId,
       playerName,
@@ -871,8 +965,8 @@ export function createQueries(db: Database) {
       allianceId,
       status,
       role,
-      troopCount,
-      marchCount,
+      troopsSnapshot,
+      troopsSnapshotUpdatedAt,
       power,
       rallySize,
       updatedAt,
@@ -892,13 +986,15 @@ export function createQueries(db: Database) {
     updatedAt: number,
     id: string
   ): RunResult {
+    const troopsSnapshot = buildTroopsSnapshot(troopCount, marchCount);
+    const troopsSnapshotUpdatedAt = troopsSnapshot ? updatedAt : null;
     return updateProfileClaim.run(
       userId,
       playerName,
       playerAvatar,
       kingdomId,
-      troopCount,
-      marchCount,
+      troopsSnapshot,
+      troopsSnapshotUpdatedAt,
       power,
       rallySize,
       updatedAt,
@@ -918,13 +1014,15 @@ export function createQueries(db: Database) {
     updatedAt: number,
     id: string
   ): RunResult {
+    const troopsSnapshot = buildTroopsSnapshot(troopCount, marchCount);
+    const troopsSnapshotUpdatedAt = troopsSnapshot ? updatedAt : null;
     return updateProfileFields.run(
       playerId,
       playerName,
       playerAvatar,
       kingdomId,
-      troopCount,
-      marchCount,
+      troopsSnapshot,
+      troopsSnapshotUpdatedAt,
       power,
       rallySize,
       updatedAt,
@@ -947,6 +1045,20 @@ export function createQueries(db: Database) {
     id: string
   ): RunResult {
     return updateProfileBotOptIn.run(enabled, updatedAt, id);
+  }
+
+  function updateProfileTroopsSnapshotRow(
+    troopsSnapshot: string,
+    troopsSnapshotUpdatedAt: number,
+    updatedAt: number,
+    id: string
+  ): RunResult {
+    return updateProfileTroopsSnapshot.run(
+      troopsSnapshot,
+      troopsSnapshotUpdatedAt,
+      updatedAt,
+      id
+    );
   }
 
   return {
@@ -1008,6 +1120,7 @@ export function createQueries(db: Database) {
     updateProfileFields: updateProfileFieldsRow,
     updateProfileStatus: updateProfileStatusRow,
     updateProfileBotOptIn: updateProfileBotOptInRow,
+    updateProfileTroopsSnapshot: updateProfileTroopsSnapshotRow,
   };
 }
 

@@ -49,14 +49,17 @@ export default function allianceSettingsRoutes(ctx: RouteContext) {
       const existing = parseAllianceConfig(ctx.queries.getAllianceConfig(allianceId));
       const nextConfig: ConfigObject & {
         bearNextTimes: { bear1: string; bear2: string };
-        vikingNextTime: string;
+        vikingNextTimes: { viking1: string; viking2: string };
       } = {
         ...existing,
         bearNextTimes: {
           bear1: parsed.data.bearNextTimes.bear1,
           bear2: parsed.data.bearNextTimes.bear2,
         },
-        vikingNextTime: parsed.data.vikingNextTime,
+        vikingNextTimes: {
+          viking1: parsed.data.vikingNextTimes.viking1,
+          viking2: parsed.data.vikingNextTimes.viking2,
+        },
       };
 
       ctx.queries.updateAllianceConfig(allianceId, JSON.stringify(nextConfig));

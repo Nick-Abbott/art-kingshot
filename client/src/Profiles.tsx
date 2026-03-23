@@ -10,7 +10,8 @@ import { updateAssignmentDmOptIn } from "./api/user";
 import {
   useCreateAllianceProfileMutation,
   useCreateProfileMutation,
-  useUpdateProfileMutation
+  useUpdateProfileMutation,
+  useUploadTroopsSnapshotMutation
 } from "./hooks/useProfileMutations";
 import { profilesQueryKey } from "./hooks/useProfilesQuery";
 import { useAllianceProfilesQuery } from "./hooks/useAllianceProfilesQuery";
@@ -52,7 +53,7 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
   const settingsMutation = useMutation({
     mutationFn: (settings: {
       bearNextTimes: { bear1: string; bear2: string };
-      vikingNextTime: string;
+      vikingNextTimes: { viking1: string; viking2: string };
     }) => updateAllianceSettings(selectedProfileId, settings)
   });
   const [form, setForm] = useState(emptyForm);
@@ -71,6 +72,10 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
     Boolean(selectedProfile?.botOptInAssignments)
   );
   const [dmOptInError, setDmOptInError] = useState("");
+  const [troopsUploadFile, setTroopsUploadFile] = useState<File | null>(null);
+  const [troopsUploadError, setTroopsUploadError] = useState("");
+  const [troopsUploadSuccess, setTroopsUploadSuccess] = useState("");
+  const [troopsUploadResetKey, setTroopsUploadResetKey] = useState(0);
   const [settingsError, setSettingsError] = useState("");
   const [settingsSuccess, setSettingsSuccess] = useState("");
   const canManage =
@@ -102,15 +107,18 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
   const loadingAdmin = allianceProfilesQuery.isLoading;
   const dmOptInBusy = assignmentOptInMutation.isPending;
   const settingsBusy = settingsMutation.isPending;
+  const troopsUploadMutation = useUploadTroopsSnapshotMutation();
   const {
     timeMode,
     setTimeMode,
     bear1Input: settingsBear1NextTime,
     bear2Input: settingsBear2NextTime,
-    vikingInput: settingsVikingNextTime,
+    viking1Input: settingsViking1NextTime,
+    viking2Input: settingsViking2NextTime,
     setBear1Input: setSettingsBear1NextTime,
     setBear2Input: setSettingsBear2NextTime,
-    setVikingInput: setSettingsVikingNextTime,
+    setViking1Input: setSettingsViking1NextTime,
+    setViking2Input: setSettingsViking2NextTime,
     markClean: markSettingsClean
   } = useAdminBearTimeSettings({
     enabled: canManageSettings,
@@ -135,6 +143,10 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
     setAddLookupStatus("");
     setSettingsError("");
     setSettingsSuccess("");
+    setTroopsUploadError("");
+    setTroopsUploadSuccess("");
+    setTroopsUploadFile(null);
+    setTroopsUploadResetKey((prev) => prev + 1);
     markSettingsClean();
     if (!selectedProfile || selectedProfile.allianceId) {
       return;
@@ -174,9 +186,51 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
     );
   }
 
+  function handleTroopsFileSelect(file: File | null) {
+    setTroopsUploadFile(file);
+    setTroopsUploadError("");
+    setTroopsUploadSuccess("");
+  }
+
+  function handleTroopsUploadSubmit() {
+    if (!selectedProfile) return;
+    if (!troopsUploadFile) {
+      setTroopsUploadError(t("profiles.errors.troopsUploadMissing"));
+      return;
+    }
+    setTroopsUploadError("");
+    setTroopsUploadSuccess("");
+    troopsUploadMutation.mutate(
+      { profileId: selectedProfile.id, file: troopsUploadFile },
+      {
+        onSuccess: (profile) => {
+          if (!profile) {
+            setTroopsUploadError(t("profiles.errors.troopsUploadFailed"));
+            return;
+          }
+          setTroopsUploadSuccess(t("profiles.troopsUploadSuccess"));
+          setTroopsUploadFile(null);
+          setTroopsUploadResetKey((prev) => prev + 1);
+          queryClient.setQueryData<Profile[]>(profilesQueryKey, (prev) => {
+            const current = prev || [];
+            return current.map((item) => (item.id === profile.id ? profile : item));
+          });
+        },
+        onError: (err) => {
+          if (err instanceof ApiError) {
+            setTroopsUploadError(err.message || t("profiles.errors.troopsUploadFailed"));
+            return;
+          }
+          setTroopsUploadError(t("profiles.errors.troopsUploadFailed"));
+        }
+      }
+    );
+  }
+
   const handleSettingsBear1NextTimeChange = setSettingsBear1NextTime;
   const handleSettingsBear2NextTimeChange = setSettingsBear2NextTime;
-  const handleSettingsVikingNextTimeChange = setSettingsVikingNextTime;
+  const handleSettingsViking1NextTimeChange = setSettingsViking1NextTime;
+  const handleSettingsViking2NextTimeChange = setSettingsViking2NextTime;
 
   function submitAllianceSettings(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -186,15 +240,16 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
 
     const bear1NextUtc = parseDateTimeInputToUtcIso(settingsBear1NextTime, timeMode);
     const bear2NextUtc = parseDateTimeInputToUtcIso(settingsBear2NextTime, timeMode);
-    const vikingNextUtc = parseDateTimeInputToUtcIso(settingsVikingNextTime, timeMode);
-    if (!bear1NextUtc || !bear2NextUtc || !vikingNextUtc) {
+    const viking1NextUtc = parseDateTimeInputToUtcIso(settingsViking1NextTime, timeMode);
+    const viking2NextUtc = parseDateTimeInputToUtcIso(settingsViking2NextTime, timeMode);
+    if (!bear1NextUtc || !bear2NextUtc || !viking1NextUtc || !viking2NextUtc) {
       setSettingsError(t("profiles.errors.nextTimeInvalid"));
       return;
     }
     settingsMutation.mutate(
       {
         bearNextTimes: { bear1: bear1NextUtc, bear2: bear2NextUtc },
-        vikingNextTime: vikingNextUtc
+        vikingNextTimes: { viking1: viking1NextUtc, viking2: viking2NextUtc }
       },
       {
         onSuccess: (settings) => {
@@ -470,6 +525,13 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
             error={error}
             success={success}
             onRefresh={refreshProfileData}
+            troopsUploadError={troopsUploadError}
+            troopsUploadSuccess={troopsUploadSuccess}
+            troopsUploadBusy={troopsUploadMutation.isPending}
+            troopsUploadCanSubmit={Boolean(troopsUploadFile)}
+            troopsUploadResetKey={troopsUploadResetKey}
+            onTroopsFileSelect={handleTroopsFileSelect}
+            onTroopsUploadSubmit={handleTroopsUploadSubmit}
             dmOptIn={dmOptIn}
             dmOptInBusy={dmOptInBusy}
             dmOptInError={dmOptInError}
@@ -520,7 +582,8 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
             timeMode={timeMode}
             settingsBear1NextTime={settingsBear1NextTime}
             settingsBear2NextTime={settingsBear2NextTime}
-            settingsVikingNextTime={settingsVikingNextTime}
+            settingsViking1NextTime={settingsViking1NextTime}
+            settingsViking2NextTime={settingsViking2NextTime}
             settingsBusy={settingsBusy}
             settingsError={settingsError}
             settingsSuccess={settingsSuccess}
@@ -533,7 +596,8 @@ function Profiles({ user, selectedProfile, selectedProfileId }: Props) {
             onTimeModeChange={setTimeMode}
             onSettingsBear1NextTimeChange={handleSettingsBear1NextTimeChange}
             onSettingsBear2NextTimeChange={handleSettingsBear2NextTimeChange}
-            onSettingsVikingNextTimeChange={handleSettingsVikingNextTimeChange}
+            onSettingsViking1NextTimeChange={handleSettingsViking1NextTimeChange}
+            onSettingsViking2NextTimeChange={handleSettingsViking2NextTimeChange}
             onSubmitAllianceSettings={submitAllianceSettings}
           />
         )}

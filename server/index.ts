@@ -51,6 +51,7 @@ export function createApp({ dbPath: dbPathOverride }: { dbPath?: string } = {}) 
   const DISCORD_REDIRECT_URI = config.discordRedirectUri;
   const DISCORD_BOT_SECRET =
     (process.env.DISCORD_BOT_SECRET || "").trim() || config.discordBotSecret;
+  const SCREENSHOT_PROCESSOR_URL = config.screenshotProcessorUrl;
   const SESSION_TTL_MS = config.sessionTtlDays * 24 * 60 * 60 * 1000;
   const isProduction = config.nodeEnv === "production";
 
@@ -351,6 +352,7 @@ export function createApp({ dbPath: dbPathOverride }: { dbPath?: string } = {}) 
     DISCORD_CLIENT_SECRET,
     DISCORD_REDIRECT_URI,
     DISCORD_BOT_SECRET,
+    SCREENSHOT_PROCESSOR_URL,
     SESSION_TTL_MS,
     isProduction,
     parseMemberPayload,

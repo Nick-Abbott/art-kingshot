@@ -4,7 +4,8 @@ import {
   createAllianceProfile,
   createProfile,
   updateAllianceProfile,
-  updateProfile
+  updateProfile,
+  uploadTroopsSnapshot
 } from "../api/profile";
 import { profilesQueryKey } from "./useProfilesQuery";
 
@@ -129,5 +130,22 @@ export function useUpdateAllianceProfileMutation() {
       payload: AllianceProfileUpdateRequest;
     }) => updateAllianceProfile(profileId, targetProfileId, payload),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: profilesQueryKey })
+  });
+}
+
+export function useUploadTroopsSnapshotMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ profileId, file }: { profileId: string; file: File }) =>
+      uploadTroopsSnapshot(profileId, file),
+    onSuccess: (profile) => {
+      if (profile) {
+        queryClient.setQueryData<Profile[]>(profilesQueryKey, (prev) => {
+          const current = prev || [];
+          return current.map((item) => (item.id === profile.id ? profile : item));
+        });
+      }
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: profilesQueryKey })
   });
 }

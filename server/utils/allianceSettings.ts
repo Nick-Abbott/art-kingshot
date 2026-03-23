@@ -29,7 +29,10 @@ export function resolveAllianceSettings(config: ConfigObject): AllianceSettings 
       bear1: DEFAULT_ALLIANCE_SETTINGS.bearNextTimes.bear1,
       bear2: DEFAULT_ALLIANCE_SETTINGS.bearNextTimes.bear2,
     },
-    vikingNextTime: DEFAULT_ALLIANCE_SETTINGS.vikingNextTime,
+    vikingNextTimes: {
+      viking1: DEFAULT_ALLIANCE_SETTINGS.vikingNextTimes.viking1,
+      viking2: DEFAULT_ALLIANCE_SETTINGS.vikingNextTimes.viking2,
+    },
   };
 
   const bearNextTimes = config.bearNextTimes;
@@ -46,9 +49,31 @@ export function resolveAllianceSettings(config: ConfigObject): AllianceSettings 
     }
   }
 
-  const vikingNextTime = config.vikingNextTime;
-  if (typeof vikingNextTime === "string" && isValidUtcDateTime(vikingNextTime)) {
-    settings.vikingNextTime = vikingNextTime;
+  const vikingNextTimes = config.vikingNextTimes;
+  if (vikingNextTimes && typeof vikingNextTimes === "object") {
+    const viking1 = (vikingNextTimes as { viking1?: unknown }).viking1;
+    const viking2 = (vikingNextTimes as { viking2?: unknown }).viking2;
+    if (typeof viking1 === "string" && typeof viking2 === "string") {
+      if (isValidUtcDateTime(viking1) && isValidUtcDateTime(viking2)) {
+        settings.vikingNextTimes = {
+          viking1,
+          viking2,
+        };
+      }
+    }
+  } else {
+    const legacyVikingNext = config.vikingNextTime;
+    if (typeof legacyVikingNext === "string" && isValidUtcDateTime(legacyVikingNext)) {
+      const base = Date.parse(legacyVikingNext);
+      const viking2 =
+        Number.isFinite(base)
+          ? new Date(base + 2 * 24 * 60 * 60 * 1000).toISOString()
+          : DEFAULT_ALLIANCE_SETTINGS.vikingNextTimes.viking2;
+      settings.vikingNextTimes = {
+        viking1: legacyVikingNext,
+        viking2,
+      };
+    }
   }
 
   return settings;

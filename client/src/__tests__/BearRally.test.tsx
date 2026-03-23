@@ -34,7 +34,10 @@ vi.mock("../hooks/useAllianceSettingsQuery", () => ({
         bear1: "2026-01-01T01:00:00.000Z",
         bear2: "2026-01-01T12:00:00.000Z"
       },
-      vikingNextTime: "2026-01-06T00:00:00.000Z"
+      vikingNextTimes: {
+        viking1: "2026-01-06T00:00:00.000Z",
+        viking2: "2026-01-08T00:00:00.000Z"
+      }
     }
   })
 }));

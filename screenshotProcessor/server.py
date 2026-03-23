@@ -6,6 +6,7 @@ from pathlib import Path
 
 import cv2
 import numpy as np
+import anyio
 from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.responses import JSONResponse
 
@@ -58,7 +59,16 @@ async def process_screenshot(
         debug_dir = tmp_dir
 
     try:
-        result = processor.process(image, conf=conf, debug_dir=debug_dir, verbose=verbose)
+        with anyio.fail_after(5):
+            result = await anyio.to_thread.run_sync(
+                processor.process,
+                image,
+                conf,
+                debug_dir,
+                verbose,
+            )
+    except TimeoutError as exc:
+        raise HTTPException(status_code=504, detail="Processing timed out.") from exc
     except SystemExit as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:

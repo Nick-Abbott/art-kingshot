@@ -57,6 +57,24 @@ export async function updateProfile(
   return data.data?.profile || null;
 }
 
+export async function uploadTroopsSnapshot(
+  profileId: string,
+  file: File
+): Promise<Profile | null> {
+  const form = new FormData();
+  form.append("file", file);
+  const res = await apiFetch<ApiResponse<ProfilePayload>>(
+    `/api/profiles/${profileId}/troops-snapshot`,
+    {
+      method: "POST",
+      body: form
+    }
+  );
+  const data = res.data;
+  if (!data || data.ok === false) return null;
+  return data.data?.profile || null;
+}
+
 export async function fetchAllianceProfiles(profileId: string): Promise<Profile[]> {
   const res = await apiFetch<ApiResponse<ProfilesPayload>>("/api/alliance/profiles", {
     profileId

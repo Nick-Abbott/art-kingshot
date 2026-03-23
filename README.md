@@ -31,10 +31,12 @@ This repository powers the primary website for the ART alliance in Kingshot. The
    ```bash
    npm run dev:client
    npm run dev:server
+   npm run dev:screenshot
    ```
 
 Client default: http://localhost:5173  
 Server default: http://localhost:3001
+Screenshot processor default: http://localhost:8000
 
 ## Discord Auth Setup
 
@@ -110,6 +112,7 @@ Root:
 - `npm run dev` — Start client + server together
 - `npm run dev:client` — Start the Vite client
 - `npm run dev:server` — Start the Express server
+- `npm run dev:screenshot` — Start the screenshot processor (FastAPI)
 - `npm run build` — Build server + client
 - `npm run typecheck` — Typecheck client
 - `npm run test` — Run server tests + i18n check + client tests

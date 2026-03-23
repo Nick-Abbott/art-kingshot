@@ -55,7 +55,10 @@ const AllianceSettingsSchema = z.object({
     bear1: z.string(),
     bear2: z.string(),
   }),
-  vikingNextTime: z.string(),
+  vikingNextTimes: z.object({
+    viking1: z.string(),
+    viking2: z.string(),
+  }),
 });
 
 const ISO_UTC_REGEX = /^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(?::\\d{2}(?:\\.\\d{3})?)?Z$/;
@@ -126,21 +129,26 @@ export function parseAllianceSettingsPayload(
 
   const bear1Next = parsed.data.bearNextTimes.bear1.trim();
   const bear2Next = parsed.data.bearNextTimes.bear2.trim();
-  const vikingNext = parsed.data.vikingNextTime.trim();
+  const viking1Next = parsed.data.vikingNextTimes.viking1.trim();
+  const viking2Next = parsed.data.vikingNextTimes.viking2.trim();
   if (!bear1Next || !bear2Next) {
     return { ok: false, error: "bearNextTimes must include bear1 and bear2." };
   }
-  if (!vikingNext) {
-    return { ok: false, error: "vikingNextTime must be provided." };
+  if (!viking1Next || !viking2Next) {
+    return { ok: false, error: "vikingNextTimes must include viking1 and viking2." };
   }
   const nextBear1 = parseUtcDateTime(bear1Next);
   const nextBear2 = parseUtcDateTime(bear2Next);
-  const nextViking = parseUtcDateTime(vikingNext);
+  const nextViking1 = parseUtcDateTime(viking1Next);
+  const nextViking2 = parseUtcDateTime(viking2Next);
   if (!nextBear1 || !nextBear2) {
     return { ok: false, error: "bearNextTimes must be ISO UTC date-times." };
   }
-  if (!nextViking) {
-    return { ok: false, error: "vikingNextTime must be an ISO UTC date-time." };
+  if (!nextViking1 || !nextViking2) {
+    return {
+      ok: false,
+      error: "vikingNextTimes must be ISO UTC date-times.",
+    };
   }
 
   return {
@@ -150,7 +158,10 @@ export function parseAllianceSettingsPayload(
         bear1: nextBear1,
         bear2: nextBear2,
       },
-      vikingNextTime: nextViking,
+      vikingNextTimes: {
+        viking1: nextViking1,
+        viking2: nextViking2,
+      },
     },
   };
 }

@@ -18,10 +18,12 @@ type AdminBearTimeState = {
   setTimeMode: (next: TimeMode) => void;
   bear1Input: string;
   bear2Input: string;
-  vikingInput: string;
+  viking1Input: string;
+  viking2Input: string;
   setBear1Input: (value: string) => void;
   setBear2Input: (value: string) => void;
-  setVikingInput: (value: string) => void;
+  setViking1Input: (value: string) => void;
+  setViking2Input: (value: string) => void;
   isDirty: boolean;
   markClean: () => void;
 };
@@ -34,7 +36,8 @@ export function useAdminBearTimeSettings({
   const [timeMode, setTimeModeState] = useState<TimeMode>("local");
   const [bear1Input, setBear1InputState] = useState("");
   const [bear2Input, setBear2InputState] = useState("");
-  const [vikingInput, setVikingInputState] = useState("");
+  const [viking1Input, setViking1InputState] = useState("");
+  const [viking2Input, setViking2InputState] = useState("");
   const [isDirty, setIsDirty] = useState(false);
   const markClean = useCallback(() => setIsDirty(false), []);
 
@@ -56,9 +59,18 @@ export function useAdminBearTimeSettings({
     [onChange]
   );
 
-  const setVikingInput = useCallback(
+  const setViking1Input = useCallback(
     (value: string) => {
-      setVikingInputState(value);
+      setViking1InputState(value);
+      setIsDirty(true);
+      onChange?.();
+    },
+    [onChange]
+  );
+
+  const setViking2Input = useCallback(
+    (value: string) => {
+      setViking2InputState(value);
       setIsDirty(true);
       onChange?.();
     },
@@ -70,7 +82,8 @@ export function useAdminBearTimeSettings({
       if (nextMode === timeMode) return;
       const bear1Utc = parseDateTimeInputToUtcIso(bear1Input, timeMode);
       const bear2Utc = parseDateTimeInputToUtcIso(bear2Input, timeMode);
-      const vikingUtc = parseDateTimeInputToUtcIso(vikingInput, timeMode);
+      const viking1Utc = parseDateTimeInputToUtcIso(viking1Input, timeMode);
+      const viking2Utc = parseDateTimeInputToUtcIso(viking2Input, timeMode);
       setTimeModeState(nextMode);
       if (bear1Utc) {
         setBear1InputState(formatDateTimeInputFromUtcIso(bear1Utc, nextMode));
@@ -78,12 +91,15 @@ export function useAdminBearTimeSettings({
       if (bear2Utc) {
         setBear2InputState(formatDateTimeInputFromUtcIso(bear2Utc, nextMode));
       }
-      if (vikingUtc) {
-        setVikingInputState(formatDateTimeInputFromUtcIso(vikingUtc, nextMode));
+      if (viking1Utc) {
+        setViking1InputState(formatDateTimeInputFromUtcIso(viking1Utc, nextMode));
+      }
+      if (viking2Utc) {
+        setViking2InputState(formatDateTimeInputFromUtcIso(viking2Utc, nextMode));
       }
       onChange?.();
     },
-    [bear1Input, bear2Input, onChange, timeMode, vikingInput]
+    [bear1Input, bear2Input, onChange, timeMode, viking1Input, viking2Input]
   );
 
   useEffect(() => {
@@ -94,15 +110,19 @@ export function useAdminBearTimeSettings({
     setBear2InputState(
       formatDateTimeInputFromUtcIso(settings?.bearNextTimes?.bear2, timeMode)
     );
-    setVikingInputState(
-      formatDateTimeInputFromUtcIso(settings?.vikingNextTime, timeMode)
+    setViking1InputState(
+      formatDateTimeInputFromUtcIso(settings?.vikingNextTimes?.viking1, timeMode)
+    );
+    setViking2InputState(
+      formatDateTimeInputFromUtcIso(settings?.vikingNextTimes?.viking2, timeMode)
     );
   }, [
     enabled,
     isDirty,
     settings?.bearNextTimes?.bear1,
     settings?.bearNextTimes?.bear2,
-    settings?.vikingNextTime,
+    settings?.vikingNextTimes?.viking1,
+    settings?.vikingNextTimes?.viking2,
     timeMode
   ]);
 
@@ -111,10 +131,12 @@ export function useAdminBearTimeSettings({
     setTimeMode,
     bear1Input,
     bear2Input,
-    vikingInput,
+    viking1Input,
+    viking2Input,
     setBear1Input,
     setBear2Input,
-    setVikingInput,
+    setViking1Input,
+    setViking2Input,
     isDirty,
     markClean
   };

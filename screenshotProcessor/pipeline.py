@@ -200,6 +200,20 @@ class ScreenshotProcessor:
 
             troops.append({"type": type_name, "tier": tier_name, "count": count_value})
 
+        total_from_cards = sum(
+            troop["count"] or 0
+            for troop in troops
+            if isinstance(troop.get("count"), int)
+        )
+        provided_total = header_values.get("totalTroops")
+        if isinstance(provided_total, int) and total_from_cards > 0:
+            if 1_000 <= provided_total < 1_000_000:
+                if abs(total_from_cards - provided_total) <= 100:
+                    header_values["totalTroops"] = total_from_cards
+            elif provided_total >= 1_000_000:
+                if abs(total_from_cards - provided_total) <= 100_000:
+                    header_values["totalTroops"] = total_from_cards
+
         return {"header": header_values, "troops": troops}
 
 

@@ -1,6 +1,46 @@
 import express from "express";
 import type { Request, Response } from "express";
+import multer from "multer";
 import type { RouteContext } from "../types";
+
+type TroopsSnapshot = {
+  header: {
+    totalTroops: number | null;
+    marchQueues: number | null;
+    infirmaryCapacity?: number | null;
+  };
+  troops: Array<{
+    type: string;
+    tier: string;
+    count: number | null;
+  }>;
+};
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 8 * 1024 * 1024 },
+});
+
+function isTroopsSnapshot(value: unknown): value is TroopsSnapshot {
+  if (!value || typeof value !== "object") return false;
+  const snapshot = value as TroopsSnapshot;
+  if (!snapshot.header || typeof snapshot.header !== "object") return false;
+  const header = snapshot.header;
+  const totalTroopsOk =
+    header.totalTroops === null || Number.isFinite(header.totalTroops);
+  const marchQueuesOk =
+    header.marchQueues === null || Number.isFinite(header.marchQueues);
+  if (!totalTroopsOk || !marchQueuesOk) return false;
+  if (!Array.isArray(snapshot.troops)) return false;
+  return snapshot.troops.every(
+    (entry) =>
+      entry &&
+      typeof entry === "object" &&
+      typeof entry.type === "string" &&
+      typeof entry.tier === "string" &&
+      (entry.count === null || Number.isFinite(entry.count))
+  );
+}
 
 export default function profileRoutes(ctx: RouteContext) {
   const router = express.Router();
@@ -266,6 +306,93 @@ export default function profileRoutes(ctx: RouteContext) {
     const profile = ctx.getProfileById(id);
     ctx.ok(res, { profile });
   });
+
+  router.post(
+    "/api/profiles/:profileId/troops-snapshot",
+    ctx.requireAuthMiddleware,
+    upload.single("file"),
+    async (req: Request, res: Response) => {
+      if (!req.user) {
+        ctx.fail(res, 401, "Authentication required.");
+        return;
+      }
+      const profileId =
+        typeof req.params.profileId === "string" ? req.params.profileId.trim() : "";
+      if (!profileId) {
+        ctx.fail(res, 400, "profileId is required.");
+        return;
+      }
+      const profile = ctx.getProfileById(profileId);
+      if (!profile) {
+        ctx.fail(res, 404, "Profile not found.");
+        return;
+      }
+      if (profile.userId !== req.user.id && !req.user?.isAppAdmin) {
+        ctx.fail(res, 403, "Profile access denied.");
+        return;
+      }
+      const file = req.file;
+      if (!file) {
+        ctx.fail(res, 400, "Screenshot file is required.");
+        return;
+      }
+      if (!ctx.SCREENSHOT_PROCESSOR_URL) {
+        ctx.fail(res, 500, "Screenshot processor is not configured.");
+        return;
+      }
+
+      const form = new FormData();
+      const blob = new Blob([new Uint8Array(file.buffer)], {
+        type: file.mimetype || "application/octet-stream",
+      });
+      form.append("file", blob, file.originalname || "troops.png");
+
+      let response: globalThis.Response;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30_000);
+      try {
+        response = await fetch(`${ctx.SCREENSHOT_PROCESSOR_URL}/process`, {
+          method: "POST",
+          body: form,
+          signal: controller.signal,
+        });
+      } catch {
+        clearTimeout(timeoutId);
+        ctx.fail(res, 502, "Screenshot processing failed.");
+        return;
+      }
+      clearTimeout(timeoutId);
+
+      let payload: { result?: unknown } | null = null;
+      try {
+        payload = (await response.json()) as { result?: unknown };
+      } catch {
+        payload = null;
+      }
+
+      if (!response.ok) {
+        ctx.fail(res, 502, "Screenshot processing failed.");
+        return;
+      }
+
+      if (!payload?.result || !isTroopsSnapshot(payload.result)) {
+        ctx.fail(res, 500, "Screenshot processing returned invalid data.");
+        return;
+      }
+
+      const troopsSnapshot = JSON.stringify(payload.result);
+      const now = Date.now();
+      ctx.queries.updateProfileTroopsSnapshot(
+        troopsSnapshot,
+        now,
+        now,
+        profile.id
+      );
+
+      const updated = ctx.getProfileById(profile.id);
+      ctx.ok(res, { profile: updated });
+    }
+  );
 
   router.post(
     "/api/alliance/profiles",

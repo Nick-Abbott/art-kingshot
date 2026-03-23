@@ -34,6 +34,9 @@ function getNumberEnv(
 export const config = {
   port: getEnv("PORT", { fallback: "3001" }),
   appBaseUrl: getEnv("APP_BASE_URL", { fallback: "http://localhost:5173" }),
+  screenshotProcessorUrl: getEnv("SCREENSHOT_PROCESSOR_URL", {
+    fallback: "http://localhost:8000"
+  }),
   discordClientId: getEnv("DISCORD_CLIENT_ID", { fallback: "" }),
   discordClientSecret: getEnv("DISCORD_CLIENT_SECRET", { fallback: "" }),
   discordRedirectUri: getEnv("DISCORD_REDIRECT_URI", { fallback: "" }),

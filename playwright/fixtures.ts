@@ -11,15 +11,30 @@ type AppFixture = {
   dbPath: string;
 };
 
-async function isPortAvailable(port: number) {
+const RUN_ID = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+
+async function isPortAvailableOnHost(port: number, host: string) {
   return await new Promise<boolean>((resolve) => {
     const server = net.createServer();
     server.unref();
-    server.on("error", () => resolve(false));
-    server.listen(port, "127.0.0.1", () => {
+    server.on("error", (error: NodeJS.ErrnoException) => {
+      if (error.code === "EADDRNOTAVAIL") {
+        resolve(true);
+        return;
+      }
+      resolve(false);
+    });
+    server.listen(port, host, () => {
       server.close(() => resolve(true));
     });
   });
+}
+
+async function isPortAvailable(port: number) {
+  const ipv4 = await isPortAvailableOnHost(port, "127.0.0.1");
+  if (!ipv4) return false;
+  const ipv6 = await isPortAvailableOnHost(port, "::1");
+  return ipv6;
 }
 
 async function getAvailablePort(startPort: number) {
@@ -45,6 +60,38 @@ async function waitForUrl(url: string, timeoutMs = 60_000) {
   throw new Error(`Timed out waiting for ${url}.`);
 }
 
+async function terminateProcess(
+  proc: ReturnType<typeof spawn>,
+  label: string
+) {
+  if (proc.exitCode !== null) return;
+  if (proc.pid) {
+    try {
+      process.kill(-proc.pid, "SIGTERM");
+    } catch {
+      proc.kill("SIGTERM");
+    }
+  } else {
+    proc.kill("SIGTERM");
+  }
+  const exited = await Promise.race([
+    once(proc, "exit").then(() => true).catch(() => false),
+    new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 10_000)),
+  ]);
+  if (exited) return;
+  console.warn(`[playwright][app] force kill ${label}`);
+  if (proc.pid) {
+    try {
+      process.kill(-proc.pid, "SIGKILL");
+    } catch {
+      proc.kill("SIGKILL");
+    }
+  } else {
+    proc.kill("SIGKILL");
+  }
+  await once(proc, "exit").catch(() => undefined);
+}
+
 export const test = base.extend<{ app: AppFixture }>({
   app: [
     // eslint-disable-next-line no-empty-pattern
@@ -58,7 +105,7 @@ export const test = base.extend<{ app: AppFixture }>({
         process.cwd(),
         "server",
         "data",
-        `viking.playwright.worker-${workerIndex}.sqlite`
+        `viking.playwright.${RUN_ID}.worker-${workerIndex}.sqlite`
       );
 
       const serverProc = spawn("npm", ["run", "dev:server"], {
@@ -69,6 +116,7 @@ export const test = base.extend<{ app: AppFixture }>({
           DB_PATH: dbPath,
           APP_BASE_URL: clientUrl,
         },
+        detached: true,
         stdio: "pipe",
       });
 
@@ -92,6 +140,7 @@ export const test = base.extend<{ app: AppFixture }>({
             ...process.env,
             VITE_PROXY_TARGET: serverUrl,
           },
+          detached: true,
           stdio: "pipe",
         }
       );
@@ -103,11 +152,9 @@ export const test = base.extend<{ app: AppFixture }>({
 
       await use({ clientUrl, serverUrl, dbPath });
 
-      serverProc.kill("SIGTERM");
-      clientProc.kill("SIGTERM");
       await Promise.all([
-        once(serverProc, "exit").catch(() => undefined),
-        once(clientProc, "exit").catch(() => undefined),
+        terminateProcess(serverProc, `server:${workerIndex}`),
+        terminateProcess(clientProc, `client:${workerIndex}`),
       ]);
       await Promise.all([
         rm(dbPath, { force: true }),

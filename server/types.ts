@@ -45,6 +45,7 @@ export type RouteContext = {
   DISCORD_CLIENT_SECRET: string;
   DISCORD_REDIRECT_URI: string;
   DISCORD_BOT_SECRET: string;
+  SCREENSHOT_PROCESSOR_URL: string;
   SESSION_TTL_MS: number;
   isProduction: boolean;
   parseMemberPayload: (

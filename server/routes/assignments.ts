@@ -2,6 +2,7 @@ import express from "express";
 import type { Request, Response } from "express";
 import type { RouteContext } from "../types";
 import { getAllianceSettingsFromConfig } from "../utils/allianceSettings";
+import { getNextVikingEventIso } from "../utils/vikingTime";
 
 export default function assignmentsRoutes(ctx: RouteContext) {
   const router = express.Router();
@@ -29,6 +30,7 @@ export default function assignmentsRoutes(ctx: RouteContext) {
           const settings = getAllianceSettingsFromConfig(
             ctx.queries.getAllianceConfig(allianceId)
           );
+          const nextVikingEvent = getNextVikingEventIso(settings.vikingNextTimes);
           const now = Date.now();
           for (const recipient of recipients) {
             const assignment = byPlayerId.get(recipient.playerId);
@@ -40,7 +42,7 @@ export default function assignmentsRoutes(ctx: RouteContext) {
               recipient.discordId,
               JSON.stringify({
                 assignment,
-                vikingNextTime: settings.vikingNextTime,
+                vikingNextTime: nextVikingEvent ?? settings.vikingNextTimes.viking1,
               }),
               "pending",
               now,

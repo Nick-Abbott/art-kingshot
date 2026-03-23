@@ -23,8 +23,7 @@ import VikingSignupCard from "./components/viking/VikingSignupCard";
 import { useAllianceSettingsQuery } from "./hooks/useAllianceSettingsQuery";
 import { DEFAULT_ALLIANCE_SETTINGS } from "@shared/allianceConfig";
 import {
-  normalizeUtcDateTimeToWeekday,
-  nextUtcDateTimeWithOffset,
+  nextUtcDateTime,
   utcDateTimeToLocalLabel
 } from "./utils/time";
 
@@ -43,7 +42,6 @@ const emptyForm: VikingForm = {
 };
 
 const VIKING_INTERVAL_MS = 14 * 24 * 60 * 60 * 1000;
-const VIKING_THURSDAY_OFFSET_MS = 2 * 24 * 60 * 60 * 1000;
 
 function formatNumber(value: number) {
   return new Intl.NumberFormat().format(value);
@@ -95,42 +93,35 @@ function VikingVengeance({ profileId, profile, canManage }: Props) {
   }, [eligibleMembers, profile]);
 
   const memberCount = members.length;
-  const vikingNextTime =
-    allianceSettingsQuery.data?.vikingNextTime ?? DEFAULT_ALLIANCE_SETTINGS.vikingNextTime;
-  const normalizedVikingBase = useMemo(
-    () => normalizeUtcDateTimeToWeekday(vikingNextTime, 2),
-    [vikingNextTime]
+  const vikingNextTimes =
+    allianceSettingsQuery.data?.vikingNextTimes ?? DEFAULT_ALLIANCE_SETTINGS.vikingNextTimes;
+  const nextViking1 = useMemo(
+    () => nextUtcDateTime(vikingNextTimes.viking1, VIKING_INTERVAL_MS),
+    [vikingNextTimes.viking1]
   );
-  const normalizedVikingBaseIso = normalizedVikingBase?.toISOString() ?? vikingNextTime;
-  const nextVikingTuesday = useMemo(
-    () => nextUtcDateTimeWithOffset(normalizedVikingBaseIso, 0, VIKING_INTERVAL_MS),
-    [normalizedVikingBaseIso]
-  );
-  const nextVikingThursday = useMemo(
-    () =>
-      nextUtcDateTimeWithOffset(
-        normalizedVikingBaseIso,
-        VIKING_THURSDAY_OFFSET_MS,
-        VIKING_INTERVAL_MS
-      ),
-    [normalizedVikingBaseIso]
+  const nextViking2 = useMemo(
+    () => nextUtcDateTime(vikingNextTimes.viking2, VIKING_INTERVAL_MS),
+    [vikingNextTimes.viking2]
   );
   const vikingNextEvent = useMemo(() => {
-    const thursdayFallback = (() => {
-      const base = Date.parse(normalizedVikingBaseIso);
-      if (!Number.isFinite(base)) return vikingNextTime;
-      return new Date(base + VIKING_THURSDAY_OFFSET_MS).toISOString();
-    })();
-    const tuesdayDate = nextVikingTuesday ?? new Date(normalizedVikingBaseIso);
-    const thursdayDate = nextVikingThursday ?? new Date(thursdayFallback);
+    if (!nextViking1 && !nextViking2) {
+      return utcDateTimeToLocalLabel(vikingNextTimes.viking1);
+    }
+    if (nextViking1 && !nextViking2) {
+      return utcDateTimeToLocalLabel(nextViking1.toISOString());
+    }
+    if (!nextViking1 && nextViking2) {
+      return utcDateTimeToLocalLabel(nextViking2.toISOString());
+    }
     const next =
-      tuesdayDate.getTime() <= thursdayDate.getTime() ? tuesdayDate : thursdayDate;
+      nextViking1!.getTime() <= nextViking2!.getTime()
+        ? nextViking1!
+        : nextViking2!;
     return utcDateTimeToLocalLabel(next.toISOString());
   }, [
-    nextVikingThursday,
-    nextVikingTuesday,
-    normalizedVikingBaseIso,
-    vikingNextTime
+    nextViking1,
+    nextViking2,
+    vikingNextTimes.viking1
   ]);
   const vikingNextEventLabel = useMemo(
     () => t("viking.nextEvent", { time: vikingNextEvent }),

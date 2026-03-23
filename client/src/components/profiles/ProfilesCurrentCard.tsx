@@ -1,6 +1,7 @@
 import React from "react";
 import type { TFunction } from "i18next";
 import type { Profile } from "@shared/types";
+import { FileInput } from "../ui/file-input";
 
 type Props = {
   t: TFunction;
@@ -9,6 +10,13 @@ type Props = {
   error: string;
   success: string;
   onRefresh: () => void;
+  troopsUploadError: string;
+  troopsUploadSuccess: string;
+  troopsUploadBusy: boolean;
+  troopsUploadCanSubmit: boolean;
+  troopsUploadResetKey: number;
+  onTroopsFileSelect: (file: File | null) => void;
+  onTroopsUploadSubmit: () => void;
   dmOptIn: boolean;
   dmOptInBusy: boolean;
   dmOptInError: string;
@@ -22,6 +30,13 @@ function ProfilesCurrentCard({
   error,
   success,
   onRefresh,
+  troopsUploadError,
+  troopsUploadSuccess,
+  troopsUploadBusy,
+  troopsUploadCanSubmit,
+  troopsUploadResetKey,
+  onTroopsFileSelect,
+  onTroopsUploadSubmit,
   dmOptIn,
   dmOptInBusy,
   dmOptInError,
@@ -106,6 +121,56 @@ function ProfilesCurrentCard({
                 defaultValue: "Rally capacity: {{value}}"
               })}
             </p>
+          </div>
+        </div>
+        <div className="ui-card-muted">
+          <div className="flex flex-col gap-3">
+            <div>
+              <p className="font-semibold">
+                {t("profiles.troopsUploadTitle", {
+                  defaultValue: "Update troops from screenshot"
+                })}
+              </p>
+              <p className="text-sm text-muted">
+                {t("profiles.troopsUploadHint", {
+                  defaultValue: "Upload a full troop overview screenshot."
+                })}
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 nav:flex-row nav:items-center">
+              <FileInput
+                buttonLabel={t("profiles.troopsUploadButton", {
+                  defaultValue: "Choose file"
+                })}
+                placeholder={t("profiles.troopsUploadPlaceholder", {
+                  defaultValue: "No file selected"
+                })}
+                accept="image/*"
+                onFileSelect={onTroopsFileSelect}
+                resetKey={troopsUploadResetKey}
+                className="flex-1"
+              />
+              <button
+                className="ui-button ui-button-sm"
+                type="button"
+                onClick={onTroopsUploadSubmit}
+                disabled={!troopsUploadCanSubmit || troopsUploadBusy}
+              >
+                {troopsUploadBusy
+                  ? t("profiles.troopsUploadSubmitting", {
+                      defaultValue: "Processing..."
+                    })
+                  : t("profiles.troopsUploadSubmit", {
+                      defaultValue: "Process screenshot"
+                    })}
+              </button>
+            </div>
+            {troopsUploadSuccess ? (
+              <span className="ui-success text-sm">{troopsUploadSuccess}</span>
+            ) : null}
+            {troopsUploadError ? (
+              <p className="ui-error">{troopsUploadError}</p>
+            ) : null}
           </div>
         </div>
         <div className="ui-card-muted">

@@ -143,7 +143,6 @@ export async function handleVikingsCommand(
         incoming: Array<{ fromName?: string; fromId?: string; troops: number; lead?: boolean }>;
         incomingTotal: number;
       } | null;
-      vikingNextTime?: string;
     }>(
       apiOptions,
       `/api/bot/vikings/assignments?profileId=${encodeURIComponent(profileId)}`
@@ -158,8 +157,7 @@ export async function handleVikingsCommand(
 
     const assignment = result.data.assignment;
     const header = buildAssignmentsHeader(
-      output === "channel" ? `<@${interaction.user.id}>` : undefined,
-      result.data.vikingNextTime
+      output === "channel" ? `<@${interaction.user.id}>` : undefined
     );
     const message = buildAssignmentsMessage(assignment, header);
     if (output === "channel") {

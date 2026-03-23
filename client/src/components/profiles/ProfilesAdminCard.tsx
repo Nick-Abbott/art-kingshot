@@ -17,7 +17,8 @@ type Props = {
   timeMode: "local" | "utc";
   settingsBear1NextTime: string;
   settingsBear2NextTime: string;
-  settingsVikingNextTime: string;
+  settingsViking1NextTime: string;
+  settingsViking2NextTime: string;
   settingsBusy: boolean;
   settingsError: string;
   settingsSuccess: string;
@@ -30,7 +31,8 @@ type Props = {
   onTimeModeChange: (mode: "local" | "utc") => void;
   onSettingsBear1NextTimeChange: (value: string) => void;
   onSettingsBear2NextTimeChange: (value: string) => void;
-  onSettingsVikingNextTimeChange: (value: string) => void;
+  onSettingsViking1NextTimeChange: (value: string) => void;
+  onSettingsViking2NextTimeChange: (value: string) => void;
   onSubmitAllianceSettings: (event: React.FormEvent<HTMLFormElement>) => void;
 };
 
@@ -53,7 +55,8 @@ function ProfilesAdminCard({
   timeMode,
   settingsBear1NextTime,
   settingsBear2NextTime,
-  settingsVikingNextTime,
+  settingsViking1NextTime,
+  settingsViking2NextTime,
   settingsBusy,
   settingsError,
   settingsSuccess,
@@ -66,7 +69,8 @@ function ProfilesAdminCard({
   onTimeModeChange,
   onSettingsBear1NextTimeChange,
   onSettingsBear2NextTimeChange,
-  onSettingsVikingNextTimeChange,
+  onSettingsViking1NextTimeChange,
+  onSettingsViking2NextTimeChange,
   onSubmitAllianceSettings
 }: Props) {
   const [memberSearch, setMemberSearch] = useState("");
@@ -166,7 +170,7 @@ function ProfilesAdminCard({
             </div>
           </div>
           <form
-            className="mt-4 grid gap-3 nav:grid-cols-[repeat(3,minmax(0,1fr))_auto] nav:items-end"
+            className="mt-4 grid gap-3 nav:grid-cols-[repeat(4,minmax(0,1fr))_auto] nav:items-end"
             onSubmit={onSubmitAllianceSettings}
           >
             <label className="ui-field">
@@ -190,12 +194,22 @@ function ProfilesAdminCard({
               />
             </label>
             <label className="ui-field">
-              {t("profiles.vikingNextTimeLabel")}
+              {t("profiles.viking1NextTimeLabel")}
               <input
                 className="ui-input"
                 type="datetime-local"
-                value={settingsVikingNextTime}
-                onChange={(event) => onSettingsVikingNextTimeChange(event.target.value)}
+                value={settingsViking1NextTime}
+                onChange={(event) => onSettingsViking1NextTimeChange(event.target.value)}
+                required
+              />
+            </label>
+            <label className="ui-field">
+              {t("profiles.viking2NextTimeLabel")}
+              <input
+                className="ui-input"
+                type="datetime-local"
+                value={settingsViking2NextTime}
+                onChange={(event) => onSettingsViking2NextTimeChange(event.target.value)}
                 required
               />
             </label>

@@ -39,7 +39,10 @@ export type AllianceSettings = {
     bear1: string;
     bear2: string;
   };
-  vikingNextTime: string;
+  vikingNextTimes: {
+    viking1: string;
+    viking2: string;
+  };
 };
 
 export type Profile = {
@@ -103,7 +106,7 @@ export type MembersPayload = {
 
 export type EligibleMember = {
   playerId: string;
-  playerName?: string;
+  playerName?: string | null;
   troopCount?: number | null;
   marchCount?: number | null;
   power?: number | null;

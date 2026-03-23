@@ -30,7 +30,7 @@
     "errorOccurred": "An error occurred"
   },
   "viking": {
-    "eyebrow": "Kingshot \u2022 Viking Vengeance",
+    "eyebrow": "Kingshot • Viking Vengeance",
     "title": "Viking Reinforcement Planner",
     "subtitle": "Everyone sends troops out, everyone gets covered.",
     "signedUp": "Signed up",
@@ -65,7 +65,7 @@
     "instructions": {
       "equalize": "Use Equalize on every march.",
       "sendAll": "Send one march to each of your assigned targets.",
-      "garrison": "If you have a garrison leader incoming, send your main heroes to someone else\u2014ideally someone whose garrison you are leading.",
+      "garrison": "If you have a garrison leader incoming, send your main heroes to someone else—ideally someone whose garrison you are leading.",
       "reinforceHeroes": "Use Chenko, Amane, Yeonwoo, Amadeus, or no heroes when reinforcing.",
       "subtext": "Assignments are calculated assuming equalized marches and consistent march counts."
     },
@@ -114,7 +114,7 @@
     }
   },
   "bear": {
-    "eyebrow": "Kingshot \u2022 Bear Rally",
+    "eyebrow": "Kingshot • Bear Rally",
     "title": "Bear Rally Planner",
     "subtitle": "Track rally sizes for Bear 1 and Bear 2.",
     "bear1": "Bear 1 ({{time}})",
@@ -186,21 +186,27 @@
     "selectAllianceBadge": "Select alliance",
     "currentTitle": "Current profile",
     "currentSubtitle": "Keep your profile details up to date.",
+    "troopsUploadTitle": "Update troops from screenshot",
+    "troopsUploadHint": "Upload a full troop overview screenshot.",
+    "troopsUploadButton": "Choose file",
+    "troopsUploadPlaceholder": "No file selected",
+    "troopsUploadSubmit": "Process screenshot",
+    "troopsUploadSubmitting": "Processing...",
+    "troopsUploadSuccess": "Troops updated.",
     "notificationsTitle": "Notifications",
     "discordDmOptInLabel": "Receive Discord updates for this profile",
     "discordDmOptInHint": "Opt in to get Kingshot profile updates in your Discord DMs.",
-  "adminTitle": "Alliance profiles",
-  "allianceSettingsTitle": "Alliance settings",
+    "adminTitle": "Alliance profiles",
+    "allianceSettingsTitle": "Alliance settings",
     "allianceSettingsSubtitle": "Set times for Bear 1, Bear 2, and Vikings.",
-  "timeModeLabel": "Time mode",
+    "timeModeLabel": "Time mode",
     "timeModeLocal": "Local",
     "timeModeUtc": "UTC",
     "timeModeToggle": "Swap time mode",
     "bear1NextTimeLabel": "Bear 1 next time",
     "bear2NextTimeLabel": "Bear 2 next time",
-    "vikingNextTimeLabel": "Viking next time",
     "saveAllianceSettings": "Save settings",
-  "settingsSaved": "Settings saved.",
+    "settingsSaved": "Settings saved.",
     "adminSubtitle": "Approve new profiles and manage roles.",
     "adminAddPlayerId": "Add profile by player ID",
     "adminAddAction": "Add profile",
@@ -228,10 +234,12 @@
       "nameRequired": "Alliance name is required.",
       "createAllianceFailed": "Failed to create alliance.",
       "deleteAllianceFailed": "Failed to delete alliance.",
-    "dmOptInUpdateFailed": "Failed to update Discord DM preference.",
-    "settingsUpdateFailed": "Failed to update alliance settings.",
-    "timeInvalid": "Enter a valid time in HH:mm.",
-    "nextTimeInvalid": "Enter a valid next bear date/time."
+      "dmOptInUpdateFailed": "Failed to update Discord DM preference.",
+      "troopsUploadMissing": "Choose a screenshot to upload.",
+      "troopsUploadFailed": "Failed to process screenshot.",
+      "settingsUpdateFailed": "Failed to update alliance settings.",
+      "timeInvalid": "Enter a valid time in HH:mm.",
+      "nextTimeInvalid": "Enter a valid next bear date/time."
     },
     "pendingNotice": "Your join request is pending approval by an alliance admin.",
     "selectAllianceNotice": "Create or join an alliance below to request access.",
@@ -268,7 +276,9 @@
     "reject": "Reject",
     "membersSearchLabel": "Search members",
     "membersSearchPlaceholder": "Type a player name...",
-    "showAllMembers": "Show all members"
+    "showAllMembers": "Show all members",
+    "viking1NextTimeLabel": "Viking next time 1",
+    "viking2NextTimeLabel": "Viking next time 2"
   },
   "admin": {
     "eyebrow": "Admin Console",
@@ -308,7 +318,7 @@
       "error": "Unable to load profile details.",
       "delete": "Delete profile",
       "confirmDelete": "Delete this profile? This cannot be undone.",
-      "meta": "ID {{id}} \u00b7 Kingdom {{kingdomId}}"
+      "meta": "ID {{id}} · Kingdom {{kingdomId}}"
     }
   }
 }

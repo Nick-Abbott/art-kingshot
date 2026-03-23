@@ -9,6 +9,7 @@ import type {
 import type { RouteContext } from "../types";
 import { getAllianceSettingsFromConfig } from "../utils/allianceSettings";
 import { parsePlayerLookup } from "../utils/playerLookup";
+import { getNextVikingEventIso } from "../utils/vikingTime";
 
 type BotAuth = {
   userId: string;
@@ -554,10 +555,11 @@ export default function botRoutes(ctx: RouteContext) {
       const settings = getAllianceSettingsFromConfig(
         ctx.queries.getAllianceConfig(profile.allianceId)
       );
+      const nextVikingEvent = getNextVikingEventIso(settings.vikingNextTimes);
       ctx.ok(res, {
         results,
         assignment,
-        vikingNextTime: settings.vikingNextTime,
+        vikingNextTime: nextVikingEvent ?? settings.vikingNextTimes.viking1,
       });
     }
   );
