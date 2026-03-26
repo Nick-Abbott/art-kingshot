@@ -34,9 +34,10 @@ def parse_header_values(header: cv2.Mat, debug_dir: Path | None = None) -> dict[
 
     h, w = header.shape[:2]
     band = header[int(h * 0.20) : int(h * 0.95), :]
-    hsv = cv2.cvtColor(band, cv2.COLOR_BGR2HSV)
-    _, s, v = cv2.split(hsv)
-    mask = ((s < 35) & (v > 225)).astype("uint8") * 255
+    b, g, r = cv2.split(band)
+    mask = (
+        (r >= 215) & (g >= 215) & (b >= 215)
+    ).astype("uint8") * 255
     mask = cv2.morphologyEx(
         mask,
         cv2.MORPH_OPEN,
@@ -68,18 +69,17 @@ def parse_header_values(header: cv2.Mat, debug_dir: Path | None = None) -> dict[
     inj_cap = None
     march_cap = None
 
-    for left, left_unit, right, right_unit in pairs:
+    for left_value, left_unit, right_value, right_unit in pairs:
         unit = (right_unit or left_unit or "").upper()
         try:
             if unit == "K":
-                _ = normalize_count(f"{left}{unit}")
-                value_right = normalize_count(f"{right}{unit}")
+                _ = normalize_count(f"{left_value}{unit}")
                 if total_cap is None:
-                    total_cap = value_right
+                    total_cap = normalize_count(f"{right_value}{unit}")
                 else:
-                    inj_cap = value_right
+                    inj_cap = normalize_count(f"{right_value}{unit}")
             else:
-                cap = int(float(right))
+                cap = int(float(right_value))
                 if 1 <= cap <= 6:
                     march_cap = cap
         except ValueError:
