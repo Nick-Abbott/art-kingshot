@@ -1,7 +1,7 @@
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { useMembers } from "../hooks/useMembers";
-import * as membersApi from "../api/members";
+import { useVikings } from "../hooks/useVikings";
+import * as vikingsApi from "../api/vikings";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 
@@ -13,7 +13,7 @@ const member = {
   playerName: "Test"
 };
 
-describe("useMembers", () => {
+describe("useVikings", () => {
   function createWrapper() {
     const queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } }
@@ -25,13 +25,13 @@ describe("useMembers", () => {
   }
 
   it("clears error on saveMember success", async () => {
-    vi.spyOn(membersApi, "fetchMembers")
+    vi.spyOn(vikingsApi, "fetchVikings")
       .mockResolvedValueOnce([])
       .mockResolvedValue([member]);
-    vi.spyOn(membersApi, "signupMember").mockResolvedValue([member]);
+    vi.spyOn(vikingsApi, "signupViking").mockResolvedValue([member]);
 
     const { wrapper } = createWrapper();
-    const { result } = renderHook(() => useMembers("p1"), { wrapper });
+    const { result } = renderHook(() => useVikings("p1"), { wrapper });
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -48,13 +48,13 @@ describe("useMembers", () => {
   });
 
   it("clears error on deleteMember success", async () => {
-    vi.spyOn(membersApi, "fetchMembers")
+    vi.spyOn(vikingsApi, "fetchVikings")
       .mockResolvedValueOnce([member])
       .mockResolvedValue([]);
-    vi.spyOn(membersApi, "removeMember").mockResolvedValue([]);
+    vi.spyOn(vikingsApi, "removeViking").mockResolvedValue([]);
 
     const { wrapper } = createWrapper();
-    const { result } = renderHook(() => useMembers("p1"), { wrapper });
+    const { result } = renderHook(() => useVikings("p1"), { wrapper });
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);

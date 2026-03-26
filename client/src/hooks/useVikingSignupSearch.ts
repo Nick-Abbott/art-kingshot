@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { Member } from "../api/members";
+import type { VikingMember } from "../api/vikings";
 
 function normalize(value: string) {
   return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -11,7 +11,7 @@ type SignupSearchOptions = {
 };
 
 export function useVikingSignupSearch(
-  members: Member[],
+  members: VikingMember[],
   { profileId, defaultQuery }: SignupSearchOptions
 ) {
   const [searchQuery, setSearchQueryState] = useState("");
@@ -71,7 +71,7 @@ export function useVikingSignupSearch(
         const score = fuzzyScore(query, name);
         return score === null ? null : { member, score };
       })
-      .filter((item): item is { member: Member; score: number } => item !== null)
+      .filter((item): item is { member: VikingMember; score: number } => item !== null)
       .sort((a, b) => b.score - a.score);
     return scored.map((item) => item.member);
   }, [fuzzyScore, members, searchQuery]);

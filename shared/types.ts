@@ -92,7 +92,7 @@ export type AllianceSettingsPayload = {
 
 export type AllianceSettingsUpdateRequest = AllianceSettings;
 
-export type Member = {
+export type VikingMember = {
   playerId: string;
   troopCount: number;
   marchCount: number;
@@ -100,8 +100,8 @@ export type Member = {
   playerName: string;
 };
 
-export type MembersPayload = {
-  members: Member[];
+export type VikingsPayload = {
+  members: VikingMember[];
 };
 
 export type EligibleMember = {

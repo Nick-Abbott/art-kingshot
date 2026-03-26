@@ -1,4 +1,4 @@
-import type { BotProfilesPayload, Member } from "../../../shared/types";
+import type { BotProfilesPayload, VikingMember } from "../../../shared/types";
 import { botApiRequest } from "../api";
 
 type BotConfig = {
@@ -176,7 +176,7 @@ export async function handleVikingsCommand(
   }
 
   if (subcommand === "remove") {
-    const result = await botApiRequest<{ members: Member[] }>(
+    const result = await botApiRequest<{ members: VikingMember[] }>(
       apiOptions,
       `/api/bot/vikings/${encodeURIComponent(profileId)}`,
       { method: "DELETE" }
@@ -194,7 +194,7 @@ export async function handleVikingsCommand(
   const troopCount = interaction.options.getNumber("troop_count");
   const power = interaction.options.getNumber("power");
 
-  const result = await botApiRequest<{ members: Member[] }>(
+  const result = await botApiRequest<{ members: VikingMember[] }>(
     apiOptions,
     "/api/bot/vikings",
     {

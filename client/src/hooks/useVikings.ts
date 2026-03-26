@@ -1,7 +1,7 @@
 import { useVikingMembersMutations } from "./useVikingMembersMutations";
 import { useVikingMembersQuery } from "./useVikingMembersQuery";
 
-export function useMembers(profileId: string) {
+export function useVikings(profileId: string) {
   const membersQuery = useVikingMembersQuery(profileId);
   const { saveMember, deleteMember } = useVikingMembersMutations(profileId);
   const members = membersQuery.data || [];

@@ -151,7 +151,7 @@ async function run() {
   await postJson("/api/reset", {}, profileId);
 
   for (const member of members) {
-    await postJson("/api/signup", member, profileId);
+    await postJson("/api/vikings", member, profileId);
   }
 
   console.log(`Seeded ${members.length} members.`);

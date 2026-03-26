@@ -1,5 +1,5 @@
 import { z } from "zod/mini";
-import type { AllianceSettings, Member } from "../shared/types";
+import type { AllianceSettings, VikingMember } from "../shared/types";
 
 type ParseResult<T> =
   | { ok: true; data: T }
@@ -13,7 +13,7 @@ const MemberPayloadSchema = z.object({
   power: z.coerce.number(),
 });
 
-export function parseMemberPayload(payload: unknown): ParseResult<Member> {
+export function parseMemberPayload(payload: unknown): ParseResult<VikingMember> {
   const parsed = MemberPayloadSchema.safeParse(payload);
   if (!parsed.success) {
     return { ok: false, error: "Invalid member payload." };
@@ -61,7 +61,7 @@ const AllianceSettingsSchema = z.object({
   }),
 });
 
-const ISO_UTC_REGEX = /^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(?::\\d{2}(?:\\.\\d{3})?)?Z$/;
+const ISO_UTC_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{3})?)?Z$/;
 
 function parseUtcDateTime(value: string): string | null {
   const trimmed = value.trim();

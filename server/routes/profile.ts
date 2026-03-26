@@ -1,45 +1,97 @@
 import express from "express";
 import type { Request, Response } from "express";
 import multer from "multer";
+import * as path from "node:path";
+import * as fs from "node:fs";
+import { z } from "zod";
 import type { RouteContext } from "../types";
 
-type TroopsSnapshot = {
+type ProcessorTroopsSnapshot = {
   header: {
-    totalTroops: number | null;
-    marchQueues: number | null;
-    infirmaryCapacity?: number | null;
+    totalTroops: number;
+    marchQueues: number;
+    infirmaryCapacity?: number;
   };
   troops: Array<{
-    type: string;
-    tier: string;
+    type: string | null;
+    tier: string | null;
+    count: number | null;
+    conf?: {
+      type?: number | null;
+      tier?: number | null;
+      count?: number | null;
+    };
+  }>;
+  meta?: {
+    partial?: boolean;
+    [key: string]: unknown;
+  };
+};
+
+type StoredTroopsSnapshot = {
+  header: {
+    totalTroops: number;
+    marchQueues: number;
+    infirmaryCapacity?: number;
+  };
+  troops: Array<{
+    type: string | null;
+    tier: string | null;
     count: number | null;
   }>;
 };
+
+const processorTroopsSnapshotSchema = z.object({
+  header: z.object({
+    totalTroops: z.number(),
+    marchQueues: z.number(),
+    infirmaryCapacity: z.number().optional(),
+  }),
+  troops: z.array(
+    z.object({
+      type: z.string().nullable(),
+      tier: z.string().nullable(),
+      count: z.number().nullable(),
+      conf: z
+        .object({
+          type: z.number().nullable().optional(),
+          tier: z.number().nullable().optional(),
+          count: z.number().nullable().optional(),
+        })
+        .optional(),
+    })
+  ),
+  meta: z
+    .looseObject({
+      partial: z.boolean().optional(),
+    })
+    .optional(),
+});
 
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 8 * 1024 * 1024 },
 });
 
-function isTroopsSnapshot(value: unknown): value is TroopsSnapshot {
-  if (!value || typeof value !== "object") return false;
-  const snapshot = value as TroopsSnapshot;
-  if (!snapshot.header || typeof snapshot.header !== "object") return false;
-  const header = snapshot.header;
-  const totalTroopsOk =
-    header.totalTroops === null || Number.isFinite(header.totalTroops);
-  const marchQueuesOk =
-    header.marchQueues === null || Number.isFinite(header.marchQueues);
-  if (!totalTroopsOk || !marchQueuesOk) return false;
-  if (!Array.isArray(snapshot.troops)) return false;
-  return snapshot.troops.every(
-    (entry) =>
-      entry &&
-      typeof entry === "object" &&
-      typeof entry.type === "string" &&
-      typeof entry.tier === "string" &&
-      (entry.count === null || Number.isFinite(entry.count))
-  );
+function buildFailedScreenshotPath(profileName: string, reason: string) {
+  const safeName = profileName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 32) || "unknown";
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const baseDir = path.join(process.cwd(), "data", "failed-screenshots");
+  fs.mkdirSync(baseDir, { recursive: true });
+  return path.join(baseDir, `${timestamp}_${safeName}_${reason}.png`);
+}
+
+function saveFailedScreenshot(file: Express.Multer.File, profileName: string, reason: string) {
+  try {
+    const targetPath = buildFailedScreenshotPath(profileName, reason);
+    fs.writeFileSync(targetPath, file.buffer);
+  } catch {
+    // Best-effort logging only.
+  }
 }
 
 export default function profileRoutes(ctx: RouteContext) {
@@ -358,6 +410,7 @@ export default function profileRoutes(ctx: RouteContext) {
         });
       } catch {
         clearTimeout(timeoutId);
+        saveFailedScreenshot(file, profile.playerName || "unknown", "fetch-failed");
         ctx.fail(res, 502, "Screenshot processing failed.");
         return;
       }
@@ -371,16 +424,65 @@ export default function profileRoutes(ctx: RouteContext) {
       }
 
       if (!response.ok) {
+        saveFailedScreenshot(
+          file,
+          profile.playerName || "unknown",
+          `status-${response.status || "unknown"}`
+        );
         ctx.fail(res, 502, "Screenshot processing failed.");
         return;
       }
 
-      if (!payload?.result || !isTroopsSnapshot(payload.result)) {
+      const parsedSnapshot = processorTroopsSnapshotSchema.safeParse(payload?.result);
+      if (!parsedSnapshot.success) {
+        saveFailedScreenshot(file, profile.playerName || "unknown", "invalid-payload");
         ctx.fail(res, 500, "Screenshot processing returned invalid data.");
         return;
       }
 
-      const troopsSnapshot = JSON.stringify(payload.result);
+      const snapshot = parsedSnapshot.data as ProcessorTroopsSnapshot;
+      const headerTotal = snapshot.header.totalTroops;
+      const troopCountSum = snapshot.troops.reduce((sum, troop) => {
+        return sum + (Number.isFinite(troop.count) ? (troop.count as number) : 0);
+      }, 0);
+      const total = headerTotal as number;
+      let close = false;
+      if (total >= 1_000_000) {
+        close = Math.abs(troopCountSum - total) <= 100_000;
+      } else if (total >= 1_000) {
+        close = Math.abs(troopCountSum - total) <= 100;
+      } else {
+        close = Math.abs(troopCountSum - total) <= 5;
+      }
+      const shouldDropTroops = !close && snapshot.troops.length <= 14;
+      if (shouldDropTroops) {
+        saveFailedScreenshot(file, profile.playerName || "unknown", "count-mismatch");
+      }
+      const troopsHaveDuplicates = snapshot.troops.some((troop, index) => {
+        const type = troop.type ?? "";
+        const tier = troop.tier ?? "";
+        if (!type || !tier) return false;
+        const key = `${type}:${tier}`;
+        return snapshot.troops
+          .slice(index + 1)
+          .some((next) => `${next.type ?? ""}:${next.tier ?? ""}` === key);
+      });
+      const shouldDropForDuplicates = troopsHaveDuplicates;
+      if (shouldDropForDuplicates) {
+        saveFailedScreenshot(file, profile.playerName || "unknown", "duplicate-tier-type");
+      }
+      const storedSnapshot: StoredTroopsSnapshot =
+        shouldDropTroops || shouldDropForDuplicates
+          ? { header: snapshot.header, troops: [] }
+          : {
+              header: snapshot.header,
+              troops: snapshot.troops.map((troop) => ({
+                type: troop.type,
+                tier: troop.tier,
+                count: troop.count,
+              })),
+            };
+      const troopsSnapshot = JSON.stringify(storedSnapshot);
       const now = Date.now();
       ctx.queries.updateProfileTroopsSnapshot(
         troopsSnapshot,

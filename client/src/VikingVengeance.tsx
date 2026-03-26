@@ -3,10 +3,10 @@ import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "./apiClient";
 import type { Profile } from "@shared/types";
-import type { Member } from "./api/members";
+import type { VikingMember } from "./api/vikings";
 import { lookupAndParsePlayer } from "./utils/playerLookup";
 import { useAssignments } from "./hooks/useAssignments";
-import { useMembers } from "./hooks/useMembers";
+import { useVikings } from "./hooks/useVikings";
 import { useUpdateProfileMutation } from "./hooks/useProfileMutations";
 import {
   eligibleMembersQueryKey,
@@ -56,7 +56,7 @@ type Props = {
 function VikingVengeance({ profileId, profile, canManage }: Props) {
   const { t } = useTranslation();
   const [form, setForm] = useState<VikingForm>(emptyForm);
-  const { members, saveMember, deleteMember } = useMembers(profileId);
+  const { members, saveMember, deleteMember } = useVikings(profileId);
   const { results, run, reset } = useAssignments(profileId);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -341,7 +341,7 @@ function VikingVengeance({ profileId, profile, canManage }: Props) {
     }
   }
 
-  function startEdit(member: Member) {
+  function startEdit(member: VikingMember) {
     if (member.playerId !== profile?.playerId && !canManage) return;
     setAdminTargetId("");
     setEditingMember(member.playerId);

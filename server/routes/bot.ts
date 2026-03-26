@@ -156,7 +156,7 @@ export default function botRoutes(ctx: RouteContext) {
       }
 
       const allianceId = profile.allianceId;
-      const members = ctx.membersRepo.upsert(allianceId, normalized.data);
+      ctx.vikingsRepo.upsert(allianceId, normalized.data);
       ctx.queries.updateProfileStatsForMember(
         normalized.data.troopCount,
         normalized.data.marchCount,
@@ -165,6 +165,7 @@ export default function botRoutes(ctx: RouteContext) {
         allianceId,
         normalized.data.playerId
       );
+      const members = ctx.vikingsRepo.list(allianceId);
       ctx.ok(res, { members });
     }
   );
@@ -182,7 +183,7 @@ export default function botRoutes(ctx: RouteContext) {
       }
       const profile = getProfileForBot(ctx, res, auth.profiles, profileId);
       if (!profile) return;
-      const members = ctx.membersRepo.remove(profile.allianceId, profile.playerId);
+      const members = ctx.vikingsRepo.remove(profile.allianceId, profile.playerId);
       ctx.ok(res, { members });
     }
   );

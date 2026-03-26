@@ -8,6 +8,7 @@ import {
   uploadTroopsSnapshot
 } from "../api/profile";
 import { profilesQueryKey } from "./useProfilesQuery";
+import { vikingMembersQueryKey } from "./useVikingMembersQuery";
 
 export function useCreateProfileMutation() {
   const queryClient = useQueryClient();
@@ -32,7 +33,14 @@ export function useCreateProfileMutation() {
         });
       }
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: profilesQueryKey })
+    onSettled: (data) => {
+      queryClient.invalidateQueries({ queryKey: profilesQueryKey });
+      if (data?.id) {
+        queryClient.invalidateQueries({
+          queryKey: vikingMembersQueryKey(data.id)
+        });
+      }
+    }
   });
 }
 
@@ -80,7 +88,12 @@ export function useUpdateProfileMutation() {
         });
       }
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: profilesQueryKey })
+    onSettled: (_data, _error, payload) => {
+      queryClient.invalidateQueries({ queryKey: profilesQueryKey });
+      queryClient.invalidateQueries({
+        queryKey: vikingMembersQueryKey(payload.profileId)
+      });
+    }
   });
 }
 

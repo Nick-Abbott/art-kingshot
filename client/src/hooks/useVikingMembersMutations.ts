@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { removeMember, signupMember, type Member } from "../api/members";
+import { removeViking, signupViking, type VikingMember } from "../api/vikings";
 import { vikingMembersQueryKey } from "./useVikingMembersQuery";
+import { profilesQueryKey } from "./useProfilesQuery";
 
 type SavePayload = {
   playerId: string;
@@ -11,26 +12,26 @@ type SavePayload = {
 };
 
 type SaveContext = {
-  previous: Member[];
+  previous: VikingMember[];
 };
 
 type DeleteContext = {
-  previous: Member[];
+  previous: VikingMember[];
 };
 
 export function useVikingMembersMutations(profileId: string) {
   const queryClient = useQueryClient();
 
-  const saveMutation = useMutation<Member[], Error, SavePayload, SaveContext>({
+  const saveMutation = useMutation<VikingMember[], Error, SavePayload, SaveContext>({
     mutationFn: (payload) => {
-      if (!profileId) return Promise.resolve<Member[]>([]);
-      return signupMember(profileId, payload);
+      if (!profileId) return Promise.resolve<VikingMember[]>([]);
+      return signupViking(profileId, payload);
     },
     onMutate: async (payload) => {
       await queryClient.cancelQueries({ queryKey: vikingMembersQueryKey(profileId) });
       const previous =
-        queryClient.getQueryData<Member[]>(vikingMembersQueryKey(profileId)) || [];
-      queryClient.setQueryData<Member[]>(vikingMembersQueryKey(profileId), (prev) => {
+        queryClient.getQueryData<VikingMember[]>(vikingMembersQueryKey(profileId)) || [];
+      queryClient.setQueryData<VikingMember[]>(vikingMembersQueryKey(profileId), (prev) => {
         const current = prev || [];
         const next = current.filter((member) => member.playerId !== payload.playerId);
         next.push({
@@ -54,19 +55,20 @@ export function useVikingMembersMutations(profileId: string) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: vikingMembersQueryKey(profileId) });
+      queryClient.invalidateQueries({ queryKey: profilesQueryKey });
     }
   });
 
-  const deleteMutation = useMutation<Member[], Error, string, DeleteContext>({
+  const deleteMutation = useMutation<VikingMember[], Error, string, DeleteContext>({
     mutationFn: (playerId) => {
-      if (!profileId) return Promise.resolve<Member[]>([]);
-      return removeMember(profileId, playerId);
+      if (!profileId) return Promise.resolve<VikingMember[]>([]);
+      return removeViking(profileId, playerId);
     },
     onMutate: async (playerId) => {
       await queryClient.cancelQueries({ queryKey: vikingMembersQueryKey(profileId) });
       const previous =
-        queryClient.getQueryData<Member[]>(vikingMembersQueryKey(profileId)) || [];
-      queryClient.setQueryData<Member[]>(vikingMembersQueryKey(profileId), (prev) =>
+        queryClient.getQueryData<VikingMember[]>(vikingMembersQueryKey(profileId)) || [];
+      queryClient.setQueryData<VikingMember[]>(vikingMembersQueryKey(profileId), (prev) =>
         (prev || []).filter((member) => member.playerId !== playerId)
       );
       return { previous };
@@ -81,6 +83,7 @@ export function useVikingMembersMutations(profileId: string) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: vikingMembersQueryKey(profileId) });
+      queryClient.invalidateQueries({ queryKey: profilesQueryKey });
     }
   });
 

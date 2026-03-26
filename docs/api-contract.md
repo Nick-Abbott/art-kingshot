@@ -23,8 +23,8 @@ This document captures the current API conventions so clients stay consistent as
 ## Common Endpoints (Current)
 
 - `GET /api/me` → `{ ok: true, data: { user, memberships } }`
-- `GET /api/members` → `{ ok: true, data: { members } }`
-- `POST /api/signup` → `{ ok: true, data: { members } }`
+- `GET /api/vikings` → `{ ok: true, data: { members } }`
+- `POST /api/vikings` → `{ ok: true, data: { members } }`
 - `POST /api/run` → `{ ok: true, data: assignmentPayload }`
 - `GET /api/results` → `{ ok: true, data: { results } }`
 - `POST /api/reset` → `{ ok: true, data: { ok: true } }`

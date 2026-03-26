@@ -27,14 +27,14 @@ import {
   parseBotAssignmentOptInPayload,
 } from "./validation";
 import authRoutes from "./routes/auth";
-import membersRoutes from "./routes/members";
+import vikingsRoutes from "./routes/vikings";
 import assignmentsRoutes from "./routes/assignments";
 import bearRoutes from "./routes/bear";
 import allianceSettingsRoutes from "./routes/allianceSettings";
 import profileRoutes from "./routes/profile";
 import adminRoutes from "./routes/admin";
 import botRoutes from "./routes/bot";
-import { createMembersRepo } from "./repos/membersRepo";
+import { createVikingsRepo } from "./repos/vikingsRepo";
 import { createMetaRepo } from "./repos/metaRepo";
 import type {
   CookieOptions,
@@ -338,7 +338,7 @@ export function createApp({ dbPath: dbPathOverride }: { dbPath?: string } = {}) 
     return next();
   });
 
-  const membersRepo = createMembersRepo(db);
+  const vikingsRepo = createVikingsRepo(db);
   const metaRepo = createMetaRepo(db);
 
   const routeContext: RouteContext = {
@@ -402,12 +402,12 @@ export function createApp({ dbPath: dbPathOverride }: { dbPath?: string } = {}) 
     updateProfileFields,
     updateProfileStatus,
     deleteSession,
-    membersRepo,
+    vikingsRepo,
     metaRepo,
   };
 
   app.use(authRoutes(routeContext));
-  app.use(membersRoutes(routeContext));
+  app.use(vikingsRoutes(routeContext));
   app.use(assignmentsRoutes(routeContext));
   app.use(profileRoutes(routeContext));
   app.use(bearRoutes(routeContext));

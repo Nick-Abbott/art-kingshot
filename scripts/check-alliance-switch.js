@@ -37,14 +37,14 @@ async function run() {
     throw new Error("Expected a profile id.");
   }
 
-  const explicit = await request("/api/members", {
+  const explicit = await request("/api/vikings", {
     headers: { ...headers, "x-profile-id": profileId }
   });
   if (!explicit.res.ok) {
-    throw new Error(`Expected profile-scoped members to work, got ${explicit.res.status}`);
+    throw new Error(`Expected profile-scoped vikings to work, got ${explicit.res.status}`);
   }
 
-  const invalid = await request("/api/members", {
+  const invalid = await request("/api/vikings", {
     headers: { ...headers, "x-profile-id": "invalid-profile" }
   });
   if (invalid.res.status !== 404) {

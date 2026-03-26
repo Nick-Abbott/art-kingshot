@@ -259,7 +259,7 @@ export async function createVikingSignup(
   playerName: string,
   serverUrl: string = SERVER_URL
 ) {
-  const { res, json } = await apiJson(request, `${serverUrl}/api/signup`, {
+  const { res, json } = await apiJson(request, `${serverUrl}/api/vikings`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

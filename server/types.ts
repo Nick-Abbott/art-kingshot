@@ -5,11 +5,11 @@ import type {
   Alliance,
   AssignmentResult,
   AllianceSettings,
-  Member,
+  VikingMember,
   Profile,
   User,
 } from "../shared/types";
-import type { MembersRepo } from "./repos/membersRepo";
+import type { VikingsRepo } from "./repos/vikingsRepo";
 import type { MetaRepo } from "./repos/metaRepo";
 import type { Queries } from "./db/queries";
 
@@ -50,7 +50,7 @@ export type RouteContext = {
   isProduction: boolean;
   parseMemberPayload: (
     body: unknown
-  ) => { ok: true; data: Member } | { ok: false; error: string; code?: string };
+  ) => { ok: true; data: VikingMember } | { ok: false; error: string; code?: string };
   parseBearPayload: (
     body: unknown
   ) =>
@@ -148,7 +148,7 @@ export type RouteContext = {
   ) =>
     | { ok: true; data: { enabled: boolean; profileId: string } }
     | { ok: false; error: string; code?: string };
-  generateAssignments: (members: Member[]) => AssignmentResult;
+  generateAssignments: (members: VikingMember[]) => AssignmentResult;
   buildPlayerLookupPayload: (fid: string | number, now?: number) => {
     fid: string;
     time: number;
@@ -207,6 +207,6 @@ export type RouteContext = {
   insertSession: Queries["insertSession"];
   getSession: Queries["getSession"];
   deleteSession: Queries["deleteSession"];
-  membersRepo: MembersRepo;
+  vikingsRepo: VikingsRepo;
   metaRepo: MetaRepo;
 };

@@ -1,5 +1,5 @@
 import type { Database } from "better-sqlite3";
-import type { MembersRepo } from "./membersRepo";
+import type { VikingsRepo } from "./vikingsRepo";
 
 export function createMetaRepo(db: Database) {
   function setLastRun(allianceId: string, run: unknown): void {
@@ -26,9 +26,9 @@ export function createMetaRepo(db: Database) {
     );
   }
 
-  function clearAll(allianceId: string, membersRepo: MembersRepo): void {
+  function clearAll(allianceId: string, vikingsRepo: VikingsRepo): void {
     db.transaction(() => {
-      membersRepo.clear(allianceId);
+      vikingsRepo.clear(allianceId);
       clearLastRun(allianceId);
     })();
   }

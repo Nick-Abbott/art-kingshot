@@ -172,6 +172,7 @@ function ProfilesAdminCard({
           <form
             className="mt-4 grid gap-3 nav:grid-cols-[repeat(4,minmax(0,1fr))_auto] nav:items-end"
             onSubmit={onSubmitAllianceSettings}
+            data-testid="profiles-settings-form"
           >
             <label className="ui-field">
               {t("profiles.bear1NextTimeLabel")}
@@ -179,6 +180,7 @@ function ProfilesAdminCard({
                 className="ui-input"
                 type="datetime-local"
                 value={settingsBear1NextTime}
+                data-testid="profiles-bear1-next-time"
                 onChange={(event) => onSettingsBear1NextTimeChange(event.target.value)}
                 required
               />
@@ -189,6 +191,7 @@ function ProfilesAdminCard({
                 className="ui-input"
                 type="datetime-local"
                 value={settingsBear2NextTime}
+                data-testid="profiles-bear2-next-time"
                 onChange={(event) => onSettingsBear2NextTimeChange(event.target.value)}
                 required
               />
@@ -199,6 +202,7 @@ function ProfilesAdminCard({
                 className="ui-input"
                 type="datetime-local"
                 value={settingsViking1NextTime}
+                data-testid="profiles-viking1-next-time"
                 onChange={(event) => onSettingsViking1NextTimeChange(event.target.value)}
                 required
               />
@@ -209,16 +213,30 @@ function ProfilesAdminCard({
                 className="ui-input"
                 type="datetime-local"
                 value={settingsViking2NextTime}
+                data-testid="profiles-viking2-next-time"
                 onChange={(event) => onSettingsViking2NextTimeChange(event.target.value)}
                 required
               />
             </label>
-            <button className="ui-button" type="submit" disabled={settingsBusy}>
+            <button
+              className="ui-button"
+              type="submit"
+              disabled={settingsBusy}
+              data-testid="profiles-save-alliance-settings"
+            >
               {t("profiles.saveAllianceSettings")}
             </button>
           </form>
-          {settingsError && <p className="ui-error">{settingsError}</p>}
-          {settingsSuccess && <p className="ui-success">{settingsSuccess}</p>}
+          {settingsError && (
+            <p className="ui-error" data-testid="profiles-settings-error">
+              {settingsError}
+            </p>
+          )}
+          {settingsSuccess && (
+            <p className="ui-success" data-testid="profiles-settings-success">
+              {settingsSuccess}
+            </p>
+          )}
         </div>
       )}
       {selectedProfile.role === "alliance_admin" && (

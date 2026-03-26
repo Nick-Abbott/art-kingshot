@@ -1,17 +1,17 @@
 import React from "react";
 import type { TFunction } from "i18next";
-import type { Member } from "../../api/members";
+import type { VikingMember } from "../../api/vikings";
 import type { Profile } from "@shared/types";
 
 type Props = {
   t: TFunction;
-  members: Member[];
+  members: VikingMember[];
   profile: Profile | null;
   canManage: boolean;
   busy: boolean;
   profileWarning: string;
   error: string;
-  onEdit: (member: Member) => void;
+  onEdit: (member: VikingMember) => void;
   onRemove: (playerId: string) => void;
   onRunAssignments: () => void;
   formatNumber: (value: number) => string;

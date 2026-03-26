@@ -2,11 +2,11 @@ import express from "express";
 import type { Request, Response } from "express";
 import type { RouteContext } from "../types";
 
-export default function membersRoutes(ctx: RouteContext) {
+export default function vikingsRoutes(ctx: RouteContext) {
   const router = express.Router();
 
   router.get(
-    "/api/members",
+    "/api/vikings",
     ctx.requireAuthMiddleware,
     ctx.requireAllianceMiddleware,
     (req: Request, res: Response) => {
@@ -15,12 +15,12 @@ export default function membersRoutes(ctx: RouteContext) {
         ctx.fail(res, 400, "Alliance is required.");
         return;
       }
-      ctx.ok(res, { members: ctx.membersRepo.list(allianceId) });
+      ctx.ok(res, { members: ctx.vikingsRepo.list(allianceId) });
     }
   );
 
   router.post(
-    "/api/signup",
+    "/api/vikings",
     ctx.requireAuthMiddleware,
     ctx.requireAllianceMiddleware,
     (req: Request, res: Response) => {
@@ -41,7 +41,7 @@ export default function membersRoutes(ctx: RouteContext) {
         return;
       }
 
-      const members = ctx.membersRepo.upsert(allianceId, normalized);
+      ctx.vikingsRepo.upsert(allianceId, normalized);
       ctx.queries.updateProfileStatsForMember(
         normalized.troopCount,
         normalized.marchCount,
@@ -50,12 +50,13 @@ export default function membersRoutes(ctx: RouteContext) {
         allianceId,
         normalized.playerId
       );
+      const members = ctx.vikingsRepo.list(allianceId);
       ctx.ok(res, { members });
     }
   );
 
   router.get(
-    "/api/members/eligible",
+    "/api/vikings/eligible",
     ctx.requireAuthMiddleware,
     ctx.requireAllianceMiddleware,
     ctx.requireRoleMiddleware(["alliance_admin"]),
@@ -71,7 +72,7 @@ export default function membersRoutes(ctx: RouteContext) {
   );
 
   router.delete(
-    "/api/members/:playerId",
+    "/api/vikings/:playerId",
     ctx.requireAuthMiddleware,
     ctx.requireAllianceMiddleware,
     (req: Request, res: Response) => {
@@ -92,7 +93,7 @@ export default function membersRoutes(ctx: RouteContext) {
         return;
       }
 
-      const members = ctx.membersRepo.remove(allianceId, playerId);
+      const members = ctx.vikingsRepo.remove(allianceId, playerId);
       ctx.ok(res, { members });
     }
   );

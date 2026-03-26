@@ -1,4 +1,4 @@
-import type { AssignmentResult, Member } from "../shared/types";
+import type { AssignmentResult, VikingMember } from "../shared/types";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -25,7 +25,7 @@ type IncomingMeta = Map<
   }
 >;
 
-type AnnotatedMember = Member & { whale: boolean };
+type AnnotatedMember = VikingMember & { whale: boolean };
 
 function getOutgoing(
   outgoing: Map<string, AssignmentOutgoingEntry[]>,
@@ -102,7 +102,7 @@ function pickLowestIncomingTarget(
   return bestId;
 }
 
-function validateMembers(members: Member[]) {
+function validateMembers(members: VikingMember[]) {
   const warnings: string[] = [];
   const warningCodes: string[] = [];
 
@@ -180,7 +180,7 @@ function validateMembers(members: Member[]) {
   return { warnings, warningCodes, validMembers };
 }
 
-function medianPower(members: Member[]): number {
+function medianPower(members: VikingMember[]): number {
   const sorted = members.map((m) => m.power).sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
   if (sorted.length % 2 === 0) {
@@ -189,7 +189,7 @@ function medianPower(members: Member[]): number {
   return sorted[mid];
 }
 
-function annotateWhales(members: Member[]): AnnotatedMember[] {
+function annotateWhales(members: VikingMember[]): AnnotatedMember[] {
   const median = medianPower(members);
   const whaleThreshold = median * WHALE_MULTIPLIER;
   return members.map((member) => ({
@@ -250,7 +250,7 @@ function isLeadEligible(sender: AnnotatedMember, target: AnnotatedMember): boole
   return sender.whale || sender.power >= target.power * 1.25;
 }
 
-function generateAssignments(members: Member[]): AssignmentResult {
+function generateAssignments(members: VikingMember[]): AssignmentResult {
   const debugLines: string[] = [];
   const logDebug = (line: string) => {
     if (!DEBUG_LOG_ENABLED) return;

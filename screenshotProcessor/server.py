@@ -43,6 +43,9 @@ def health() -> dict[str, str]:
 async def process_screenshot(
     file: UploadFile = File(...),
     conf: float = Query(0.25, ge=0.0, le=1.0),
+    type_conf_min: float = Query(0.6, ge=0.0, le=1.0),
+    tier_conf_min: float = Query(0.6, ge=0.0, le=1.0),
+    ocr_conf_min: float = Query(0.6, ge=0.0, le=1.0),
     verbose: bool = False,
     debug: bool = False,
 ) -> JSONResponse:
@@ -64,6 +67,9 @@ async def process_screenshot(
                 processor.process,
                 image,
                 conf,
+                type_conf_min,
+                tier_conf_min,
+                ocr_conf_min,
                 debug_dir,
                 verbose,
             )
@@ -74,10 +80,21 @@ async def process_screenshot(
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
+    troops = result.get("troops", []) if isinstance(result, dict) else []
+    partial = any(
+        troop.get("type") is None or troop.get("tier") is None or troop.get("count") is None
+        for troop in troops
+        if isinstance(troop, dict)
+    )
+    if isinstance(result, dict):
+        meta = result.get("meta") if isinstance(result.get("meta"), dict) else {}
+        meta["partial"] = partial
+        result["meta"] = meta
+
     payload = {"result": result}
     if debug_dir is not None:
         payload["debugDir"] = str(debug_dir)
-    return JSONResponse(payload)
+    return JSONResponse(payload, status_code=206 if partial else 200)
 
 
 if __name__ == "__main__":

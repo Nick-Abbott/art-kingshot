@@ -67,6 +67,9 @@ class ScreenshotProcessor:
         self,
         image: cv2.Mat,
         conf: float = 0.25,
+        type_conf_min: float = 0.6,
+        tier_conf_min: float = 0.6,
+        ocr_conf_min: float = 0.6,
         debug_dir: Path | None = None,
         verbose: bool = False,
     ) -> dict:
@@ -81,6 +84,11 @@ class ScreenshotProcessor:
             cv2.imwrite(str(debug_dir / "body.png"), body)
 
         header_values = parse_header_values(header, debug_dir=debug_dir)
+        if not any(
+            isinstance(header_values.get(key), int)
+            for key in ("totalTroops", "marchQueues", "infirmaryCapacity")
+        ):
+            raise SystemExit("Header values could not be parsed.")
 
         results = self.detector.predict(source=body, conf=conf, verbose=False)
         if not results:
@@ -146,22 +154,28 @@ class ScreenshotProcessor:
                 count_ocr_crop = count_crop
 
             type_name = None
+            type_conf = None
             if icon_crop.size:
                 tensor = self.type_tf(icon_crop).unsqueeze(0)
                 with torch.no_grad():
                     logits = self.type_model(tensor)
                     probs = torch.softmax(logits, dim=1).squeeze(0)
                     _, cls_idx = torch.max(probs, dim=0)
-                    type_name = self.type_classes[int(cls_idx)]
+                    type_conf = float(probs[int(cls_idx)].item())
+                    if type_conf >= type_conf_min:
+                        type_name = self.type_classes[int(cls_idx)]
 
             tier_name = None
+            tier_conf = None
             if tier_crop.size:
                 tensor = self.tier_tf(tier_crop).unsqueeze(0)
                 with torch.no_grad():
                     logits = self.tier_model(tensor)
                     probs = torch.softmax(logits, dim=1).squeeze(0)
                     _, cls_idx = torch.max(probs, dim=0)
-                    tier_name = self.tier_classes[int(cls_idx)]
+                    tier_conf = float(probs[int(cls_idx)].item())
+                    if tier_conf >= tier_conf_min:
+                        tier_name = self.tier_classes[int(cls_idx)]
 
             if debug_dir is not None:
                 cv2.imwrite(str(debug_dir / f"card_{idx}_count.png"), count_crop)
@@ -180,17 +194,30 @@ class ScreenshotProcessor:
                     cv2.BORDER_CONSTANT,
                     value=255,
                 )
-            count_raw = ocr_tesseract(
-                cv2.dilate(count_ocr_crop, cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2)), iterations=1)
-                if count_ocr_crop is not None and count_ocr_crop.size
-                else count_ocr_crop,
-                "0123456789,",
-                11,
-            )
-            digits_only = "".join(ch for ch in count_raw if ch.isdigit())
-            if not digits_only and count_ocr_crop is not None and count_ocr_crop.size:
-                count_raw = ocr_tesseract(count_ocr_crop, "0123456789,", 7)
+            count_raw = ""
+            digits_only = ""
+            count_conf = 0.0
+            if count_ocr_crop is not None and count_ocr_crop.size:
+                primary_crop = cv2.dilate(
+                    count_ocr_crop,
+                    cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2)),
+                    iterations=1,
+                )
+                count_raw = ocr_tesseract(primary_crop, "0123456789,", 11)
                 digits_only = "".join(ch for ch in count_raw if ch.isdigit())
+                raw_len = len(count_raw.strip())
+                count_conf = (len(digits_only) / raw_len) if raw_len else 0.0
+
+                if count_conf < ocr_conf_min:
+                    fallback_raw = ocr_tesseract(count_ocr_crop, "0123456789,", 7)
+                    fallback_digits = "".join(ch for ch in fallback_raw if ch.isdigit())
+                    fallback_len = len(fallback_raw.strip())
+                    fallback_conf = (len(fallback_digits) / fallback_len) if fallback_len else 0.0
+                    if fallback_conf > count_conf:
+                        count_raw = fallback_raw
+                        digits_only = fallback_digits
+                        count_conf = fallback_conf
+
             count_value = int(digits_only) if digits_only else None
             if verbose:
                 print(
@@ -198,7 +225,18 @@ class ScreenshotProcessor:
                     f"raw='{count_raw.strip()}' digits='{digits_only}' value={count_value}"
                 )
 
-            troops.append({"type": type_name, "tier": tier_name, "count": count_value})
+            troops.append(
+                {
+                    "type": type_name,
+                    "tier": tier_name,
+                    "count": count_value,
+                    "conf": {
+                        "type": type_conf,
+                        "tier": tier_conf,
+                        "count": count_conf,
+                    },
+                }
+            )
 
         total_from_cards = sum(
             troop["count"] or 0
@@ -225,6 +263,9 @@ def process_image(
     tier_model_path: Path,
     tier_classes_path: Path,
     conf: float = 0.25,
+    type_conf_min: float = 0.6,
+    tier_conf_min: float = 0.6,
+    ocr_conf_min: float = 0.6,
     debug_dir: Path | None = None,
     verbose: bool = False,
 ) -> dict:
@@ -235,4 +276,12 @@ def process_image(
         tier_model_path=tier_model_path,
         tier_classes_path=tier_classes_path,
     )
-    return processor.process(image, conf=conf, debug_dir=debug_dir, verbose=verbose)
+    return processor.process(
+        image,
+        conf=conf,
+        type_conf_min=type_conf_min,
+        tier_conf_min=tier_conf_min,
+        ocr_conf_min=ocr_conf_min,
+        debug_dir=debug_dir,
+        verbose=verbose,
+    )

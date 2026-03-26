@@ -48,7 +48,7 @@ This guide is a quick reference for agents working in this repo. It summarizes h
 ### Server Routes
 - `server/routes/auth.ts` — login/logout, `/api/me`.
 - `server/routes/profile.ts` — profiles, alliances, player lookup.
-- `server/routes/members.ts` — Viking roster + eligible list.
+- `server/routes/vikings.ts` — Viking roster + eligible list.
 - `server/routes/bear.ts` — Bear roster + eligible list.
 - `server/routes/assignments.ts` — run/reset/results.
 - `server/routes/admin.ts` — app-admin cross-kingdom tooling.

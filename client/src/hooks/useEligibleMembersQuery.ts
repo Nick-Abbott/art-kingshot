@@ -1,4 +1,4 @@
-import { fetchEligibleMembers } from "../api/members";
+import { fetchEligibleVikings } from "../api/vikings";
 import { useEligibleMembersBaseQuery } from "./useEligibleMembersBaseQuery";
 
 export const eligibleMembersQueryKey = (profileId: string) =>
@@ -7,7 +7,7 @@ export const eligibleMembersQueryKey = (profileId: string) =>
 export function useEligibleMembersQuery(profileId: string, enabled: boolean) {
   return useEligibleMembersBaseQuery({
     queryKey: eligibleMembersQueryKey(profileId),
-    queryFn: () => fetchEligibleMembers(profileId),
+    queryFn: () => fetchEligibleVikings(profileId),
     enabled: enabled && Boolean(profileId)
   });
 }

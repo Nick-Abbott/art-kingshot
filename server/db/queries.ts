@@ -272,7 +272,7 @@ export function createQueries(db: Database) {
      WHERE allianceId = ?
        AND status = 'active'
        AND playerId NOT IN (
-         SELECT playerId FROM members WHERE allianceId = ?
+         SELECT playerId FROM vikings WHERE allianceId = ?
        )
      ORDER BY COALESCE(playerName, playerId) ASC`
   );
@@ -330,14 +330,14 @@ export function createQueries(db: Database) {
      WHERE id = ?`
   );
   const deleteMemberByPlayer = db.prepare(
-    "DELETE FROM members WHERE allianceId = ? AND playerId = ?"
+    "DELETE FROM vikings WHERE allianceId = ? AND playerId = ?"
   );
   const deleteBearByPlayerAny = db.prepare(
     "DELETE FROM bear WHERE allianceId = ? AND playerId = ?"
   );
   const deleteProfileById = db.prepare("DELETE FROM profiles WHERE id = ?");
   const deleteMembersByAlliance = db.prepare(
-    "DELETE FROM members WHERE allianceId = ?"
+    "DELETE FROM vikings WHERE allianceId = ?"
   );
   const deleteMetaByAlliance = db.prepare(
     "DELETE FROM meta WHERE allianceId = ?"

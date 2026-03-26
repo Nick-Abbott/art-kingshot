@@ -16,8 +16,8 @@ const saveMember = vi.fn().mockResolvedValue([member]);
 const deleteMember = vi.fn().mockResolvedValue([]);
 
 
-vi.mock("../hooks/useMembers", () => ({
-  useMembers: () => ({
+vi.mock("../hooks/useVikings", () => ({
+  useVikings: () => ({
     members: [member],
     saveMember,
     deleteMember,

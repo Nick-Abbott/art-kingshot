@@ -19,7 +19,7 @@ export default function assignmentsRoutes(ctx: RouteContext) {
         return;
       }
       try {
-        const run = ctx.generateAssignments(ctx.membersRepo.list(allianceId));
+        const run = ctx.generateAssignments(ctx.vikingsRepo.list(allianceId));
         ctx.metaRepo.setLastRun(allianceId, run);
         const recipients = ctx.queries.listOptedInAssignmentRecipients(allianceId);
         if (recipients.length > 0) {

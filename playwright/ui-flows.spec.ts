@@ -380,6 +380,54 @@ test("alliance admin updates applicants list immediately", async ({
   await context.close();
 });
 
+test("alliance admin updates alliance settings", async ({ app, browser, request }) => {
+  test.setTimeout(30000);
+  sessionToken = createSessionToken({ dbPath: app.dbPath });
+  await assertSession(request, sessionToken, app.serverUrl);
+  const { profileA } = await seedProfiles(request, app.serverUrl);
+
+  const context = await createAuthContext(browser, sessionToken, app.clientUrl);
+  const page = await context.newPage();
+
+  await openPage(page, {
+    pageKey: "profiles",
+    selectedProfileId: profileA.id,
+    clientUrl: app.clientUrl,
+    waitForMeTimeout: WAIT_TIMEOUT,
+    readyTestId: "profiles-settings-form",
+    readyState: "attached",
+    readyTimeout: WAIT_TIMEOUT,
+  });
+
+  await page.getByTestId("profiles-bear1-next-time").fill("2026-03-14T01:00");
+  await page.getByTestId("profiles-bear2-next-time").fill("2026-03-14T12:00");
+  await page.getByTestId("profiles-viking1-next-time").fill("2026-03-14T03:00");
+  await page.getByTestId("profiles-viking2-next-time").fill("2026-03-14T14:00");
+
+  const updateResponse = page.waitForResponse(
+    (res) =>
+      res.url().includes("/api/alliance/settings") &&
+      res.request().method() === "PUT",
+    { timeout: WAIT_TIMEOUT }
+  );
+  await page.getByTestId("profiles-save-alliance-settings").click({
+    timeout: WAIT_TIMEOUT,
+  });
+  const response = await updateResponse;
+  if (!response.ok()) {
+    const payload = await response.json().catch(() => null);
+    throw new Error(
+      `Alliance settings update failed: ${response.status()} ${JSON.stringify(payload)}`
+    );
+  }
+
+  await expect(page.getByTestId("profiles-settings-success")).toBeVisible({
+    timeout: WAIT_TIMEOUT,
+  });
+
+  await context.close();
+});
+
 test("admin panel updates alliances and profiles without reload", async ({
   app,
   browser,

@@ -7,6 +7,8 @@ import * as crypto from "node:crypto";
 import Database from "better-sqlite3";
 import { createApp } from "./index";
 import type { ApiErrorPayload } from "../shared/types";
+import { DEFAULT_ALLIANCE_SETTINGS } from "../shared/allianceConfig";
+import { getNextVikingEventIso } from "./utils/vikingTime";
 
 const tmpDirs: string[] = [];
 
@@ -84,6 +86,69 @@ function requestJson(
   });
 }
 
+function requestMultipart(
+  port: number,
+  method: string,
+  path: string,
+  {
+    headers = {},
+    field = "file",
+    filename = "troops.png",
+    contentType = "image/png",
+    fileBuffer = Buffer.from([1, 2, 3, 4]),
+  }: {
+    headers?: Record<string, string>;
+    field?: string;
+    filename?: string;
+    contentType?: string;
+    fileBuffer?: Buffer;
+  } = {}
+): Promise<JsonResponse> {
+  return new Promise((resolve, reject) => {
+    const boundary = `----vikingapp-${crypto.randomBytes(8).toString("hex")}`;
+    const preamble = Buffer.from(
+      `--${boundary}\r\n` +
+        `Content-Disposition: form-data; name="${field}"; filename="${filename}"\r\n` +
+        `Content-Type: ${contentType}\r\n\r\n`
+    );
+    const closing = Buffer.from(`\r\n--${boundary}--\r\n`);
+    const body = Buffer.concat([preamble, fileBuffer, closing]);
+    const req = http.request(
+      {
+        hostname: "127.0.0.1",
+        port,
+        method,
+        path,
+        headers: {
+          "Content-Type": `multipart/form-data; boundary=${boundary}`,
+          "Content-Length": String(body.length),
+          ...headers,
+        },
+      },
+      (res: import("node:http").IncomingMessage) => {
+        let data = "";
+        res.on("data", (chunk: Buffer) => (data += chunk));
+        res.on("end", () => {
+          let parsed = null;
+          try {
+            parsed = JSON.parse(data);
+          } catch {
+            parsed = data;
+          }
+          resolve({
+            status: res.statusCode,
+            data: parsed as ApiPayload,
+            headers: res.headers,
+          });
+        });
+      }
+    );
+    req.on("error", reject);
+    req.write(body);
+    req.end();
+  });
+}
+
 function tmpDbPath() {
   const baseDir = path.join(process.cwd(), "data");
   fs.mkdirSync(baseDir, { recursive: true });
@@ -92,10 +157,18 @@ function tmpDbPath() {
   return path.join(dir, "test.sqlite");
 }
 
+function listFailedScreenshots() {
+  const dir = path.join(process.cwd(), "data", "failed-screenshots");
+  if (!fs.existsSync(dir)) return [];
+  return fs.readdirSync(dir).map((name) => path.join(dir, name));
+}
+
 test.after(() => {
   for (const dir of tmpDirs) {
     fs.rmSync(dir, { recursive: true, force: true });
   }
+  const failedDir = path.join(process.cwd(), "data", "failed-screenshots");
+  fs.rmSync(failedDir, { recursive: true, force: true });
 });
 
 function getPayload<T>(response: JsonResponse): T {
@@ -151,6 +224,18 @@ function createBotUser(
   const db = new Database(dbPath);
   const now = Date.now();
   const userId = crypto.randomUUID();
+  const troopsSnapshot =
+    troopCount == null && marchCount == null
+      ? null
+      : JSON.stringify({
+          header: {
+            totalTroops: troopCount,
+            marchQueues: marchCount,
+            infirmaryCapacity: 0,
+          },
+          troops: [],
+        });
+  const troopsSnapshotUpdatedAt = troopsSnapshot ? now : null;
   db.prepare(
     "INSERT INTO users (id, discordId, displayName, avatar, isAppAdmin, createdAt) VALUES (?, ?, ?, ?, ?, ?)"
   ).run(userId, discordId, "Bot User", null, isAppAdmin ? 1 : 0, now);
@@ -168,10 +253,10 @@ function createBotUser(
        allianceId,
        status,
        role,
-       troopCount,
-       marchCount,
        power,
        rallySize,
+       troopsSnapshot,
+       troopsSnapshotUpdatedAt,
        createdAt,
        updatedAt
      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
@@ -185,10 +270,10 @@ function createBotUser(
     allianceId,
     "active",
     role,
-    troopCount,
-    marchCount,
     power,
     null,
+    troopsSnapshot,
+    troopsSnapshotUpdatedAt,
     now,
     now
   );
@@ -201,7 +286,7 @@ test("unauthenticated access returns 401", async () => {
   process.env.PORT = "0";
   const { httpServer, port } = await startServer();
   try {
-    const res = await requestJson(port, "GET", "/api/members");
+    const res = await requestJson(port, "GET", "/api/vikings");
     assert.equal(res.status, 401);
   } finally {
     httpServer.close();
@@ -224,7 +309,7 @@ test("session auth allows access and enforces profile requirement", async () => 
     const missingProfile = await requestJson(
       port,
       "GET",
-      "/api/members",
+      "/api/vikings",
       headers
     );
     assert.equal(missingProfile.status, 400);
@@ -275,7 +360,7 @@ test("alliance admin required for destructive endpoints", async () => {
     const signup = await requestJson(
       port,
       "POST",
-      "/api/signup",
+      "/api/vikings",
       { ...profileHeaders, "Content-Type": "application/json" },
       signupBody
     );
@@ -284,10 +369,76 @@ test("alliance admin required for destructive endpoints", async () => {
     const remove = await requestJson(
       port,
       "DELETE",
-      "/api/members/FID00001",
+      "/api/vikings/FID00001",
       profileHeaders
     );
     assert.equal(remove.status, 200);
+  } finally {
+    httpServer.close();
+  }
+});
+
+test("signup updates profile snapshot and members list uses snapshot stats", async () => {
+  const dbPath = tmpDbPath();
+  process.env.DB_PATH = dbPath;
+  process.env.PORT = "0";
+  const { httpServer, port } = await startServer();
+  try {
+    const headers = { Cookie: createSessionCookie(dbPath) };
+    const createProfile = await requestJson(
+      port,
+      "POST",
+      "/api/profiles",
+      { ...headers, "Content-Type": "application/json" },
+      JSON.stringify({ playerId: "FIDSNAP", kingdomId: 1459 })
+    );
+    assert.equal(createProfile.status, 200);
+    const profileId = getPayload<{ profile: { id: string } }>(createProfile).profile.id;
+
+    const createAlliance = await requestJson(
+      port,
+      "POST",
+      "/api/alliances",
+      { ...headers, "Content-Type": "application/json", "x-profile-id": profileId },
+      JSON.stringify({ tag: "SNP", name: "Snapshot Alliance" })
+    );
+    assert.equal(createAlliance.status, 200);
+    const profileHeaders = { ...headers, "x-profile-id": profileId };
+
+    const signup = await requestJson(
+      port,
+      "POST",
+      "/api/vikings",
+      { ...profileHeaders, "Content-Type": "application/json" },
+      JSON.stringify({
+        playerId: "FIDSNAP",
+        troopCount: 1200,
+        playerName: "Snap",
+        marchCount: 4,
+        power: 2000000,
+      })
+    );
+    assert.equal(signup.status, 200);
+
+    const members = await requestJson(port, "GET", "/api/vikings", profileHeaders);
+    assert.equal(members.status, 200);
+    const membersPayload = getPayload<{ members: Array<{ troopCount: number; marchCount: number }> }>(
+      members
+    );
+    assert.equal(membersPayload.members[0]?.troopCount, 1200);
+    assert.equal(membersPayload.members[0]?.marchCount, 4);
+
+    const db = new Database(dbPath);
+    const row = db.prepare(
+      "SELECT troopsSnapshot FROM profiles WHERE playerId = ?"
+    ).get("FIDSNAP") as { troopsSnapshot?: string | null };
+    db.close();
+    assert.ok(row?.troopsSnapshot);
+    const snapshot = JSON.parse(row.troopsSnapshot || "{}") as {
+      header?: { totalTroops?: number; marchQueues?: number };
+    };
+    assert.equal(snapshot.header?.totalTroops, 1200);
+    assert.equal(snapshot.header?.marchQueues, 4);
   } finally {
     httpServer.close();
   }
@@ -393,8 +544,15 @@ test("alliance settings return defaults and update", async () => {
         vikingNextTimes: { viking1: string; viking2: string };
       };
     }>(initialSettings);
-    assert.equal(initialPayload.settings.bearNextTimes.bear1, "2026-01-01T01:00:00.000Z");
-    assert.equal(initialPayload.settings.bearNextTimes.bear2, "2026-01-01T12:00:00.000Z");
+    const now = new Date();
+    const expectedBear1 = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 1, 0, 0, 0)
+    ).toISOString();
+    const expectedBear2 = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 12, 0, 0, 0)
+    ).toISOString();
+    assert.equal(initialPayload.settings.bearNextTimes.bear1, expectedBear1);
+    assert.equal(initialPayload.settings.bearNextTimes.bear2, expectedBear2);
     assert.equal(
       initialPayload.settings.vikingNextTimes.viking1,
       "2026-03-10T02:00:00.000Z"
@@ -466,7 +624,7 @@ test("alliance settings return defaults and update", async () => {
   }
 });
 
-test("alliance delete cascades members, bear, meta, and profile reset", async () => {
+test("alliance delete cascades vikings, bear, meta, and profile reset", async () => {
   const dbPath = tmpDbPath();
   process.env.DB_PATH = dbPath;
   process.env.PORT = "0";
@@ -498,7 +656,7 @@ test("alliance delete cascades members, bear, meta, and profile reset", async ()
     const signup = await requestJson(
       port,
       "POST",
-      "/api/signup",
+      "/api/vikings",
       { ...headers, "Content-Type": "application/json", "x-profile-id": profileId },
       JSON.stringify({
         playerId: "MEMBER1",
@@ -536,8 +694,8 @@ test("alliance delete cascades members, bear, meta, and profile reset", async ()
     assert.equal(deleteAlliance.status, 200);
 
     const db = new Database(dbPath);
-    const memberCount = db.prepare(
-      "SELECT COUNT(1) AS count FROM members WHERE allianceId = ?"
+    const vikingCount = db.prepare(
+      "SELECT COUNT(1) AS count FROM vikings WHERE allianceId = ?"
     ).get(allianceId) as { count: number };
     const metaCount = db.prepare(
       "SELECT COUNT(1) AS count FROM meta WHERE allianceId = ?"
@@ -553,7 +711,7 @@ test("alliance delete cascades members, bear, meta, and profile reset", async ()
     ).get(allianceId) as { count: number };
     db.close();
 
-    assert.equal(memberCount.count, 0);
+    assert.equal(vikingCount.count, 0);
     assert.equal(metaCount.count, 0);
     assert.equal(bearCount.count, 0);
     assert.equal(allianceRow.count, 0);
@@ -626,7 +784,7 @@ test("alliance admin can edit other signups, members cannot", async () => {
     const memberAttempt = await requestJson(
       port,
       "POST",
-      "/api/signup",
+      "/api/vikings",
       { ...memberHeaders, "Content-Type": "application/json" },
       JSON.stringify({
         playerId: "FIDOTHER",
@@ -641,7 +799,7 @@ test("alliance admin can edit other signups, members cannot", async () => {
     const memberOwn = await requestJson(
       port,
       "POST",
-      "/api/signup",
+      "/api/vikings",
       { ...memberHeaders, "Content-Type": "application/json" },
       JSON.stringify({
         playerId: "FIDMEM",
@@ -656,7 +814,7 @@ test("alliance admin can edit other signups, members cannot", async () => {
     const memberDeleteOther = await requestJson(
       port,
       "DELETE",
-      "/api/members/FIDOTHER",
+      "/api/vikings/FIDOTHER",
       memberHeaders
     );
     assert.equal(memberDeleteOther.status, 403);
@@ -664,7 +822,7 @@ test("alliance admin can edit other signups, members cannot", async () => {
     const memberDeleteSelf = await requestJson(
       port,
       "DELETE",
-      "/api/members/FIDMEM",
+      "/api/vikings/FIDMEM",
       memberHeaders
     );
     assert.equal(memberDeleteSelf.status, 200);
@@ -673,7 +831,7 @@ test("alliance admin can edit other signups, members cannot", async () => {
     const adminAttempt = await requestJson(
       port,
       "POST",
-      "/api/signup",
+      "/api/vikings",
       { ...adminHeaders, "Content-Type": "application/json" },
       JSON.stringify({
         playerId: "FIDOTHER",
@@ -784,7 +942,7 @@ test("eligible signup lists return active alliance members not yet signed up", a
     const memberEligibleDenied = await requestJson(
       port,
       "GET",
-      "/api/members/eligible",
+      "/api/vikings/eligible",
       memberHeaders
     );
     assert.equal(memberEligibleDenied.status, 403);
@@ -792,7 +950,7 @@ test("eligible signup lists return active alliance members not yet signed up", a
     await requestJson(
       port,
       "POST",
-      "/api/signup",
+      "/api/vikings",
       { ...adminHeaders, "Content-Type": "application/json" },
       JSON.stringify({
         playerId: "FIDMEM1",
@@ -823,7 +981,7 @@ test("eligible signup lists return active alliance members not yet signed up", a
     const eligibleMembers = await requestJson(
       port,
       "GET",
-      "/api/members/eligible",
+      "/api/vikings/eligible",
       adminHeaders
     );
     assert.equal(eligibleMembers.status, 200);
@@ -909,10 +1067,35 @@ test("assignment run queues notifications for opted-in users", async () => {
     db.prepare("UPDATE profiles SET botOptInAssignments = 1").run();
     db.close();
 
+    const createSecondProfile = await requestJson(
+      port,
+      "POST",
+      "/api/profiles",
+      { ...headers, "Content-Type": "application/json" },
+      JSON.stringify({ playerId: "FIDOPTIN2", kingdomId: 1459 })
+    );
+    const secondProfileId = getPayload<{ profile: { id: string } }>(createSecondProfile)
+      .profile.id;
+
+    await requestJson(
+      port,
+      "PATCH",
+      `/api/profiles/${secondProfileId}`,
+      { ...headers, "Content-Type": "application/json" },
+      JSON.stringify({ allianceId })
+    );
+    await requestJson(
+      port,
+      "PATCH",
+      `/api/alliance/profiles/${secondProfileId}`,
+      { ...headers, "Content-Type": "application/json", "x-profile-id": profileId },
+      JSON.stringify({ status: "active" })
+    );
+
     const signup = await requestJson(
       port,
       "POST",
-      "/api/signup",
+      "/api/vikings",
       { ...headers, "Content-Type": "application/json", "x-profile-id": profileId },
       JSON.stringify({
         playerId: "FIDOPTIN",
@@ -923,6 +1106,21 @@ test("assignment run queues notifications for opted-in users", async () => {
       })
     );
     assert.equal(signup.status, 200);
+
+    const signupTwo = await requestJson(
+      port,
+      "POST",
+      "/api/vikings",
+      { ...headers, "Content-Type": "application/json", "x-profile-id": profileId },
+      JSON.stringify({
+        playerId: "FIDOPTIN2",
+        troopCount: 1200,
+        playerName: "Opted Two",
+        marchCount: 4,
+        power: 1900000,
+      })
+    );
+    assert.equal(signupTwo.status, 200);
 
     const run = await requestJson(
       port,
@@ -937,7 +1135,123 @@ test("assignment run queues notifications for opted-in users", async () => {
       "SELECT COUNT(1) AS count FROM assignment_notifications WHERE allianceId = ? AND status = 'pending'"
     ).get(allianceId) as { count: number };
     checkDb.close();
-    assert.equal(row.count, 1);
+    assert.equal(row.count, 2);
+  } finally {
+    httpServer.close();
+  }
+});
+
+test("assignment run skips members missing snapshot", async () => {
+  const dbPath = tmpDbPath();
+  process.env.DB_PATH = dbPath;
+  process.env.PORT = "0";
+  const { httpServer, port } = await startServer();
+  try {
+    const headers = { Cookie: createSessionCookie(dbPath) };
+    const createAdminProfile = await requestJson(
+      port,
+      "POST",
+      "/api/profiles",
+      { ...headers, "Content-Type": "application/json" },
+      JSON.stringify({ playerId: "FIDADMIN", kingdomId: 1459 })
+    );
+    const adminProfileId = getPayload<{ profile: { id: string } }>(createAdminProfile)
+      .profile.id;
+
+    const createAlliance = await requestJson(
+      port,
+      "POST",
+      "/api/alliances",
+      { ...headers, "Content-Type": "application/json", "x-profile-id": adminProfileId },
+      JSON.stringify({ tag: "ASN", name: "Assignments Alliance" })
+    );
+    assert.equal(createAlliance.status, 200);
+    const allianceId = getPayload<{ alliance: { id: string } }>(createAlliance).alliance.id;
+
+    const createValidProfile = await requestJson(
+      port,
+      "POST",
+      "/api/profiles",
+      { ...headers, "Content-Type": "application/json" },
+      JSON.stringify({ playerId: "FIDGOOD", kingdomId: 1459 })
+    );
+    const validProfileId = getPayload<{ profile: { id: string } }>(createValidProfile)
+      .profile.id;
+
+    await requestJson(
+      port,
+      "PATCH",
+      `/api/profiles/${validProfileId}`,
+      { ...headers, "Content-Type": "application/json" },
+      JSON.stringify({ allianceId })
+    );
+    await requestJson(
+      port,
+      "PATCH",
+      `/api/alliance/profiles/${validProfileId}`,
+      { ...headers, "Content-Type": "application/json", "x-profile-id": adminProfileId },
+      JSON.stringify({ status: "active" })
+    );
+
+    await requestJson(
+      port,
+      "POST",
+      "/api/vikings",
+      { ...headers, "Content-Type": "application/json", "x-profile-id": adminProfileId },
+      JSON.stringify({
+        playerId: "FIDGOOD",
+        troopCount: 1000,
+        playerName: "Valid",
+        marchCount: 4,
+        power: 2000000,
+      })
+    );
+
+    const createMissingProfile = await requestJson(
+      port,
+      "POST",
+      "/api/profiles",
+      { ...headers, "Content-Type": "application/json" },
+      JSON.stringify({ playerId: "FIDMISS", kingdomId: 1459 })
+    );
+    const missingProfileId = getPayload<{ profile: { id: string } }>(createMissingProfile)
+      .profile.id;
+
+    await requestJson(
+      port,
+      "PATCH",
+      `/api/profiles/${missingProfileId}`,
+      { ...headers, "Content-Type": "application/json" },
+      JSON.stringify({ allianceId })
+    );
+    await requestJson(
+      port,
+      "PATCH",
+      `/api/alliance/profiles/${missingProfileId}`,
+      { ...headers, "Content-Type": "application/json", "x-profile-id": adminProfileId },
+      JSON.stringify({ status: "active" })
+    );
+
+    const db = new Database(dbPath);
+    db.prepare(
+      "INSERT INTO vikings (allianceId, playerId, troopCount, marchCount, power, playerName) VALUES (?, ?, ?, ?, ?, ?)"
+    ).run(allianceId, "FIDMISS", 0, 0, 0, "Missing");
+    db.close();
+
+    const run = await requestJson(
+      port,
+      "POST",
+      "/api/run",
+      { ...headers, "x-profile-id": adminProfileId }
+    );
+    assert.equal(run.status, 200);
+    const runPayload = getPayload<{
+      members: Array<{ playerId: string }>;
+      warningCodes?: string[];
+    }>(run);
+    const ids = runPayload.members.map((member) => member.playerId);
+    assert.ok(!ids.includes("FIDMISS"));
+    assert.ok(runPayload.warningCodes?.includes("assignments_invalid_troop_count"));
   } finally {
     httpServer.close();
   }
@@ -972,7 +1286,7 @@ test("reset keeps viking signups but clears last run", async () => {
     const signupOne = await requestJson(
       port,
       "POST",
-      "/api/signup",
+      "/api/vikings",
       { ...headers, "Content-Type": "application/json", "x-profile-id": profileId },
       JSON.stringify({
         playerId: "RESET1",
@@ -987,7 +1301,7 @@ test("reset keeps viking signups but clears last run", async () => {
     const signupTwo = await requestJson(
       port,
       "POST",
-      "/api/signup",
+      "/api/vikings",
       { ...headers, "Content-Type": "application/json", "x-profile-id": profileId },
       JSON.stringify({
         playerId: "RESET2",
@@ -1016,15 +1330,15 @@ test("reset keeps viking signups but clears last run", async () => {
     assert.equal(reset.status, 200);
 
     const db = new Database(dbPath);
-    const membersCount = db.prepare(
-      "SELECT COUNT(1) AS count FROM members WHERE allianceId = ?"
+    const vikingsCount = db.prepare(
+      "SELECT COUNT(1) AS count FROM vikings WHERE allianceId = ?"
     ).get(allianceId) as { count: number };
     const lastRunCount = db.prepare(
       "SELECT COUNT(1) AS count FROM meta WHERE allianceId = ? AND key = 'lastRun'"
     ).get(allianceId) as { count: number };
     db.close();
 
-    assert.equal(membersCount.count, 2);
+    assert.equal(vikingsCount.count, 2);
     assert.equal(lastRunCount.count, 0);
   } finally {
     httpServer.close();
@@ -1464,10 +1778,10 @@ test("bot endpoints resolve discord user and enforce ownership", async () => {
       vikingNextTime?: string;
     }>(assignments);
     assert.equal(assignmentsPayload.assignment?.playerId, playerId);
-    assert.equal(
-      assignmentsPayload.vikingNextTime,
-      "2026-03-10T02:00:00.000Z"
+    const expectedNextViking = getNextVikingEventIso(
+      DEFAULT_ALLIANCE_SETTINGS.vikingNextTimes
     );
+    assert.equal(assignmentsPayload.vikingNextTime, expectedNextViking);
 
     const remove = await requestJson(
       port,
@@ -1597,6 +1911,535 @@ test("bot guild association enforces admin access and updates guild", async () =
     dbAfter.close();
     assert.equal(row.guildId, "guild-123");
   } finally {
+    httpServer.close();
+  }
+});
+
+test("troops snapshot upload stores processor 200 response", async () => {
+  const dbPath = tmpDbPath();
+  process.env.DB_PATH = dbPath;
+  process.env.PORT = "0";
+  process.env.SCREENSHOT_PROCESSOR_URL = "http://processor.test";
+  const { httpServer, port } = await startServer();
+  const originalFetch = global.fetch;
+  try {
+    const cookie = createSessionCookie(dbPath);
+    const createProfile = await requestJson(
+      port,
+      "POST",
+      "/api/profiles",
+      { "Content-Type": "application/json", Cookie: cookie },
+      JSON.stringify({ playerId: "PLAYER200" })
+    );
+    assert.equal(createProfile.status, 200);
+    const profileId = getPayload<{ profile: { id: string } }>(createProfile).profile.id;
+
+    global.fetch = (async () =>
+      ({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          result: {
+            header: { totalTroops: 123, marchQueues: 1, infirmaryCapacity: 0 },
+            troops: [
+              {
+                type: "infantry",
+                tier: "t9",
+                count: 123,
+                conf: { type: 0.9, tier: 0.8, count: 0.7 },
+              },
+            ],
+            meta: { partial: false },
+          },
+        }),
+      } as Response)) as typeof fetch;
+
+    const upload = await requestMultipart(
+      port,
+      "POST",
+      `/api/profiles/${profileId}/troops-snapshot`,
+      { headers: { Cookie: cookie } }
+    );
+    assert.equal(upload.status, 200);
+
+    const db = new Database(dbPath);
+    const row = db
+      .prepare("SELECT troopsSnapshot FROM profiles WHERE id = ?")
+      .get(profileId) as { troopsSnapshot: string | null };
+    db.close();
+    assert.ok(row.troopsSnapshot);
+    const snapshot = JSON.parse(row.troopsSnapshot || "{}") as {
+      header: { totalTroops: number };
+      troops: Array<{ type: string }>;
+    };
+    assert.equal(snapshot.header.totalTroops, 123);
+    assert.equal(snapshot.troops[0]?.type, "infantry");
+  } finally {
+    global.fetch = originalFetch;
+    httpServer.close();
+  }
+});
+
+test("troops snapshot upload stores processor 206 partial response", async () => {
+  const dbPath = tmpDbPath();
+  process.env.DB_PATH = dbPath;
+  process.env.PORT = "0";
+  process.env.SCREENSHOT_PROCESSOR_URL = "http://processor.test";
+  const { httpServer, port } = await startServer();
+  const originalFetch = global.fetch;
+  try {
+    const cookie = createSessionCookie(dbPath);
+    const createProfile = await requestJson(
+      port,
+      "POST",
+      "/api/profiles",
+      { "Content-Type": "application/json", Cookie: cookie },
+      JSON.stringify({ playerId: "PLAYER206" })
+    );
+    assert.equal(createProfile.status, 200);
+    const profileId = getPayload<{ profile: { id: string } }>(createProfile).profile.id;
+
+    global.fetch = (async () =>
+      ({
+        ok: true,
+        status: 206,
+        json: async () => ({
+          result: {
+            header: { totalTroops: 0, marchQueues: 1, infirmaryCapacity: 0 },
+            troops: [
+              {
+                type: null,
+                tier: null,
+                count: null,
+                conf: { type: 0.2, tier: 0.1, count: 0.05 },
+              },
+            ],
+            meta: { partial: true },
+          },
+        }),
+      } as Response)) as typeof fetch;
+
+    const upload = await requestMultipart(
+      port,
+      "POST",
+      `/api/profiles/${profileId}/troops-snapshot`,
+      { headers: { Cookie: cookie } }
+    );
+    assert.equal(upload.status, 200);
+
+    const db = new Database(dbPath);
+    const row = db
+      .prepare("SELECT troopsSnapshot FROM profiles WHERE id = ?")
+      .get(profileId) as { troopsSnapshot: string | null };
+    db.close();
+    assert.ok(row.troopsSnapshot);
+    const snapshot = JSON.parse(row.troopsSnapshot || "{}") as {
+      troops: Array<{ type: string | null }>;
+      meta?: { partial?: boolean };
+    };
+    assert.equal(snapshot.troops[0]?.type, null);
+    assert.equal(snapshot.meta, undefined);
+  } finally {
+    global.fetch = originalFetch;
+    httpServer.close();
+  }
+});
+
+test("troops snapshot upload rejects invalid processor payload", async () => {
+  const dbPath = tmpDbPath();
+  process.env.DB_PATH = dbPath;
+  process.env.PORT = "0";
+  process.env.SCREENSHOT_PROCESSOR_URL = "http://processor.test";
+  const { httpServer, port } = await startServer();
+  const originalFetch = global.fetch;
+  try {
+    const cookie = createSessionCookie(dbPath);
+    const createProfile = await requestJson(
+      port,
+      "POST",
+      "/api/profiles",
+      { "Content-Type": "application/json", Cookie: cookie },
+      JSON.stringify({ playerId: "PLAYERBAD" })
+    );
+    assert.equal(createProfile.status, 200);
+    const profileId = getPayload<{ profile: { id: string } }>(createProfile).profile.id;
+
+    global.fetch = (async () =>
+      ({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          result: {
+            header: { totalTroops: "nope", marchQueues: 1 },
+            troops: [],
+          },
+        }),
+      } as Response)) as typeof fetch;
+
+    const upload = await requestMultipart(
+      port,
+      "POST",
+      `/api/profiles/${profileId}/troops-snapshot`,
+      { headers: { Cookie: cookie } }
+    );
+    assert.equal(upload.status, 500);
+
+    const db = new Database(dbPath);
+    const row = db
+      .prepare("SELECT troopsSnapshot FROM profiles WHERE id = ?")
+      .get(profileId) as { troopsSnapshot: string | null };
+    db.close();
+    assert.equal(row.troopsSnapshot, null);
+  } finally {
+    global.fetch = originalFetch;
+    httpServer.close();
+  }
+});
+
+test("troops snapshot upload rejects invalid payload even on 206", async () => {
+  const dbPath = tmpDbPath();
+  process.env.DB_PATH = dbPath;
+  process.env.PORT = "0";
+  process.env.SCREENSHOT_PROCESSOR_URL = "http://processor.test";
+  const { httpServer, port } = await startServer();
+  const originalFetch = global.fetch;
+  try {
+    const cookie = createSessionCookie(dbPath);
+    const createProfile = await requestJson(
+      port,
+      "POST",
+      "/api/profiles",
+      { "Content-Type": "application/json", Cookie: cookie },
+      JSON.stringify({ playerId: "PLAYERBAD206" })
+    );
+    assert.equal(createProfile.status, 200);
+    const profileId = getPayload<{ profile: { id: string } }>(createProfile).profile.id;
+
+    global.fetch = (async () =>
+      ({
+        ok: true,
+        status: 206,
+        json: async () => ({
+          result: {
+            header: { totalTroops: "nope", marchQueues: 1 },
+            troops: [],
+          },
+        }),
+      } as Response)) as typeof fetch;
+
+    const upload = await requestMultipart(
+      port,
+      "POST",
+      `/api/profiles/${profileId}/troops-snapshot`,
+      { headers: { Cookie: cookie } }
+    );
+    assert.equal(upload.status, 500);
+  } finally {
+    global.fetch = originalFetch;
+    httpServer.close();
+  }
+});
+
+test("troops snapshot upload handles processor non-ok response", async () => {
+  const dbPath = tmpDbPath();
+  process.env.DB_PATH = dbPath;
+  process.env.PORT = "0";
+  process.env.SCREENSHOT_PROCESSOR_URL = "http://processor.test";
+  const { httpServer, port } = await startServer();
+  const originalFetch = global.fetch;
+  try {
+    const cookie = createSessionCookie(dbPath);
+    const createProfile = await requestJson(
+      port,
+      "POST",
+      "/api/profiles",
+      { "Content-Type": "application/json", Cookie: cookie },
+      JSON.stringify({ playerId: "PLAYERFAIL" })
+    );
+    assert.equal(createProfile.status, 200);
+    const profileId = getPayload<{ profile: { id: string } }>(createProfile).profile.id;
+
+    global.fetch = (async () =>
+      ({
+        ok: false,
+        status: 400,
+        json: async () => ({ detail: "No detections." }),
+      } as Response)) as typeof fetch;
+
+    const upload = await requestMultipart(
+      port,
+      "POST",
+      `/api/profiles/${profileId}/troops-snapshot`,
+      { headers: { Cookie: cookie } }
+    );
+    assert.equal(upload.status, 502);
+  } finally {
+    global.fetch = originalFetch;
+    httpServer.close();
+  }
+});
+
+test("troops snapshot upload handles processor fetch failure", async () => {
+  const dbPath = tmpDbPath();
+  process.env.DB_PATH = dbPath;
+  process.env.PORT = "0";
+  process.env.SCREENSHOT_PROCESSOR_URL = "http://processor.test";
+  const { httpServer, port } = await startServer();
+  const originalFetch = global.fetch;
+  try {
+    const cookie = createSessionCookie(dbPath);
+    const createProfile = await requestJson(
+      port,
+      "POST",
+      "/api/profiles",
+      { "Content-Type": "application/json", Cookie: cookie },
+      JSON.stringify({ playerId: "PLAYERFETCHFAIL" })
+    );
+    assert.equal(createProfile.status, 200);
+    const profileId = getPayload<{ profile: { id: string } }>(createProfile).profile.id;
+
+    global.fetch = (async () => {
+      throw new Error("fetch failed");
+    }) as typeof fetch;
+
+    const upload = await requestMultipart(
+      port,
+      "POST",
+      `/api/profiles/${profileId}/troops-snapshot`,
+      { headers: { Cookie: cookie } }
+    );
+    assert.equal(upload.status, 502);
+  } finally {
+    global.fetch = originalFetch;
+    httpServer.close();
+  }
+});
+
+test("troops snapshot upload saves failed image on non-200 response", async () => {
+  const dbPath = tmpDbPath();
+  process.env.DB_PATH = dbPath;
+  process.env.PORT = "0";
+  process.env.SCREENSHOT_PROCESSOR_URL = "http://processor.test";
+  const { httpServer, port } = await startServer();
+  const originalFetch = global.fetch;
+  const before = listFailedScreenshots();
+  try {
+    const cookie = createSessionCookie(dbPath);
+    const createProfile = await requestJson(
+      port,
+      "POST",
+      "/api/profiles",
+      { "Content-Type": "application/json", Cookie: cookie },
+      JSON.stringify({ playerId: "PLAYERFAILSAVE", playerName: "Test Profile" })
+    );
+    assert.equal(createProfile.status, 200);
+    const profileId = getPayload<{ profile: { id: string } }>(createProfile).profile.id;
+
+    global.fetch = (async () =>
+      ({
+        ok: false,
+        status: 400,
+        json: async () => ({ detail: "No detections." }),
+      } as Response)) as typeof fetch;
+
+    const upload = await requestMultipart(
+      port,
+      "POST",
+      `/api/profiles/${profileId}/troops-snapshot`,
+      { headers: { Cookie: cookie } }
+    );
+    assert.equal(upload.status, 502);
+
+    const after = listFailedScreenshots();
+    const created = after.filter((item) => !before.includes(item));
+    assert.ok(created.length >= 1);
+    assert.ok(created.some((item) => item.includes("test-profile")));
+    created.forEach((item) => fs.rmSync(item, { force: true }));
+  } finally {
+    global.fetch = originalFetch;
+    httpServer.close();
+  }
+});
+
+test("troops snapshot upload saves failed image on invalid payload", async () => {
+  const dbPath = tmpDbPath();
+  process.env.DB_PATH = dbPath;
+  process.env.PORT = "0";
+  process.env.SCREENSHOT_PROCESSOR_URL = "http://processor.test";
+  const { httpServer, port } = await startServer();
+  const originalFetch = global.fetch;
+  const before = listFailedScreenshots();
+  try {
+    const cookie = createSessionCookie(dbPath);
+    const createProfile = await requestJson(
+      port,
+      "POST",
+      "/api/profiles",
+      { "Content-Type": "application/json", Cookie: cookie },
+      JSON.stringify({ playerId: "PLAYERBADSAVE", playerName: "Bad Profile" })
+    );
+    assert.equal(createProfile.status, 200);
+    const profileId = getPayload<{ profile: { id: string } }>(createProfile).profile.id;
+
+    global.fetch = (async () =>
+      ({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          result: {
+            header: { totalTroops: "nope", marchQueues: 1 },
+            troops: [],
+          },
+        }),
+      } as Response)) as typeof fetch;
+
+    const upload = await requestMultipart(
+      port,
+      "POST",
+      `/api/profiles/${profileId}/troops-snapshot`,
+      { headers: { Cookie: cookie } }
+    );
+    assert.equal(upload.status, 500);
+
+    const after = listFailedScreenshots();
+    const created = after.filter((item) => !before.includes(item));
+    assert.ok(created.length >= 1);
+    assert.ok(created.some((item) => item.includes("bad-profile")));
+    created.forEach((item) => fs.rmSync(item, { force: true }));
+  } finally {
+    global.fetch = originalFetch;
+    httpServer.close();
+  }
+});
+
+test("troops snapshot upload drops troops on count mismatch with <=14 stacks", async () => {
+  const dbPath = tmpDbPath();
+  process.env.DB_PATH = dbPath;
+  process.env.PORT = "0";
+  process.env.SCREENSHOT_PROCESSOR_URL = "http://processor.test";
+  const { httpServer, port } = await startServer();
+  const originalFetch = global.fetch;
+  const before = listFailedScreenshots();
+  try {
+    const cookie = createSessionCookie(dbPath);
+    const createProfile = await requestJson(
+      port,
+      "POST",
+      "/api/profiles",
+      { "Content-Type": "application/json", Cookie: cookie },
+      JSON.stringify({ playerId: "PLAYERMISMATCH", playerName: "Mismatch Profile" })
+    );
+    assert.equal(createProfile.status, 200);
+    const profileId = getPayload<{ profile: { id: string } }>(createProfile).profile.id;
+
+    global.fetch = (async () =>
+      ({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          result: {
+            header: { totalTroops: 1000, marchQueues: 1, infirmaryCapacity: 0 },
+            troops: [
+              { type: "infantry", tier: "t9", count: 100, conf: { count: 0.9 } },
+              { type: "archer", tier: "t9", count: 100, conf: { count: 0.9 } },
+            ],
+          },
+        }),
+      } as Response)) as typeof fetch;
+
+    const upload = await requestMultipart(
+      port,
+      "POST",
+      `/api/profiles/${profileId}/troops-snapshot`,
+      { headers: { Cookie: cookie } }
+    );
+    assert.equal(upload.status, 200);
+
+    const db = new Database(dbPath);
+    const row = db
+      .prepare("SELECT troopsSnapshot FROM profiles WHERE id = ?")
+      .get(profileId) as { troopsSnapshot: string | null };
+    db.close();
+    const snapshot = JSON.parse(row.troopsSnapshot || "{}") as {
+      header: { totalTroops: number };
+      troops: unknown[];
+    };
+    assert.equal(snapshot.header.totalTroops, 1000);
+    assert.equal(snapshot.troops.length, 0);
+
+    const after = listFailedScreenshots();
+    const created = after.filter((item) => !before.includes(item));
+    assert.ok(created.length >= 1);
+    assert.ok(created.some((item) => item.includes("mismatch-profile")));
+    created.forEach((item) => fs.rmSync(item, { force: true }));
+  } finally {
+    global.fetch = originalFetch;
+    httpServer.close();
+  }
+});
+
+test("troops snapshot upload drops troops on duplicate type/tier stacks", async () => {
+  const dbPath = tmpDbPath();
+  process.env.DB_PATH = dbPath;
+  process.env.PORT = "0";
+  process.env.SCREENSHOT_PROCESSOR_URL = "http://processor.test";
+  const { httpServer, port } = await startServer();
+  const originalFetch = global.fetch;
+  const before = listFailedScreenshots();
+  try {
+    const cookie = createSessionCookie(dbPath);
+    const createProfile = await requestJson(
+      port,
+      "POST",
+      "/api/profiles",
+      { "Content-Type": "application/json", Cookie: cookie },
+      JSON.stringify({ playerId: "PLAYERDUPES", playerName: "Dupes Profile" })
+    );
+    assert.equal(createProfile.status, 200);
+    const profileId = getPayload<{ profile: { id: string } }>(createProfile).profile.id;
+
+    global.fetch = (async () =>
+      ({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          result: {
+            header: { totalTroops: 1000, marchQueues: 1, infirmaryCapacity: 0 },
+            troops: [
+              { type: "infantry", tier: "t3", count: 500 },
+              { type: "infantry", tier: "t3", count: 500 },
+            ],
+          },
+        }),
+      } as Response)) as typeof fetch;
+
+    const upload = await requestMultipart(
+      port,
+      "POST",
+      `/api/profiles/${profileId}/troops-snapshot`,
+      { headers: { Cookie: cookie } }
+    );
+    assert.equal(upload.status, 200);
+
+    const db = new Database(dbPath);
+    const row = db
+      .prepare("SELECT troopsSnapshot FROM profiles WHERE id = ?")
+      .get(profileId) as { troopsSnapshot: string | null };
+    db.close();
+    const snapshot = JSON.parse(row.troopsSnapshot || "{}") as {
+      header: { totalTroops: number };
+      troops: unknown[];
+    };
+    assert.equal(snapshot.header.totalTroops, 1000);
+    assert.equal(snapshot.troops.length, 0);
+
+    const after = listFailedScreenshots();
+    const created = after.filter((item) => !before.includes(item));
+    assert.ok(created.length >= 1);
+    assert.ok(created.some((item) => item.includes("dupes-profile")));
+    created.forEach((item) => fs.rmSync(item, { force: true }));
+  } finally {
+    global.fetch = originalFetch;
     httpServer.close();
   }
 });
