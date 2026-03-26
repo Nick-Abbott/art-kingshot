@@ -160,7 +160,10 @@ function tmpDbPath() {
 function listFailedScreenshots() {
   const dir = path.join(process.cwd(), "data", "failed-screenshots");
   if (!fs.existsSync(dir)) return [];
-  return fs.readdirSync(dir).map((name) => path.join(dir, name));
+  return fs
+    .readdirSync(dir)
+    .map((name) => path.join(dir, name))
+    .filter((entry) => fs.statSync(entry).isDirectory());
 }
 
 test.after(() => {
@@ -2253,8 +2256,11 @@ test("troops snapshot upload saves failed image on non-200 response", async () =
     const after = listFailedScreenshots();
     const created = after.filter((item) => !before.includes(item));
     assert.ok(created.length >= 1);
-    assert.ok(created.some((item) => item.includes("test-profile")));
-    created.forEach((item) => fs.rmSync(item, { force: true }));
+    const match = created.find((item) => item.includes("test-profile"));
+    assert.ok(match);
+    assert.ok(fs.existsSync(path.join(match, "upload.png")));
+    assert.ok(fs.existsSync(path.join(match, "output.txt")));
+    created.forEach((item) => fs.rmSync(item, { recursive: true, force: true }));
   } finally {
     global.fetch = originalFetch;
     httpServer.close();
@@ -2304,8 +2310,11 @@ test("troops snapshot upload saves failed image on invalid payload", async () =>
     const after = listFailedScreenshots();
     const created = after.filter((item) => !before.includes(item));
     assert.ok(created.length >= 1);
-    assert.ok(created.some((item) => item.includes("bad-profile")));
-    created.forEach((item) => fs.rmSync(item, { force: true }));
+    const match = created.find((item) => item.includes("bad-profile"));
+    assert.ok(match);
+    assert.ok(fs.existsSync(path.join(match, "upload.png")));
+    assert.ok(fs.existsSync(path.join(match, "output.txt")));
+    created.forEach((item) => fs.rmSync(item, { recursive: true, force: true }));
   } finally {
     global.fetch = originalFetch;
     httpServer.close();
@@ -2370,8 +2379,11 @@ test("troops snapshot upload drops troops on count mismatch with <=14 stacks", a
     const after = listFailedScreenshots();
     const created = after.filter((item) => !before.includes(item));
     assert.ok(created.length >= 1);
-    assert.ok(created.some((item) => item.includes("mismatch-profile")));
-    created.forEach((item) => fs.rmSync(item, { force: true }));
+    const match = created.find((item) => item.includes("mismatch-profile"));
+    assert.ok(match);
+    assert.ok(fs.existsSync(path.join(match, "upload.png")));
+    assert.ok(fs.existsSync(path.join(match, "output.txt")));
+    created.forEach((item) => fs.rmSync(item, { recursive: true, force: true }));
   } finally {
     global.fetch = originalFetch;
     httpServer.close();
@@ -2436,8 +2448,11 @@ test("troops snapshot upload drops troops on duplicate type/tier stacks", async 
     const after = listFailedScreenshots();
     const created = after.filter((item) => !before.includes(item));
     assert.ok(created.length >= 1);
-    assert.ok(created.some((item) => item.includes("dupes-profile")));
-    created.forEach((item) => fs.rmSync(item, { force: true }));
+    const match = created.find((item) => item.includes("dupes-profile"));
+    assert.ok(match);
+    assert.ok(fs.existsSync(path.join(match, "upload.png")));
+    assert.ok(fs.existsSync(path.join(match, "output.txt")));
+    created.forEach((item) => fs.rmSync(item, { recursive: true, force: true }));
   } finally {
     global.fetch = originalFetch;
     httpServer.close();

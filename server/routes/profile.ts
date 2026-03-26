@@ -82,13 +82,20 @@ function buildFailedScreenshotPath(profileName: string, reason: string) {
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
   const baseDir = path.join(process.cwd(), "data", "failed-screenshots");
   fs.mkdirSync(baseDir, { recursive: true });
-  return path.join(baseDir, `${timestamp}_${safeName}_${reason}.png`);
+  return path.join(baseDir, `${timestamp}_${safeName}_${reason}`);
 }
 
-function saveFailedScreenshot(file: Express.Multer.File, profileName: string, reason: string) {
+function saveFailedScreenshot(
+  file: Express.Multer.File,
+  profileName: string,
+  reason: string,
+  output: string
+) {
   try {
-    const targetPath = buildFailedScreenshotPath(profileName, reason);
-    fs.writeFileSync(targetPath, file.buffer);
+    const targetDir = buildFailedScreenshotPath(profileName, reason);
+    fs.mkdirSync(targetDir, { recursive: true });
+    fs.writeFileSync(path.join(targetDir, "upload.png"), file.buffer);
+    fs.writeFileSync(path.join(targetDir, "output.txt"), output, "utf-8");
   } catch {
     // Best-effort logging only.
   }
@@ -402,6 +409,12 @@ export default function profileRoutes(ctx: RouteContext) {
       let response: globalThis.Response;
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30_000);
+      let savedFailure = false;
+      const saveFailureOnce = (reason: string, output: string) => {
+        if (savedFailure) return;
+        saveFailedScreenshot(file, profile.playerName || "unknown", reason, output);
+        savedFailure = true;
+      };
       try {
         response = await fetch(`${ctx.SCREENSHOT_PROCESSOR_URL}/process`, {
           method: "POST",
@@ -410,7 +423,7 @@ export default function profileRoutes(ctx: RouteContext) {
         });
       } catch {
         clearTimeout(timeoutId);
-        saveFailedScreenshot(file, profile.playerName || "unknown", "fetch-failed");
+        saveFailureOnce("fetch-failed", "Screenshot processor fetch failed.");
         ctx.fail(res, 502, "Screenshot processing failed.");
         return;
       }
@@ -424,10 +437,9 @@ export default function profileRoutes(ctx: RouteContext) {
       }
 
       if (!response.ok) {
-        saveFailedScreenshot(
-          file,
-          profile.playerName || "unknown",
-          `status-${response.status || "unknown"}`
+        saveFailureOnce(
+          `status-${response.status || "unknown"}`,
+          payload ? JSON.stringify(payload, null, 2) : "Screenshot processor error."
         );
         ctx.fail(res, 502, "Screenshot processing failed.");
         return;
@@ -435,7 +447,10 @@ export default function profileRoutes(ctx: RouteContext) {
 
       const parsedSnapshot = processorTroopsSnapshotSchema.safeParse(payload?.result);
       if (!parsedSnapshot.success) {
-        saveFailedScreenshot(file, profile.playerName || "unknown", "invalid-payload");
+        saveFailureOnce(
+          "invalid-payload",
+          payload ? JSON.stringify(payload, null, 2) : "Invalid processor payload."
+        );
         ctx.fail(res, 500, "Screenshot processing returned invalid data.");
         return;
       }
@@ -456,7 +471,10 @@ export default function profileRoutes(ctx: RouteContext) {
       }
       const shouldDropTroops = !close && snapshot.troops.length <= 14;
       if (shouldDropTroops) {
-        saveFailedScreenshot(file, profile.playerName || "unknown", "count-mismatch");
+        saveFailureOnce(
+          "count-mismatch",
+          JSON.stringify({ header: snapshot.header, troops: snapshot.troops }, null, 2)
+        );
       }
       const troopsHaveDuplicates = snapshot.troops.some((troop, index) => {
         const type = troop.type ?? "";
@@ -469,7 +487,10 @@ export default function profileRoutes(ctx: RouteContext) {
       });
       const shouldDropForDuplicates = troopsHaveDuplicates;
       if (shouldDropForDuplicates) {
-        saveFailedScreenshot(file, profile.playerName || "unknown", "duplicate-tier-type");
+        saveFailureOnce(
+          "duplicate-tier-type",
+          JSON.stringify({ header: snapshot.header, troops: snapshot.troops }, null, 2)
+        );
       }
       const storedSnapshot: StoredTroopsSnapshot =
         shouldDropTroops || shouldDropForDuplicates
