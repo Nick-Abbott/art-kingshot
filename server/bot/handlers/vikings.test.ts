@@ -57,6 +57,18 @@ test("vikings register returns success copy", async () => {
   assert.equal(message, "Registered! You’re signed up with 5 marches.");
 });
 
+test("vikings register omits march count when not provided", async () => {
+  mockFetchOnce({ ok: true, data: { members: [] } });
+  const message = await handleVikingsCommand(
+    createInteraction({
+      subcommand: "register",
+      profileId: "profile-1",
+    }),
+    { serverUrl: "http://localhost", botSecret: "secret" }
+  );
+  assert.equal(message, "Registered! You’re signed up for this event.");
+});
+
 test("vikings edit returns update copy", async () => {
   mockFetchOnce({ ok: true, data: { members: [] } });
   const message = await handleVikingsCommand(

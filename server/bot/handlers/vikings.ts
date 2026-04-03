@@ -189,8 +189,6 @@ export async function handleVikingsCommand(
   }
 
   const marchCount = interaction.options.getNumber("march_count");
-  if (!marchCount) return "Please enter a march count.";
-
   const troopCount = interaction.options.getNumber("troop_count");
   const power = interaction.options.getNumber("power");
 
@@ -201,7 +199,7 @@ export async function handleVikingsCommand(
       method: "POST",
       body: JSON.stringify({
         profileId,
-        marchCount,
+        marchCount: marchCount ?? undefined,
         troopCount: troopCount ?? undefined,
         power: power ?? undefined,
       }),
@@ -215,7 +213,10 @@ export async function handleVikingsCommand(
   if (subcommand === "edit") {
     return "Updated. Your registration details have been saved.";
   }
-  return `Registered! You’re signed up with ${marchCount} marches.`;
+  if (typeof marchCount === "number") {
+    return `Registered! You’re signed up with ${marchCount} marches.`;
+  }
+  return "Registered! You’re signed up for this event.";
 }
 
 export async function handleVikingsAutocomplete(

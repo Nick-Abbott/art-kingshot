@@ -128,7 +128,7 @@ export const commands = [
           option
             .setName("march_count")
             .setDescription("March count.")
-            .setRequired(true)
+            .setRequired(false)
         )
         .addNumberOption((option) =>
           option
@@ -158,7 +158,7 @@ export const commands = [
           option
             .setName("march_count")
             .setDescription("March count.")
-            .setRequired(true)
+            .setRequired(false)
         )
         .addNumberOption((option) =>
           option

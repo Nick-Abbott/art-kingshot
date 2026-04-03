@@ -116,7 +116,7 @@ export type RouteContext = {
         data: {
           profileId: string;
           troopCount?: number;
-          marchCount: number;
+          marchCount?: number;
           power?: number;
           playerName?: string;
         };

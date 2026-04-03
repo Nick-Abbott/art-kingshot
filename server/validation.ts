@@ -315,7 +315,7 @@ export function parseAllianceProfileUpdatePayload(payload: unknown): ParseResult
 const BotMemberSchema = z.object({
   profileId: z.string(),
   troopCount: z.optional(z.coerce.number()),
-  marchCount: z.coerce.number(),
+  marchCount: z.optional(z.coerce.number()),
   power: z.optional(z.coerce.number()),
   playerName: z.optional(z.string()),
 });
@@ -323,7 +323,7 @@ const BotMemberSchema = z.object({
 export function parseBotMemberPayload(payload: unknown): ParseResult<{
   profileId: string;
   troopCount?: number;
-  marchCount: number;
+  marchCount?: number;
   power?: number;
   playerName?: string;
 }> {

@@ -133,6 +133,7 @@ export default function botRoutes(ctx: RouteContext) {
       if (!profile) return;
       const troopCount = parsed.data.troopCount ?? profile.troopCount ?? null;
       const power = parsed.data.power ?? profile.power ?? null;
+      const marchCount = parsed.data.marchCount ?? profile.marchCount ?? null;
       if (troopCount == null) {
         ctx.fail(res, 400, "troopCount is required.");
         return;
@@ -141,12 +142,16 @@ export default function botRoutes(ctx: RouteContext) {
         ctx.fail(res, 400, "power is required.");
         return;
       }
+      if (marchCount == null) {
+        ctx.fail(res, 400, "marchCount is required.");
+        return;
+      }
       const memberPayload = {
         playerId: profile.playerId,
         playerName:
           parsed.data.playerName ?? profile.playerName ?? "Unknown",
         troopCount,
-        marchCount: parsed.data.marchCount,
+        marchCount,
         power,
       };
       const normalized = ctx.parseMemberPayload(memberPayload);

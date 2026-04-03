@@ -1677,10 +1677,41 @@ test("bot endpoints resolve discord user and enforce ownership", async () => {
       headers,
       JSON.stringify({
         profileId,
-        marchCount: 4,
       })
     );
     assert.equal(optionalSignup.status, 200);
+
+    const missingMarchProfileId = crypto.randomUUID();
+    const missingMarchDiscordId = "discord-bot-user-missing-march";
+    createBotUser(dbPath, {
+      discordId: missingMarchDiscordId,
+      allianceId: "bot-missing-march",
+      profileId: missingMarchProfileId,
+      playerId: "BOTPLAYER2",
+      kingdomId: 1460,
+      troopCount: 1200,
+      marchCount: null,
+      power: 2000000,
+      guildId: "guild-2",
+    });
+
+    const missingMarchHeaders = {
+      "x-bot-secret": "bot-secret",
+      "x-discord-id": missingMarchDiscordId,
+      "Content-Type": "application/json",
+    };
+
+    const missingMarchSignup = await requestJson(
+      port,
+      "POST",
+      "/api/bot/vikings",
+      missingMarchHeaders,
+      JSON.stringify({
+        profileId: missingMarchProfileId,
+      })
+    );
+    assert.equal(missingMarchSignup.status, 400);
+    assert.equal(missingMarchSignup.data.ok, false);
 
     const bear = await requestJson(
       port,
