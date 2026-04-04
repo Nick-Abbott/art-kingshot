@@ -57,7 +57,7 @@ export function buildAssignmentsHeader(
   const eventTime = formatDiscordTimestamp(vikingNextTime);
   const lines = [intro];
   if (eventTime) {
-    lines.push(`Event time: ${eventTime}`);
+    lines.push(`Event time (your local timezone): ${eventTime}`);
   }
   return [...lines, ...instructionsLines].join("\n");
 }
