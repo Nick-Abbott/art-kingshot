@@ -186,7 +186,7 @@
     "selectAllianceBadge": "Select alliance",
     "currentTitle": "Current profile",
     "currentSubtitle": "Keep your profile details up to date.",
-    "troopsUploadTitle": "Update troops from screenshot",
+    "troopsUploadTitle": "Update troops from screenshot (experimental)",
     "troopsUploadHint": "Upload a full troop overview screenshot.",
     "troopsUploadButton": "Choose file",
     "troopsUploadPlaceholder": "No file selected",
