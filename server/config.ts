@@ -41,6 +41,7 @@ export const config = {
   discordClientSecret: getEnv("DISCORD_CLIENT_SECRET", { fallback: "" }),
   discordRedirectUri: getEnv("DISCORD_REDIRECT_URI", { fallback: "" }),
   discordBotSecret: getEnv("DISCORD_BOT_SECRET", { fallback: "" }),
+  kingshotStatsApiKey: getEnv("KINGSHOT_STATS_API_KEY", { fallback: "" }),
   sessionTtlDays: getNumberEnv("SESSION_TTL_DAYS", { fallback: 14 }),
   nodeEnv: getEnv("NODE_ENV", { fallback: "" }),
 };

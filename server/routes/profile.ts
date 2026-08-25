@@ -5,6 +5,7 @@ import * as path from "node:path";
 import * as fs from "node:fs";
 import { z } from "zod";
 import type { RouteContext } from "../types";
+import { KingshotStatsError } from "../kingshot";
 
 type ProcessorTroopsSnapshot = {
   header: {
@@ -827,39 +828,24 @@ export default function profileRoutes(ctx: RouteContext) {
         ctx.fail(res, 400, parsed.error, parsed.code);
         return;
       }
-      const { fid } = parsed.data;
-
-      const payload = ctx.buildPlayerLookupPayload(fid);
-      const body = new URLSearchParams({
-        fid: payload.fid,
-        time: String(payload.time),
-        sign: payload.sign,
-      }).toString();
-
       try {
-        const response = await fetch(
-          "https://kingshot-giftcode.centurygame.com/api/player",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body,
-          }
-        );
-
-        const text = await response.text();
-        let data = null;
-        try {
-          data = JSON.parse(text);
-        } catch {
-          data = { raw: text };
+        const lookup = await ctx.lookupKingshotPlayer(parsed.data.fid);
+        ctx.ok(res, {
+          ok: true,
+          status: 200,
+          data: {
+            data: {
+              name: lookup.playerName,
+              kid: lookup.kingdomId,
+              avatar: lookup.avatar,
+            },
+          },
+        });
+      } catch (error) {
+        if (error instanceof KingshotStatsError) {
+          ctx.fail(res, error.status, error.message, error.code);
+          return;
         }
-
-        if (response.ok) {
-          ctx.ok(res, { ok: response.ok, status: response.status, data });
-        } else {
-          ctx.fail(res, 502, "Lookup request failed.");
-        }
-      } catch {
         ctx.fail(res, 502, "Lookup request failed.");
       }
     }
