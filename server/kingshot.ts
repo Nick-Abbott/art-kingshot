@@ -1,34 +1,96 @@
-import * as crypto from "node:crypto";
+type FetchLike = typeof fetch;
 
-const SIGN_SECRET = "mN4!pQs6JrYwV9";
+type KingshotStatsPlayerResponse = {
+  player?: {
+    nick_name?: unknown;
+    kid?: unknown;
+    avatar_url?: unknown;
+  };
+};
 
-export function buildSign(params: Record<string, unknown>): string {
-  const sortedKeys = Object.keys(params).sort();
-  const base = sortedKeys
-    .map((key) => {
-      const value = params[key];
-      const encoded =
-        value !== null && typeof value === "object"
-          ? JSON.stringify(value)
-          : String(value);
-      return `${key}=${encoded}`;
-    })
-    .join("&");
+export type PlayerLookupResult = {
+  playerName: string;
+  kingdomId: number | null;
+  avatar: string | null;
+};
 
-  return crypto.createHash("md5").update(base + SIGN_SECRET).digest("hex");
+export class KingshotStatsError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+    readonly code: string
+  ) {
+    super(message);
+  }
 }
 
-export function buildPlayerLookupPayload(
-  fid: string | number,
-  now = Date.now()
-): { fid: string; time: number; sign: string } {
-  const payload = {
-    fid: String(fid),
-    time: now,
-  };
+export async function lookupKingshotPlayer(
+  governorId: string,
+  apiKey: string,
+  fetchImpl: FetchLike = fetch
+): Promise<PlayerLookupResult> {
+  if (!apiKey) {
+    throw new KingshotStatsError(
+      "Player lookup is not configured.",
+      503,
+      "player_lookup_not_configured"
+    );
+  }
+
+  let response: Response;
+  try {
+    response = await fetchImpl(
+      `https://api.kingshotstats.com/v1/players/${encodeURIComponent(governorId)}?include=base`,
+      { headers: { Authorization: `Bearer ${apiKey}` } }
+    );
+  } catch {
+    throw new KingshotStatsError("Lookup request failed.", 502, "lookup_failed");
+  }
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new KingshotStatsError("Player not found.", 404, "player_not_found");
+    }
+    if (response.status === 429) {
+      throw new KingshotStatsError(
+        "Player lookup is temporarily rate limited. Please try again shortly.",
+        429,
+        "player_lookup_rate_limited"
+      );
+    }
+    if (response.status === 401 || response.status === 403) {
+      throw new KingshotStatsError(
+        "Player lookup is not configured.",
+        503,
+        "player_lookup_not_configured"
+      );
+    }
+    throw new KingshotStatsError("Lookup request failed.", 502, "lookup_failed");
+  }
+
+  let payload: KingshotStatsPlayerResponse;
+  try {
+    payload = (await response.json()) as KingshotStatsPlayerResponse;
+  } catch {
+    throw new KingshotStatsError("Lookup returned invalid data.", 502, "lookup_invalid_response");
+  }
+
+  const player = payload.player;
+  const playerName =
+    typeof player?.nick_name === "string" ? player.nick_name.trim() : "";
+  if (!playerName) {
+    throw new KingshotStatsError("Lookup returned invalid data.", 502, "lookup_invalid_response");
+  }
+
+  const kingdomId = Number(player?.kid);
+  const avatar =
+    typeof player?.avatar_url === "string" && player.avatar_url.trim()
+      ? player.avatar_url
+      : null;
 
   return {
-    ...payload,
-    sign: buildSign(payload),
+    playerName,
+    kingdomId: Number.isFinite(kingdomId) ? kingdomId : null,
+    avatar,
   };
 }

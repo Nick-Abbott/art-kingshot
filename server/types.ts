@@ -45,6 +45,7 @@ export type RouteContext = {
   DISCORD_CLIENT_SECRET: string;
   DISCORD_REDIRECT_URI: string;
   DISCORD_BOT_SECRET: string;
+  KINGSHOT_STATS_API_KEY: string;
   SCREENSHOT_PROCESSOR_URL: string;
   SESSION_TTL_MS: number;
   isProduction: boolean;
@@ -149,11 +150,11 @@ export type RouteContext = {
     | { ok: true; data: { enabled: boolean; profileId: string } }
     | { ok: false; error: string; code?: string };
   generateAssignments: (members: VikingMember[]) => AssignmentResult;
-  buildPlayerLookupPayload: (fid: string | number, now?: number) => {
-    fid: string;
-    time: number;
-    sign: string;
-  };
+  lookupKingshotPlayer: (governorId: string) => Promise<{
+    playerName: string;
+    kingdomId: number | null;
+    avatar: string | null;
+  }>;
   parseCookies: (cookieHeader: string) => Record<string, string>;
   setCookie: (
     res: Response,

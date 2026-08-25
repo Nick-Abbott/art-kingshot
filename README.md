@@ -83,6 +83,7 @@ Server:
 - `DISCORD_CLIENT_ID`: Discord application client ID (required for login)
 - `DISCORD_CLIENT_SECRET`: Discord application client secret (required for login)
 - `DISCORD_REDIRECT_URI`: Discord OAuth callback URL (required for login)
+- `KINGSHOT_STATS_API_KEY`: Kingshot Stats API key used for governor-ID player lookup (required for player lookup)
 - `SESSION_TTL_DAYS`: Session length in days (default `14`)
 - `DEFAULT_ALLIANCE_ID`: Default alliance slug/id (default `art`)
 - `DEFAULT_ALLIANCE_NAME`: Default alliance name (default `ART Alliance`)

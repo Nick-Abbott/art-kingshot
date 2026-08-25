@@ -8,7 +8,7 @@ import { runMigrations } from "./db/migrate";
 import { createQueries } from "./db/queries";
 import { config } from "./config";
 import { generateAssignments } from "./assignments";
-import { buildPlayerLookupPayload } from "./kingshot";
+import { lookupKingshotPlayer } from "./kingshot";
 import createAccessMiddleware from "./middleware/access";
 import {
   parseMemberPayload,
@@ -51,6 +51,8 @@ export function createApp({ dbPath: dbPathOverride }: { dbPath?: string } = {}) 
   const DISCORD_REDIRECT_URI = config.discordRedirectUri;
   const DISCORD_BOT_SECRET =
     (process.env.DISCORD_BOT_SECRET || "").trim() || config.discordBotSecret;
+  const KINGSHOT_STATS_API_KEY =
+    (process.env.KINGSHOT_STATS_API_KEY || "").trim() || config.kingshotStatsApiKey;
   const SCREENSHOT_PROCESSOR_URL = config.screenshotProcessorUrl;
   const SESSION_TTL_MS = config.sessionTtlDays * 24 * 60 * 60 * 1000;
   const isProduction = config.nodeEnv === "production";
@@ -352,6 +354,7 @@ export function createApp({ dbPath: dbPathOverride }: { dbPath?: string } = {}) 
     DISCORD_CLIENT_SECRET,
     DISCORD_REDIRECT_URI,
     DISCORD_BOT_SECRET,
+    KINGSHOT_STATS_API_KEY,
     SCREENSHOT_PROCESSOR_URL,
     SESSION_TTL_MS,
     isProduction,
@@ -370,7 +373,8 @@ export function createApp({ dbPath: dbPathOverride }: { dbPath?: string } = {}) 
     parseAssignmentOptInPayload,
     parseBotAssignmentOptInPayload,
     generateAssignments,
-    buildPlayerLookupPayload,
+    lookupKingshotPlayer: (governorId) =>
+      lookupKingshotPlayer(governorId, KINGSHOT_STATS_API_KEY),
     parseCookies,
     setCookie,
     clearCookie,

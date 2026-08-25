@@ -322,6 +322,55 @@ test("session auth allows access and enforces profile requirement", async () => 
   }
 });
 
+test("player lookup normalizes Kingshot Stats player data", async () => {
+  const dbPath = tmpDbPath();
+  const originalFetch = global.fetch;
+  process.env.DB_PATH = dbPath;
+  process.env.PORT = "0";
+  process.env.KINGSHOT_STATS_API_KEY = "kss_test";
+  const { httpServer, port } = await startServer();
+  try {
+    global.fetch = (async () =>
+      ({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          player: {
+            nick_name: "Lookup Player",
+            kid: 1459,
+            avatar_url: "https://example.test/avatar.png",
+          },
+        }),
+      } as Response)) as typeof fetch;
+
+    const response = await requestJson(
+      port,
+      "POST",
+      "/api/player-lookup",
+      {
+        Cookie: createSessionCookie(dbPath),
+        "Content-Type": "application/json",
+      },
+      JSON.stringify({ fid: "209927780" })
+    );
+    assert.equal(response.status, 200);
+    assert.deepEqual(getPayload(response), {
+      ok: true,
+      status: 200,
+      data: {
+        data: {
+          name: "Lookup Player",
+          kid: 1459,
+          avatar: "https://example.test/avatar.png",
+        },
+      },
+    });
+  } finally {
+    global.fetch = originalFetch;
+    httpServer.close();
+  }
+});
+
 test("alliance admin required for destructive endpoints", async () => {
   const dbPath = tmpDbPath();
   process.env.DB_PATH = dbPath;
@@ -1632,6 +1681,7 @@ test("bot endpoints resolve discord user and enforce ownership", async () => {
   process.env.DB_PATH = dbPath;
   process.env.PORT = "0";
   process.env.DISCORD_BOT_SECRET = "bot-secret";
+  process.env.KINGSHOT_STATS_API_KEY = "kss_test";
   const { httpServer, port } = await startServer();
   try {
     const discordId = "discord-bot-user";
@@ -1750,10 +1800,13 @@ test("bot endpoints resolve discord user and enforce ownership", async () => {
       ({
         ok: true,
         status: 200,
-        text: async () =>
-          JSON.stringify({
-            data: { data: { name: "Linked Player", kid: 1459, avatar: "icon" } },
-          }),
+        json: async () => ({
+          player: {
+            nick_name: "Linked Player",
+            kid: 1459,
+            avatar_url: "icon",
+          },
+        }),
       } as Response)) as typeof fetch;
 
     const link = await requestJson(
@@ -1853,16 +1906,20 @@ test("bot link creates user when discord account is missing", async () => {
   process.env.DB_PATH = dbPath;
   process.env.PORT = "0";
   process.env.DISCORD_BOT_SECRET = "bot-secret";
+  process.env.KINGSHOT_STATS_API_KEY = "kss_test";
   const { httpServer, port } = await startServer();
   try {
     global.fetch = (async () =>
       ({
         ok: true,
         status: 200,
-        text: async () =>
-          JSON.stringify({
-            data: { data: { name: "Linked Player", kid: 1459, avatar: "icon" } },
-          }),
+        json: async () => ({
+          player: {
+            nick_name: "Linked Player",
+            kid: 1459,
+            avatar_url: "icon",
+          },
+        }),
       } as Response)) as typeof fetch;
 
     const headers = {

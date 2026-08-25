@@ -8,8 +8,8 @@ import type {
 } from "../../shared/types";
 import type { RouteContext } from "../types";
 import { getAllianceSettingsFromConfig } from "../utils/allianceSettings";
-import { parsePlayerLookup } from "../utils/playerLookup";
 import { getNextVikingEventIso } from "../utils/vikingTime";
+import { KingshotStatsError } from "../kingshot";
 
 type BotAuth = {
   userId: string;
@@ -293,33 +293,15 @@ export default function botRoutes(ctx: RouteContext) {
         : null;
       const targetAllianceId = guildAssociation?.allianceId || null;
 
-      const payload = ctx.buildPlayerLookupPayload(playerId);
-      const body = new URLSearchParams({
-        fid: payload.fid,
-        time: String(payload.time),
-        sign: payload.sign,
-      }).toString();
-
-      let lookupData: unknown = null;
+      let parsedLookup;
       try {
-        const response = await fetch(
-          "https://kingshot-giftcode.centurygame.com/api/player",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body,
-          }
-        );
-        const text = await response.text();
-        lookupData = JSON.parse(text);
-      } catch {
+        parsedLookup = await ctx.lookupKingshotPlayer(playerId);
+      } catch (error) {
+        if (error instanceof KingshotStatsError) {
+          ctx.fail(res, error.status, error.message, error.code);
+          return;
+        }
         ctx.fail(res, 502, "Lookup request failed.");
-        return;
-      }
-
-      const parsedLookup = parsePlayerLookup(lookupData);
-      if (!parsedLookup) {
-        ctx.fail(res, 404, "Player not found.");
         return;
       }
 
